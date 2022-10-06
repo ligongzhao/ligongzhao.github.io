@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Java 内部类 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Java/Java基础/Java 内部类"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Java 内部类
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/Java%20%E5%86%85%E9%83%A8%E7%B1%BB.html" class="article-date">
+  <time datetime="2021-11-29T09:22:09.000Z" itemprop="datePublished">2021-11-29</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a> / <a class="article-category-link" href="/categories/Java/Java%E5%9F%BA%E7%A1%80/">Java基础</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">8 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="嵌套类-Nested-Classes"><a href="#嵌套类-Nested-Classes" class="headerlink" title="嵌套类(Nested Classes)"></a>嵌套类(Nested Classes)</h1><blockquote>
+<p>Nested classes are divided into two categories: non-static and static. Non-static nested classes are called <em>inner classes</em>. Nested classes that are declared <code>static</code> are called <em>static nested classes</em>. </p>
+<p>–来自 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/tutorial/java/javaOO/nested.html">Oracle 官方Java指南</a></p>
+</blockquote>
+<p>嵌套类分为两种，静态和非静态。非静态的称为 <code>内部类</code>，静态的称为<code>静态嵌套类</code>（也是我们说的 <code>静态内部类</code>）</p>
+<p>简单理解就是：如果把类比喻成鸡蛋，内部类为蛋黄,外部类是蛋壳。那么静态类相当于熟鸡蛋，就算蛋壳破碎（外部类没有实例化），蛋黄依然完好（内部类可以实例化）；而非静态类相当于生鸡蛋，蛋壳破碎（无实例化），蛋黄也会跟着xx（不能实例化）。</p>
+<blockquote>
+<ul>
+<li><p>Non-static nested classes (inner classes) have access to other members  of the enclosing class, even if they are declared private. </p>
+</li>
+<li><p>Static nested classes do not have access to other members of the enclosing class. 问题：不能使用 static 修饰的变量&#x2F;方法？看完试一下。</p>
+</li>
+</ul>
+</blockquote>
+<h3 id="为什么使用嵌套类？"><a href="#为什么使用嵌套类？" class="headerlink" title="为什么使用嵌套类？"></a>为什么使用嵌套类？</h3><p> 内部类：</p>
+<ol>
+<li>是一种逻辑分组：当一个类仅在另一个类中使用时，嵌套在一起，成为 “助手类”；</li>
+<li>可以更好的封装：B嵌套在A中，B可以访问A的所有成员变量和方法（包括定义为 private 的），同时 B 自身可以对外界隐藏起来，只给 A 用；</li>
+<li>增加代码可读性和可维护性；</li>
+</ol>
+<p>静态嵌套类，就是一个独立的类。更多的知识表明类结构和命名空间，表明静态嵌套类和外部类是强关联的，专用于外部类。</p>
+<ul>
+<li>比如有A，B两个类，B有点特殊，虽然可以独立存在，但只被A使用。<br>这时候怎么办？如果把B并入A里，复杂度提高，搞得A违反单一职责。如果B独立，又可能被其他类（比如同一个包下的C）依赖，不符合设计的本意。所以不如将其变成A.B，等于添加个注释，告诉其他类别使用B了，它只跟A玩。– <a target="_blank" rel="noopener" href="https://www.zhihu.com/question/28197253/answer/39880399">参考知乎铁心男回答</a></li>
+<li>例如：<code>ThreadLocal</code> 与 <code>ThreadLocalMap</code></li>
+</ul>
+<p>静态嵌套类和非静态内部类最大的区别是：非静态内部类编译后隐式保存着外部类的引用（就算外部类对象没用了也GC不掉），但是静态内部类没有。</p>
+<h2 id="内部类-Inner-Classes"><a href="#内部类-Inner-Classes" class="headerlink" title="内部类(Inner Classes)"></a>内部类(Inner Classes)</h2><p>特性：</p>
+<ol>
+<li>与其外部类的实例相关联，就像是实例方法和实例参数一样；</li>
+<li>可以直接（direct）访问外部类的方法和字段；</li>
+<li>因为与实例相关联，不能在内部类中定义任何 static 成员；<ul>
+<li>an inner class is associated with an instance, it cannot define any static members itself.</li>
+</ul>
+</li>
+<li>隐式保存着外部类的引用；</li>
+</ol>
+<p>使用：</p>
+<ul>
+<li>需要先实例化外部类，在实例化内部类。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">OuterClass</span> <span class="variable">outerObject</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OuterClass</span>();</span><br><span class="line">OuterClass.<span class="type">InnerClass</span> <span class="variable">innerObject</span> <span class="operator">=</span> outerObject.<span class="keyword">new</span> <span class="title class_">InnerClass</span>();</span><br></pre></td></tr></table></figure>
+
+
+
+<p>注意：<code>本地类</code>（在方法中定义的类）和 <code>匿名类</code> 都属于内部类</p>
+<h2 id="静态嵌套类-Static-Nested-Classes"><a href="#静态嵌套类-Static-Nested-Classes" class="headerlink" title="静态嵌套类(Static Nested Classes)"></a>静态嵌套类(Static Nested Classes)</h2><p>特性：</p>
+<ol>
+<li>与外部类相关联，与类方法和类变量（被 static 修饰的 method 和 field）；</li>
+<li>使用静态嵌套类与使用其他顶级类(top-level class)一样（定义静态，非静态成员），与外部类的实例交互就像任何其他顶级类一样；<ul>
+<li>只是为了方便打包，嵌套在一个顶级类中的顶级类；（仅表明结构上是归属外部类的；）</li>
+</ul>
+</li>
+<li>不能直接访问外部类中非静态成员（因为这些属于类对象的）；<ul>
+<li>但是可以通过实例化外部类的方式访问；（参考下面的样例）</li>
+</ul>
+</li>
+</ol>
+<p>使用：</p>
+<ul>
+<li>实例化静态嵌套类的方法与顶级类一样。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">StaticNestedClass</span> <span class="variable">staticNestedObject</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StaticNestedClass</span>();</span><br></pre></td></tr></table></figure>
+
+
+
+<p>内部类和静态嵌套类的结合样例：</p>
+<ul>
+<li>请注意，静态嵌套类与外部类的实例成员进行交互，就像任何其他顶级类一样。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OuterClass</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">String</span> <span class="variable">outerField</span> <span class="operator">=</span> <span class="string">&quot;Outer field&quot;</span>;</span><br><span class="line">    <span class="keyword">static</span> <span class="type">String</span> <span class="variable">staticOuterField</span> <span class="operator">=</span> <span class="string">&quot;Static outer field&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">class</span> <span class="title class_">InnerClass</span> &#123;</span><br><span class="line">        <span class="keyword">void</span> <span class="title function_">accessMembers</span><span class="params">()</span> &#123;</span><br><span class="line">            System.out.println(outerField);</span><br><span class="line">            System.out.println(staticOuterField);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">StaticNestedClass</span> &#123;</span><br><span class="line">        <span class="comment">// 这里告诉我们，静态嵌套类中可以像其他顶级类一样使用外部类对象，并访问其成员</span></span><br><span class="line">        <span class="keyword">void</span> <span class="title function_">accessMembers</span><span class="params">(OuterClass outer)</span> &#123;</span><br><span class="line">            <span class="comment">// Compiler error: Cannot make a static reference to the non-static</span></span><br><span class="line">            <span class="comment">//     field outerField</span></span><br><span class="line">            <span class="comment">// System.out.println(outerField);</span></span><br><span class="line">            <span class="comment">// 这样就可以访问</span></span><br><span class="line">            System.out.println(outer.outerField);</span><br><span class="line">            System.out.println(staticOuterField);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Inner class:&quot;</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;------------&quot;</span>);</span><br><span class="line">        <span class="type">OuterClass</span> <span class="variable">outerObject</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OuterClass</span>();</span><br><span class="line">        OuterClass.<span class="type">InnerClass</span> <span class="variable">innerObject</span> <span class="operator">=</span> outerObject.<span class="keyword">new</span> <span class="title class_">InnerClass</span>();</span><br><span class="line">        innerObject.accessMembers();</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">&quot;\nStatic nested class:&quot;</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;--------------------&quot;</span>);</span><br><span class="line">        <span class="type">StaticNestedClass</span> <span class="variable">staticNestedObject</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StaticNestedClass</span>();        </span><br><span class="line">        staticNestedObject.accessMembers(outerObject);</span><br><span class="line">        </span><br><span class="line">        System.out.println(<span class="string">&quot;\nTop-level class:&quot;</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;--------------------&quot;</span>);</span><br><span class="line">        <span class="type">TopLevelClass</span> <span class="variable">topLevelObject</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TopLevelClass</span>();        </span><br><span class="line">        topLevelObject.accessMembers(outerObject);           </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TopLevelClass</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">accessMembers</span><span class="params">(OuterClass outer)</span> &#123;     </span><br><span class="line">        <span class="comment">// Compiler error: Cannot make a static reference to the non-static</span></span><br><span class="line">        <span class="comment">//     field OuterClass.outerField</span></span><br><span class="line">        <span class="comment">// System.out.println(OuterClass.outerField);</span></span><br><span class="line">        System.out.println(outer.outerField);</span><br><span class="line">        System.out.println(OuterClass.staticOuterField);</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>什么是 package private</p>
+<h1 id="类成员-Class-Members"><a href="#类成员-Class-Members" class="headerlink" title="类成员(Class Members)"></a>类成员(Class Members)</h1><ul>
+<li>Class variables</li>
+<li>Class methods</li>
+</ul>
+<p>被 <code>static</code> 修饰的 field 称为 <code>static field </code> or <code>class variables</code>，它们属于类，而不是类生成的 object，</p>
+<p>位置：</p>
+<ul>
+<li><p>类的实例（对象）共享 <code>static field</code>，这个变量的位置在内存中是固定的（fixed）。</p>
+</li>
+<li><p>普通的 field，属于 object，所以每个对象的field都存在不同的内存中。</p>
+</li>
+</ul>
+<p>使用：</p>
+<ul>
+<li>通常使用 <code>Class.static_field</code> 的形式，</li>
+<li>（可以但是最好不要用的形式：）<code>&lt;Object&gt;.static_field</code>，因为这样无法体现 static_field 是类变量。</li>
+</ul>
+<p>静态变量&#x2F;方法与非静态变量&#x2F;方法的使用组合：</p>
+<ul>
+<li>non-static 可以使用 static，反过来不行；</li>
+<li>non-static 可以使用 non-static 和 static；</li>
+<li>static 仅可以使用 static；</li>
+<li>static 修饰的方法中，不能使用 <code>this</code>关键字（因为没有可供 this 引用的实例）</li>
+</ul>
+<blockquote>
+<p>主要因为生成的时间不一样，static修饰的在类加载完就存在了，non-static 的则是需要创建对象后才存在，所以 static 修饰的不能使用 non-static，因为使用内存中没有的对象。</p>
+</blockquote>
+<h1 id="this-关键字"><a href="#this-关键字" class="headerlink" title="this 关键字"></a>this 关键字</h1><p>在实例方法或构造函数中，<code>this</code>是对当前对象的引用 （当前对象：正在调用其方法或构造函数的对象。）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line">举例：</span><br><span class="line"><span class="number">1.</span> 与 field 一起使用：</span><br><span class="line">    通常是发生了遮蔽（特定作用域中（例如在构造函数中）出现了与外部作用域中相同名称的变量名（如下例子），导致在这个特定作用域中定义的同名变量隐藏了外部的同名变量，这时如果要使用外部变量就不能直接使用变量名，需要用 <span class="built_in">this</span> 关键字）</span><br><span class="line"><span class="comment">// 原因是 构造函数的参数与field重名，导致被遮蔽（shadow）,所以通过 this，表明是要赋值给 Point 类中的field。</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Point</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="variable">x</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="variable">y</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">        </span><br><span class="line">    <span class="comment">//constructor</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Point</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> y)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.x = x;</span><br><span class="line">        <span class="built_in">this</span>.y = y;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ShadowTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="variable">x</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">class</span> <span class="title class_">FirstLevel</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="type">int</span> <span class="variable">x</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">void</span> <span class="title function_">methodInFirstLevel</span><span class="params">(<span class="type">int</span> x)</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;x = &quot;</span> + x);</span><br><span class="line">            System.out.println(<span class="string">&quot;this.x = &quot;</span> + <span class="built_in">this</span>.x);</span><br><span class="line">            <span class="comment">// 通过所属的类名引用包含较大作用域的成员变量</span></span><br><span class="line">            System.out.println(<span class="string">&quot;ShadowTest.this.x = &quot;</span> + ShadowTest.<span class="built_in">this</span>.x);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String... args)</span> &#123;</span><br><span class="line">        <span class="type">ShadowTest</span> <span class="variable">st</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ShadowTest</span>();</span><br><span class="line">        ShadowTest.<span class="type">FirstLevel</span> <span class="variable">fl</span> <span class="operator">=</span> st.<span class="keyword">new</span> <span class="title class_">FirstLevel</span>();</span><br><span class="line">        fl.methodInFirstLevel(<span class="number">23</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">运行结果：</span><br><span class="line">x = <span class="number">23</span></span><br><span class="line"><span class="built_in">this</span>.x = <span class="number">1</span></span><br><span class="line">ShadowTest.<span class="built_in">this</span>.x = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="number">2.</span> 与 构造函数一起使用：</span><br><span class="line"><span class="comment">// 这里希望提供有默认值的构造函数，使用时根据参数个数选择合适的构造函数；</span></span><br><span class="line"><span class="comment">// 注意，使用时 this(xxx) 需要写在构造函数的第一行</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Rectangle</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> x, y;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> width, height;</span><br><span class="line">        </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Rectangle</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Rectangle</span><span class="params">(<span class="type">int</span> width, <span class="type">int</span> height)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>(<span class="number">0</span>, <span class="number">0</span>, width, height);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Rectangle</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> y, <span class="type">int</span> width, <span class="type">int</span> height)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.x = x;</span><br><span class="line">        <span class="built_in">this</span>.y = y;</span><br><span class="line">        <span class="built_in">this</span>.width = width;</span><br><span class="line">        <span class="built_in">this</span>.height = height;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="number">3.</span> ThreadLocal 中的例子：</span><br><span class="line">    <span class="keyword">public</span> T <span class="title function_">get</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">t</span> <span class="operator">=</span> Thread.currentThread();</span><br><span class="line">        <span class="type">ThreadLocalMap</span> <span class="variable">map</span> <span class="operator">=</span> getMap(t);</span><br><span class="line">        <span class="keyword">if</span> (map != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="comment">// 这里的 this 是调用get() 方法的对象的引用</span></span><br><span class="line">            ThreadLocalMap.<span class="type">Entry</span> <span class="variable">e</span> <span class="operator">=</span> map.getEntry(<span class="built_in">this</span>);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 3中的具体使用，this 就是 threadLocalName 对象的引用</span></span><br><span class="line">	ThreadLocal&lt;String&gt; threadLocalName = ThreadLocal.withInitial(() -&gt; Thread.currentThread().getName());</span><br><span class="line">    threadLocalName.get()</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/tutorial/java/javaOO/thiskey.html">Oracle官方指南内容</a></li>
+</ul>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/Java%20%E5%86%85%E9%83%A8%E7%B1%BB.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/==%20and%20equals()%20and%20hashCode().html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            == and equals() and hashCode()
+          
+        </div>
+      </a>
+    
+    
+      <a href="/Java%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E7%82%B9%E6%B1%87%E6%80%BB.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Java基础知识点汇总</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

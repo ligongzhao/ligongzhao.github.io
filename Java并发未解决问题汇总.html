@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Java并发未解决问题汇总 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Java/Java并发/Java并发未解决问题汇总"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Java并发未解决问题汇总
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/Java%E5%B9%B6%E5%8F%91%E6%9C%AA%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html" class="article-date">
+  <time datetime="2022-10-04T09:41:02.000Z" itemprop="datePublished">2022-10-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a> / <a class="article-category-link" href="/categories/Java/Java%E5%B9%B6%E5%8F%91/">Java并发</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">4k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">14 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="Java并发未解决问题汇总"><a href="#Java并发未解决问题汇总" class="headerlink" title="Java并发未解决问题汇总"></a>Java并发未解决问题汇总</h1><ol>
+<li>什么是再入锁？</li>
+<li>并发实践讲了啥？<ul>
+<li>基础，并发性，线程安全性，基础类库提供的并发能力构建线程安全类</li>
+<li>利用线程提高并发程序的性能</li>
+<li>测试</li>
+<li>底层原理</li>
+</ul>
+</li>
+</ol>
+<h1 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h1><ol>
+<li>Executors 提供的四个线程池的缺点：（尽管它们内部都是通过创建 ThreadPoolExecutor 来实现的，但是本身不利于资源的合理利用）<ol>
+<li>Executors.newFixedThreadPool() 和 Executors.newSingleThreadExecutor() <ul>
+<li>主要问题是堆积的请求处理队列可能会耗费非常大的内存，甚至OOM。</li>
+<li>因为创建的线程池使用的是 <code>new LinkedBlockingQueue&lt;Runnable&gt;()</code> 无界队列。</li>
+</ul>
+</li>
+<li>Executors.newCachedThreadPool() 和 Executors.newScheduledThreadPool() <ul>
+<li>主要问题是线程数最大数是Integer.MAX_VALUE，可能会创建数量非常多的线程，甚至OOM。</li>
+<li>同时 newCachedThreadPool() 线程池的 corePoolSize 为 0，表示进来的任务进到队列后就必须等待到队列满，然后通过&lt;maximumPoolSize 来不停的创建新线程。</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>阿里巴巴编码规约中提到，线程池<strong>不允许使用</strong> <code>Executors</code>创建，<strong>应该通过</strong> <code>ThreadPoolExecutor</code> 的方式，这样的处理方式让写的同学更加明确线程池的运行规则，避免资源耗尽的风险。</li>
+</ol>
+<h3 id="TheadPoolExecutor-创建线程池"><a href="#TheadPoolExecutor-创建线程池" class="headerlink" title="TheadPoolExecutor 创建线程池"></a>TheadPoolExecutor 创建线程池</h3><p>是线程池的核心实现。</p>
+<p>参数解释：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">ThreadPoolExecutor</span><span class="params">(<span class="type">int</span> corePoolSize,  </span></span><br><span class="line"><span class="params">                          <span class="type">int</span> maximumPoolSize,  </span></span><br><span class="line"><span class="params">                          <span class="type">long</span> keepAliveTime,  </span></span><br><span class="line"><span class="params">                          TimeUnit unit,  </span></span><br><span class="line"><span class="params">                          BlockingQueue&lt;Runnable&gt; workQueue,  </span></span><br><span class="line"><span class="params">                          RejectedExecutionHandler handler)</span> &#123;  </span><br><span class="line">    <span class="built_in">this</span>(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,  </span><br><span class="line">         Executors.defaultThreadFactory(), handler);  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>corePoolSize &amp; maximumPoolSize</strong> </p>
+<ul>
+<li><p>corePoolSize 核心线程数，</p>
+</li>
+<li><p>maximumPoolSize 最大线程数</p>
+</li>
+</ul>
+<p>关系如下：</p>
+<ol>
+<li>当新任务被提交到线程池中，如果当前运行的线程数 &lt; corePoolSize 核心线程数，即使当前有空闲线程，也会新建一个线程来处理新提交的任务；</li>
+<li>如果当前运行的线程数 &gt; corePoolSize 核心线程数，但是 &lt; maximumPoolSize 最大线程数，只有当等待队列已满的情况下才会创建新线程。</li>
+</ol>
+<p><strong>keepAliveTime &amp; unit</strong></p>
+<ul>
+<li>keepAliveTime 为超过 corePoolSize 线程数的线程的最大空闲时间。超过这个时间如果线程依然空闲，且数量超过 corePoolSize 的数量，空闲线程就会被销毁。</li>
+<li>unit 为时间单位。提供了一个枚举类型。</li>
+</ul>
+<p><strong>等待队列</strong></p>
+<p>参数类型为 <code>BlockingQueue</code> 接口，任何阻塞队列(BlockingQueue) 都可以用来缓存提交的队列。</p>
+<p>线程池的大小和阻塞队列，共同约束线程池的能力：任务提交给线程池后，各种处理策略如下。</p>
+<ol>
+<li>如果运行的线程数 <strong>&lt;</strong> corePoolSize 核心线程数，提交新的任务后就会新建一个线程来运行；</li>
+<li>如果运行的线程数 <strong>&gt;</strong> corePoolSize 核心线程数，新提交的任务就会进入队列，等待被执行；</li>
+<li>如果队列已满，且运行线程数 <strong>&lt;</strong> maximumPoolSize 最大线程数，则新建一个线程来运行该任务；</li>
+<li>如果队列已满，且运行线程数 <strong>&gt;</strong> maximumPoolSize 最大线程数，新提交的任务将会根据 <em>拒绝策略</em> 来处理。</li>
+</ol>
+<blockquote>
+<p>线程池中的线程不是一开始就全都创建启动的，而是根据任务量开始慢慢增加 的，这就算是一种<strong>懒加载</strong>，到用的时候再创建线程，节省资源</p>
+</blockquote>
+<p>三种通用的队列处理方式</p>
+<ul>
+<li>SynchronousQueue  –这个不太熟悉，查一下</li>
+<li>LinkedBlockingQueue，属于无界队列<ul>
+<li>特点，当所有核心线程都在运行时，新增任务会进入队列等待，因为是无界队列，所以不会有大于 corePoolSize 的线程被创建，此时 maximumPoolSize 参数失去了作用。</li>
+<li>缺点，如果新增任务速度 &gt; 可处理速度，可能导致等待队列无线增长，耗费很多内存，甚至OOM。</li>
+<li>适合场景，可以使得瞬间爆发的高频请求变得平滑。</li>
+</ul>
+</li>
+<li>ArrayBlockingQueue，属于有界队列<ul>
+<li>队列有最大值，可以防止资源被耗尽；</li>
+<li>难点，需要平衡队列的大小与线程数 –这点需要再查资料</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>无界队列与有界队列有多种实现方式，上面列举的仅是举例</p>
+</blockquote>
+<p><strong>拒绝策略</strong></p>
+<p>当线程池已经关闭，或者达到饱和（达到最大线程数，且队列已满）状态时，新提交的任务会被拒绝。</p>
+<p>TheadPoolExecutor 定义了4中拒绝策略：</p>
+<ul>
+<li>AbortPolicy , 默认策略，拒绝（丢弃）并抛出 <code>RejectedExecutionException</code></li>
+<li>CallerRunsPolicy , 直接在 execute 方法的调用线程中运行被拒绝的任务，如果线程池已经关闭，则任务被丢弃；</li>
+<li>DiscardPolicy ， 直接丢弃任务，不报错；</li>
+<li>DiscardOldestPolicy  ， 丢弃队列中等待时间最长的任务，并执行当前提交的任务。如果线程池已经关闭，则丢弃任务。</li>
+</ul>
+<blockquote>
+<p>还可以自定义拒绝策略，实现 <code>RejectedExecutionHandler</code> 接口即可。</p>
+</blockquote>
+<p>代码测试：</p>
+<h1 id="实现特点及部分提问："><a href="#实现特点及部分提问：" class="headerlink" title="实现特点及部分提问："></a>实现特点及部分提问：</h1><ol>
+<li><p>为什么线程池中，队列使用 Runnable 而不是 Thread ？</p>
+</li>
+<li><p>Thread 中的 start() 与 run() 有什么区别？</p>
+</li>
+<li><p>此时线程数小于核心线程数，并且线程都处于空闲状态，现在提交一个任务，是新起一个线程还是给之前创建的线程运行？</p>
+<ul>
+<li>答：execute方法的注释中写道，<code>If fewer than corePoolSize threads are running, try to start a new thread with the given command as its first task.</code> 从注释可以知道，此时线程池会新起一个线程来运行新任务，不管老线程是否空闲。</li>
+<li>扩展，从注释我们可以知道，虽然默认线程池是懒加载，但它实际是想快速拥有核心线程数的线程数量。</li>
+<li>核心线程数代表着线程池中承载日常工作的中坚力量，也就是线程池希望可以尽快创建出这些线程来处理任务，所以是在懒中又急着创建核心线程数。</li>
+<li>而最大线程数 maximumPoolSize , 其实是为了应对突发状况，突发问题解决后，就把多出来的线程回收掉，只维持核心线程数量的线程。</li>
+</ul>
+</li>
+<li><p>线程池中，核心线程和最大线程是否有特殊标记？</p>
+<ul>
+<li>答：没有，无论是核心线程还是非核心线程，在线程池中都一样，当淘汰的时候，不关心是哪些线程，只需要留下核心线程数量个线程即可。</li>
+</ul>
+</li>
+<li><p>你是怎样理解 KeepAliveTime 的？</p>
+<ul>
+<li>答：线程池只想要核心线程数个线程，maximumPoolSize 中对出来的是为了预留一些来应对突发状态的，当突发状态过去后，线程池只希望维持核心线程数的线程，所以有了 KeepAliveTime，当线程数大于核心线程数之后，如果线程空闲时间超过 KeepAliveTime，就回收线程，直到数量与核心线程数持平。</li>
+</ul>
+</li>
+<li><p>workQueue 有什么作用？</p>
+<ul>
+<li>答：缓存任务作用，需要注意限制工作队列大小，太长任务等待就会变长，同时缓存过多 可能导致资源耗尽系统崩溃。具体队列长度，需要结合线程数，任务执行时长，能承受的等待时间等决定。</li>
+</ul>
+</li>
+<li><p>拒绝策略的作用？</p>
+<ul>
+<li>答：来应对过载任务的。线程池会遇到都满且队列也满的情况，这时就需要一种策略来处理 后序提交的任务。这里默认有四种策略，还可以自定义，具体看上面拒绝策略内容。</li>
+</ul>
+</li>
+<li><p>ThreadPoolExecutor 源码中的 ctl 是干嘛的？</p>
+<ul>
+<li>ctl 是一个涵盖了两个概念的原子整数类，它将工作线程数（ workerCount ）和线程池状态（ runState），结合在一起维护，这样通过一个字段来维护多个值，形成一个原子操作，更容易维护多个值之间的一致性，也算是一种极简主义。（并发包中有很多这种实现）<ul>
+<li>低 29 位存放 workerCount ，所以有效的线程数为 (2 ^ 29) - 1 （大约 5亿个）</li>
+<li>高 3 位存放 runState</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>线程池有几种状态？</p>
+<ul>
+<li>看一下源码注解即可，在 ctl字段的注释中。</li>
+<li>RUNNING ： 能接受新任务，并处理阻塞队列中的任务；</li>
+<li>SHUTDOWN ：不接受新任务，但是可以处理阻塞队列中的任务；</li>
+<li>STOP ：不接受新任务，也不处理阻塞队列中的任务，并且还打断正在运行任务的线程，抛异常，就是不干了；</li>
+<li>TIDYING ：所有任务都终止，且工作线程也为 0，处于关闭之间的状态；</li>
+<li>TERMINATED ：已关闭。</li>
+</ul>
+</li>
+<li><p>线程池的状态是如何变迁的？</p>
+<ul>
+<li><p>ThreadPoolExecutor 源码的 ctl字段的注释中写的很清楚。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">* RUNNING -&gt; SHUTDOWN</span><br><span class="line">*    On invocation of <span class="title function_">shutdown</span><span class="params">()</span>, perhaps implicitly in <span class="title function_">finalize</span><span class="params">()</span></span><br><span class="line">* (RUNNING or SHUTDOWN) -&gt; STOP</span><br><span class="line">*    On invocation of <span class="title function_">shutdownNow</span><span class="params">()</span></span><br><span class="line">* SHUTDOWN -&gt; TIDYING</span><br><span class="line">*    When both queue and pool are empty</span><br><span class="line">* STOP -&gt; TIDYING</span><br><span class="line">*    When pool is empty</span><br><span class="line">* TIDYING -&gt; TERMINATED</span><br><span class="line">*    When the <span class="title function_">terminated</span><span class="params">()</span> hook method has completed</span><br></pre></td></tr></table></figure>
+
+<p>问题，如何判断状态从 shutdown -&gt; tidying ? 通过判断 workCount 是否为0 。</p>
+</li>
+<li><p>可以画个图</p>
+</li>
+</ul>
+</li>
+<li><p>原生线程池的核心线程一定伴随着任务慢慢创建的吗？</p>
+<ul>
+<li>并不是，虽然线程池的默认策略是执行新任务时才启动一个核心线程，但是它也提供了两个预启动的方法来覆盖默认策略。创建线程池后可以调用这两个方法。</li>
+<li>prestartCoreThread  当前线程数小于核心线程数时创建一个</li>
+<li>prestartAllCoreThreads  创建所有核心线程</li>
+</ul>
+</li>
+<li><p>为什么要把任务先放在任务队列里面，而不是把线程先拉满到最大线程数？</p>
+<ul>
+<li>答：<ol>
+<li>首先我个人觉得没有为什么，就是这样设计的，而且设计的也很合理。</li>
+<li>其次，从<code>ctl</code> 上面的注释可知，原线程池的设计本意是希望让核心线程工作，最大线程数是一个应急方案，新建线程帮助消化过多的任务。所以你可以把线程池的 corePoolSize 设置为你想要线程池工作的线程数，任务队列 workQueue 起到一个缓冲的作用。</li>
+<li>如果一定要扯一扯 CPU 密集型和 I&#x2F;O 密集型，原版线程池的实现可以认为是偏向 CPU 密集型的，我们知道处理 CPU 密集型任务时，线程太多反而会由于线程频繁切换的开销得不偿失，所以优先堆积任务而不是创建新线程。原版实现也是如此，当任务过多时，先通过任务队列缓存任务，让核心线程去消化。只有当核心线程和队列都满了，才利用最大线程来辅助消化。</li>
+<li>对于像 Tomcat 这样的业务场景，大部分情况下是需要大量 I&#x2F;O 处理的情况就做了一些定制，修改了 jdk 中原生线程池的实现，使得在队列没满的时候，可以创建线程至最大线程数。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>如何修改原生线程池，可以先拉满最大线程数再入任务队列排队？</p>
+<p>答：关键点在队列的 <code>offer</code> 方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">execute</span><span class="params">(Runnable command)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="literal">false</span>))</span><br></pre></td></tr></table></figure>
+
+<p>从上面的 execute 方法（给线程池提交任务的方法）我们可以知道，在这个方法中只要在 <code>offer</code> 方法内部判断此时线程数小于最大线程数的时候返回 false，即可走下面 <code>else if </code> 中的 <code>addWorker()</code> （新增线程）的逻辑，如果数量已经达到最大线程数，直接入队即可。具体可以看一下 Tomcat 中的定制线程。</p>
+</li>
+</ol>
+<h2 id="不懂的地方："><a href="#不懂的地方：" class="headerlink" title="不懂的地方："></a>不懂的地方：</h2><h4 id="1-runWorker-方法中是获取-Runnable-task-执行其-run-方法"><a href="#1-runWorker-方法中是获取-Runnable-task-执行其-run-方法" class="headerlink" title="1. runWorker() 方法中是获取 Runnable task 执行其 run() 方法"></a>1. runWorker() 方法中是获取 Runnable task 执行其 run() 方法</h4><p>答： 根据 Thread 的 start() 和 run() 的关系可知，一个线程调用 start() 即启动后，只要 run() 方法不执行结束，线程就不会终止（遇到异常或调用  stop() 方法主动停止除外）。那么复用线程的过程就是在其 run() 方法中执行循环的过程。所以这也是为什么 <code>runWorker()</code> 方法中是一个 while 循环获取并执行 Runnable task.run() 的过程，这里显示调用 run() 方法其实就是在线程中进行普通的方法调用。</p>
+<h4 id="2-为什么-Integer-的低-29-位存放-workerCount-，有效的线程数为-2-29-1-？"><a href="#2-为什么-Integer-的低-29-位存放-workerCount-，有效的线程数为-2-29-1-？" class="headerlink" title="2. 为什么 Integer 的低 29 位存放 workerCount ，有效的线程数为 (2 ^ 29) - 1 ？"></a>2. 为什么 Integer 的低 29 位存放 workerCount ，有效的线程数为 (2 ^ 29) - 1 ？</h4><p>答：首先 Java 中的 Integer 是4个字节，32bit。低29位能表示的最大值就是29个1，同时我们知道最低位上 1 &#x3D; 2^0，那么 2^29其实表示二进制中第30位为1，其他低位为0的情况，再减去1就表示低29位全为1的情况了，即(2^29) -1 。</p>
+<h1 id="涉及知识点："><a href="#涉及知识点：" class="headerlink" title="涉及知识点："></a>涉及知识点：</h1><h3 id="1-为什么线程-Thread-要先调用-start-再调用-run-，而不是直接调用-run"><a href="#1-为什么线程-Thread-要先调用-start-再调用-run-，而不是直接调用-run" class="headerlink" title="1. 为什么线程 Thread 要先调用 start() 再调用 run() ，而不是直接调用 run() ?"></a>1. 为什么线程 Thread 要先调用 start() 再调用 run() ，而不是直接调用 run() ?</h3><p>也是问 Thead 中 start() 方法与 run() 方法的关系。</p>
+<p>答：</p>
+<p>结论：因为 JVM 内存机制规定 </p>
+<ol>
+<li>run() 就是 Thread 中的一个普通的方法，直接调用 run() 是在当前线程中执行而不是新增线程，程序执行路径还是只有一条，需要等 run() 执行完才能执行后面的内容，无法达到多线程执行的目的；</li>
+<li>start() 是启动 Thread 的方法，执行后，JVM 会新建一个线程，然后由这个新线程调用 run() ，这样 run() 就不在主线程中执行了。此时程序主线程无需等待 run() 方法执行完毕，而直接执行后面的代码。run() 在 Thread 中称为线程体，它包含了线程要执行的内容，通过调用 Thread 的 start() 启动线程后，线程处于就绪状态（可运行），并没有执行，在排队等待获取 CPU 时间片，就执行 run() 。run() 执行结束后，此线程即终止。（或者调用 stop() ，线程也会终止。）（在 main 方法中执行时主线程为 main）。</li>
+</ol>
+<p>Java 线程的说明：</p>
+<ul>
+<li>Java  的线程是通过 <code>java.lang.Thread</code> 类来实现的。VM 启动时会有一个由<code>主方法</code>所定义的线程。可以通过创建Thread的实例来创建新的线程。每个线程都是通过某个特定Thread对象所对应的方法run() 来完成其操作的，方法run()称为线程体。通过调用Thread类的 start() 方法来启动一个线程。</li>
+</ul>
+<p>实现并启动线程的方法，2个：</p>
+<ul>
+<li>方法1，写一个类继承自 Thread 类，重写 run() 方法。创建该类实例后，调用 start() 方法启动线程；</li>
+<li>方法2，写一个类实现Runnable接口，实现 run() 方法。用 new Thread(Runnable target).start() 方法来启动；</li>
+</ul>
+<p>Java 中 Thread 的 start() 中的基本流程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Thread#start() --&gt; <span class="keyword">native</span> <span class="title function_">start0</span><span class="params">()</span> --&gt; JVM_StartThread --&gt; thread_entry --&gt; Thread#run()</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">说明：</span><br><span class="line">start方法中调用了本地方法start0，<span class="keyword">native</span>即是本地方法（也是底层方法）。怎么看start0方法，可以去访问openjdk源码。</span><br><span class="line">start0映射的方法就是JVM_StartThread,再看一下jvm.cpp文件中JVM_StartThread方法，里面有段代码</span><br><span class="line">native_thread = <span class="keyword">new</span> <span class="title class_">JavaThread</span>(&amp;thread_entry,sz);</span><br><span class="line"></span><br><span class="line">再看 thread_entry 方法</span><br><span class="line">JavaCalls::call_virtual(&amp;result,obj,KlassHandle(THREAD, SystemDictionary::Thread_klass()),vmSymbols::run_method_name(),vmSymbols::void_mehtod_signature(),THREAD);</span><br><span class="line"><span class="comment">// 这里 vmSymbols::run_method_name() 就是调用Thread 的 run() 方法。</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+<h1 id="遇到问题："><a href="#遇到问题：" class="headerlink" title="遇到问题："></a>遇到问题：</h1><p>看一下 TheadPoolExecutor 是如何处理阻塞队列中的任务的？如何复用线程的？</p>
+<ul>
+<li>run() 方法中循环调用提交的 <code>run()</code>方法，只要线程自身的 <code>run()</code> 方法不执行完，该线程就不会终止</li>
+</ul>
+<h2 id="20210827"><a href="#20210827" class="headerlink" title="20210827"></a>20210827</h2><p>下面使用 <code>IntStream.forEach()</code> 代码写的有问题，列出来纠正一下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">    IntStream.rangeClosed(<span class="number">1</span>, <span class="number">8</span>).forEach(</span><br><span class="line">        (i) -&gt; &#123;</span><br><span class="line">          <span class="keyword">try</span> &#123;</span><br><span class="line">            poolExecutor.execute(() -&gt; &#123;</span><br><span class="line">              System.out.println(<span class="string">&quot;我是线程： &quot;</span> + i);</span><br><span class="line"></span><br><span class="line">              <span class="comment">// 模拟线程执行时间，10s</span></span><br><span class="line">              <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep(<span class="number">10</span> * <span class="number">1000</span>);</span><br><span class="line">              &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">              &#125;</span><br><span class="line"></span><br><span class="line">            &#125;);</span><br><span class="line">            Thread.sleep(<span class="number">500</span>);</span><br><span class="line">          &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">          &#125;</span><br><span class="line">          <span class="comment">// TODO(SLi): 不能在for循环中添加这种 线程池的shutdown 方法。</span></span><br><span class="line">          <span class="comment">// finally &#123;</span></span><br><span class="line">          <span class="comment">//   poolExecutor.shutdown();</span></span><br><span class="line">          <span class="comment">// &#125;</span></span><br><span class="line">        &#125;</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">原因：因为上面的代码写的有问题，<span class="keyword">try</span>...<span class="keyword">finally</span>... 代码块在forEach() 方法体中，即在<span class="keyword">for</span>循环中，每次循环都将走完方法体，应该把<span class="keyword">finally</span>部分挪到forEach的外面才对。</span><br></pre></td></tr></table></figure>
+
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/Java%E5%B9%B6%E5%8F%91%E6%9C%AA%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%B9%B6%E5%8F%91/" rel="tag">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/Java%E7%8E%B0%E5%9C%BA%E6%8A%80%E5%B7%A7%E6%B1%87%E6%80%BB.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Java现场技巧汇总
+          
+        </div>
+      </a>
+    
+    
+      <a href="/spark_shuffle%E6%9D%82%E8%AE%B0.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">spark_shuffle杂记</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

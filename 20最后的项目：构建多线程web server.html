@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>20最后的项目：构建多线程web server |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/20最后的项目：构建多线程web server"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  20最后的项目：构建多线程web server
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/20%E6%9C%80%E5%90%8E%E7%9A%84%E9%A1%B9%E7%9B%AE%EF%BC%9A%E6%9E%84%E5%BB%BA%E5%A4%9A%E7%BA%BF%E7%A8%8Bweb%20server.html" class="article-date">
+  <time datetime="2022-01-12T08:26:35.000Z" itemprop="datePublished">2022-01-12</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.9k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">11 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>在本章中，我们将一同构建另一个项目，来展示最后几章所学，同时复习更早的章节。</p>
+<p>如下是我们将怎样构建此 web server 的计划：</p>
+<ol>
+<li>学习一些 TCP 与 HTTP 知识</li>
+<li>在套接字（socket）上监听 TCP 请求</li>
+<li>解析少量的 HTTP 请求</li>
+<li>创建一个合适的 HTTP 响应</li>
+<li>通过线程池改善 server 的吞吐量</li>
+</ol>
+<p>不过在开始之前，需要提到一点细节：这里使用的方法并不是使用 Rust 构建 web server 最好的方法。<a target="_blank" rel="noopener" href="https://crates.io/">crates.io</a> 上有很多可用于生产环境的 crate，它们提供了比我们所要编写的更为完整的 web server 和线程池实现。</p>
+<p>然而，本章的目的在于学习，而不是走捷径。因为 Rust 是一个系统编程语言，我们能够选择处理什么层次的抽象，并能够选择比其他语言可能或可用的层次更低的层次。因此我们将自己编写一个基础的 HTTP server 和线程池，以便学习将来可能用到的 crate 背后的通用理念和技术。</p>
+<h1 id="涉及知识点"><a href="#涉及知识点" class="headerlink" title="涉及知识点"></a>涉及知识点</h1><p> <strong>超文本传输协议</strong>（<em>Hypertext Transfer Protocol</em>，<em>HTTP</em>）</p>
+<p><strong>传输控制协议</strong>（<em>Transmission Control Protocol</em>，<em>TCP</em>）</p>
+<ul>
+<li>都是 <strong>请求-响应</strong>（<em>request-response</em>）协议，</li>
+<li>也就是说，有 <strong>客户端</strong>（<em>client</em>）来初始化请求，并有 <strong>服务端</strong>（<em>server</em>）监听请求并向客户端提供响应。请求与响应的内容由协议本身定义。</li>
+</ul>
+<p>标准库提供了 <code>std::net</code> 模块处理这些功能。</p>
+<p><code>TcpListener</code> 用于监听 TCP 连接。</p>
+<ul>
+<li>具体内容可以查看API文档；</li>
+<li><code>bind</code> 函数返回 <code>Result&lt;T, E&gt;</code>，这表明绑定可能会失败；</li>
+<li><code>TcpListener</code> 的 <code>incoming</code> 方法返回一个迭代器，它提供了一系列的流（更准确的说是 <code>TcpStream</code> 类型的流）。</li>
+</ul>
+<p><strong>流</strong>（<em>stream</em>）代表一个客户端和服务端之间打开的连接。</p>
+<p><strong>连接</strong>（<em>connection</em>）代表客户端连接服务端、服务端生成响应以及服务端关闭连接的全部请求 &#x2F; 响应过程。</p>
+<p>当客户端连接到服务端时 <code>incoming</code> 方法返回错误是可能的，因为我们实际上没有遍历连接，而是遍历 <strong>连接尝试</strong>（<em>connection attempts</em>）。</p>
+<p>当 <code>stream</code> 在循环的结尾离开作用域并被丢弃，其连接将被关闭，作为 <code>drop</code> 实现的一部分。</p>
+<h2 id="读取请求"><a href="#读取请求" class="headerlink" title="读取请求"></a>读取请求</h2><p>将 <code>std::io::prelude</code> 引入作用域来获取读写流所需的特定 trait。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">handle_connection</span>(<span class="keyword">mut</span> stream: TcpStream) &#123;</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>handle_connection</code> 中，<code>stream</code> 参数是可变的。这是因为 <code>TcpStream</code> 实例在内部记录了所返回的数据。它可能读取了多于我们请求的数据并保存它们以备下一次请求数据。因此它需要是 <code>mut</code> 的<strong>因为其内部状态可能会改变</strong>；通常我们认为 “读取” 不需要可变性，不过在这个例子中则需要 <code>mut</code> 关键字。</p>
+<p>HTTP 是一个基于文本的协议，同时一个请求有如下格式：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Method Request-URI HTTP-Version CRLF</span><br><span class="line">headers CRLF</span><br><span class="line">message-body</span><br></pre></td></tr></table></figure>
+
+<p>第一行叫做 <strong>请求行</strong>（<em>request line</em>），它存放了客户端请求了什么的信息。</p>
+<ul>
+<li><p>请求行的第一部分是所使用的 <em>method</em>，比如 <code>GET</code> 或 <code>POST</code>，这描述了客户端如何进行请求。这里客户端使用了 <code>GET</code> 请求。</p>
+</li>
+<li><p>请求行接下来的部分是 <em>&#x2F;<em>，它代表客户端请求的 <strong>统一资源标识符</strong>（<em>Uniform Resource Identifier</em>，</em>URI</em>） —— URI 大体上类似，但也不完全类似于 URL（<strong>统一资源定位符</strong>，<em>Uniform Resource Locators</em>）。URI 和 URL 之间的区别对于本章的目的来说并不重要，不过 <strong>HTTP 规范使用术语 URI</strong>，所以这里可以简单的将 URL 理解为 URI。</p>
+</li>
+<li><p>最后一部分是客户端使用的HTTP版本，然后请求行以 <strong>CRLF序列</strong> （CRLF代表回车和换行，<em>carriage return line feed</em>，这是打字机时代的术语！）结束。CRLF序列也可以写成<code>\r\n</code>，其中<code>\r</code>是回车符，<code>\n</code>是换行符。 CRLF序列将请求行与其余请求数据分开。 请注意，打印CRLF时，我们会看到一个新行，而不是<code>\r\n</code>。</p>
+</li>
+</ul>
+<p>第二行是 headers；从 <code>Host:</code> 开始的其余的行是 headers；<code>GET</code> 请求没有 body。</p>
+<h2 id="编写响应"><a href="#编写响应" class="headerlink" title="编写响应"></a>编写响应</h2><p>我们将实现在客户端请求的响应中发送数据的功能。响应有如下格式：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">HTTP-Version Status-Code Reason-Phrase CRLF</span><br><span class="line">headers CRLF</span><br><span class="line">message-body</span><br></pre></td></tr></table></figure>
+
+<p>第一行叫做 <strong>状态行</strong>（<em>status line</em>），它包含响应的 HTTP 版本、一个数字状态码用以总结请求的结果和一个描述之前状态码的文本原因短语。</p>
+<p>CRLF 序列之后是任意 header，另一个 CRLF 序列，和响应的 body。</p>
+<p>例如，一个没有body的响应</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">200</span> OK\r\n\r\n</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>数据开头增加 <code>b&quot;&quot;</code> <strong>字节字符串</strong>语法将其转换为字节字符串。</p>
+<h2 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h2><p>通道可以通道任务队列的作用</p>
+<p>如何创建并存储空线程？</p>
+<ul>
+<li>使用 <code>JoinHandle</code>来存储创建的线程</li>
+</ul>
+<p>看一下 <code>thread::spawn</code>的签名</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">spawn</span>&lt;F, T&gt;(f: F) <span class="punctuation">-&gt;</span> JoinHandle&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() <span class="punctuation">-&gt;</span> T + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>,</span><br><span class="line">        T: <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br></pre></td></tr></table></figure>
+
+<p><code>spawn</code>返回 <code>JoinHandle&lt;T&gt;</code>，<code>T</code> 是闭包返回的类型。不返回有意义的值则使用<code>()</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// thread::spawn() -&gt; JoinHandle&lt;T&gt;;</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(||&#123;&#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">spawn</span>&lt;F, T&gt;(f: F) <span class="punctuation">-&gt;</span> JoinHandle&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() <span class="punctuation">-&gt;</span> T + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>,</span><br><span class="line">        T: <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br></pre></td></tr></table></figure>
+
+<p><code>F</code> 是这里我们关心的参数；</p>
+<p>要理解<code>F</code>的三个 trait bound的目的，</p>
+<ul>
+<li><code>FnOnce()</code> ，线程仅对闭包执行一次，</li>
+<li><code>Send</code> 来将闭包从一个线程转移到另一个线程（安全在线程间转移所有权）；</li>
+<li><code>&#39;static</code> 是因为并不知道线程会执行多久。</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">execute</span>&lt;F&gt;(&amp;<span class="keyword">self</span>, f: F)</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里与上面 <code>spawn</code> 部分 <code>FnOnce</code>的不同有一个知识点：</p>
+<ul>
+<li>使用<code>FnOnce/FnMut/Fn</code>定义 trait bound时，就像普通定义函数签名时一样</li>
+</ul>
+<ol>
+<li>如果有参数和返回值，需要<code>FnOnce(类型) -&gt; 类型2</code>；</li>
+<li>如果没有参数和返回值，或者两者缺一，<ul>
+<li>没有参数时也需要<code>()</code>，即<code>FnOnce()</code>，函数没有参数时也是这样；</li>
+<li>没有返回值时，可以省略返回值，即<code>FnOnce(xxx)</code>（没有返回值时其实就是返回<code>()</code>，不过可以省略）;</li>
+</ul>
+</li>
+</ol>
+<p><code>Vec::with_capacity(size)</code>与 <code>Vec::new()</code>的区别？</p>
+<ul>
+<li><p><code>Vec::with_capacity(size)</code> 效率要高一些，因为会预先进行分配size个元素的空间。</p>
+</li>
+<li><p><code>Vec::new</code> 会随着插入元素而重新改变大小；</p>
+</li>
+</ul>
+<h3 id="使用通道向线程发送请求"><a href="#使用通道向线程发送请求" class="headerlink" title="使用通道向线程发送请求"></a>使用通道向线程发送请求</h3><p>在线程池中，<code>Worker</code> 结构体能够从 <code>ThreadPool</code> 的队列中获取需要执行的代码，并发送到线程中执行他们。</p>
+<p>我们要队列，在这里我们可以简单是使用<strong>通道</strong>来充当任务队列的作用。</p>
+<ol>
+<li><code>ThreadPool</code> 会创建一个通道，其<code>execute</code> 方法会在通道发送端发出期望执行的任务。</li>
+<li>每个 <code>Worker</code> 将会充当通道的接收端。</li>
+</ol>
+<p>注意，<code>mpsc::channel()</code>中，Rust 提供的通道是多生产者，单消费者。</p>
+<ul>
+<li>在线程中的接收端是不能传递给多个<code>worker</code>实例的。</li>
+<li>所以只能所有<code>worker</code>共享单一的receiver了，同时取出任务需要修改receiver。<ul>
+<li>这涉及到在多个线程间共享所有权，并允许线程修改其值得问题。</li>
+<li>需要使用<code>Arc&lt;Mutex&lt;T&gt;&gt;</code>。<code>Arc</code>允许多个线程间共享所有权，<code>Mutex</code> 确保一次只有一个worker能从接收端获取任务并修改。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">receiver</span> = Arc::<span class="title function_ invoke__">new</span>(Mutex::<span class="title function_ invoke__">new</span>(receiver));</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> <span class="variable">id</span> <span class="keyword">in</span> <span class="number">0</span>..size &#123;</span><br><span class="line">   </span><br><span class="line">    <span class="comment">// 共享所有权需要使用clone方法</span></span><br><span class="line">    workers.<span class="title function_ invoke__">push</span>(Worker::<span class="title function_ invoke__">new</span>(id,Arc::<span class="title function_ invoke__">clone</span>(&amp;receiver)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="接收闭包类型的-trait对象的类型别名"><a href="#接收闭包类型的-trait对象的类型别名" class="headerlink" title="接收闭包类型的 trait对象的类型别名"></a>接收闭包类型的 trait对象的类型别名</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="title class_">Job</span> = <span class="type">Box</span>&lt;<span class="keyword">dyn</span> <span class="title function_ invoke__">FnOnce</span>() + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>&gt;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="为什么选择loop而不是while-let"><a href="#为什么选择loop而不是while-let" class="headerlink" title="为什么选择loop而不是while let?"></a>为什么选择<code>loop</code>而不是<code>while let</code>?</h3><p>我们需要闭包<strong>一直循环</strong>，向通道的接收端请求任务，并在得到任务时执行他们</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Worker</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>(id: <span class="type">usize</span>, receiver: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Job&gt;&gt;&gt;) <span class="punctuation">-&gt;</span> Worker &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">            <span class="keyword">loop</span> &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">job</span> = receiver.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">recv</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line"></span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;Worker &#123;&#125; got a job; executing.&quot;</span>, id);</span><br><span class="line"></span><br><span class="line">                <span class="title function_ invoke__">job</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Worker &#123;</span><br><span class="line">            id,</span><br><span class="line">            thread,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>实现上使用了<code>loop</code>，而不是<code>while let</code>，为什么？</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Worker</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>(id: <span class="type">usize</span>, receiver: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Job&gt;&gt;&gt;) <span class="punctuation">-&gt;</span> Worker &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">            <span class="keyword">while</span> <span class="keyword">let</span> <span class="variable">Ok</span>(job) = receiver.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">recv</span>() &#123;</span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;Worker &#123;&#125; got a job; executing.&quot;</span>, id);</span><br><span class="line"></span><br><span class="line">                <span class="title function_ invoke__">job</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Worker &#123;</span><br><span class="line">            id,</span><br><span class="line">            thread,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码可以编译和运行，但是并不会产生所期望的线程行为：一个慢请求仍然会导致其他请求等待执行。– 这里主要因为获取锁的原因；</p>
+<p>原因有些微妙：</p>
+<ul>
+<li><code>Mutex</code> 结构体没有公有 <code>unlock</code> 方法，因为锁的所有权依赖 <code>lock</code> 方法返回的 <code>LockResult&lt;MutexGuard&lt;T&gt;&gt;</code> 中 <code>MutexGuard&lt;T&gt;</code> 的生命周期。<ul>
+<li>因为<code>MutexGuard&lt;T&gt;</code>是个智能指针，其实现了<code>Drop</code> trait，当<code>MutexGuard</code>离开作用域时会自动释放锁（lock）；</li>
+<li>所以借用检查器可以在编译时就确保不会出现被<code>Mutex</code>守护的资源被没有持有锁的情况下被访问。</li>
+<li>所以在处理锁的时候，需要考虑<code>lock</code>方法返回值的生命周期，否则可能出现持有锁的时间比预期长的情况，导致性能受损。</li>
+</ul>
+</li>
+<li>问题来了，这与 <code>while let</code> 有什么关系呢？<ul>
+<li><code>let</code>语句，当<code>let</code>语句结束时，表达式中等号右边的任何临时值都会被立即丢弃。</li>
+<li><code>while let</code> 、<code>if let</code> 和 <code>match</code> 直到相关块的末尾才会丢弃临时值。</li>
+</ul>
+</li>
+</ul>
+<p>所以综上，</p>
+<p>如果这里使用 <code>while let</code>，一次判断循环，在离开其代码块前，产生的<code>MutexGuard</code>临时值会一直存在，如果有慢请求，worker获取锁后，到执行完job都会一直持有锁，导致无法实现多线程并发。</p>
+<p>而使用<code>loop</code>循环，因为<code>let</code>语句在内部，且<code>let</code>语句执行完，<code>MutexGuard</code>就会被丢弃，这样其他worker就可以争夺锁，就可以达到多个线程并发执行了。</p>
+<h1 id="优雅停机与清理"><a href="#优雅停机与清理" class="headerlink" title="优雅停机与清理"></a>优雅停机与清理</h1><h2 id="为-ThreadPool-实现-Drop-trait"><a href="#为-ThreadPool-实现-Drop-trait" class="headerlink" title="为 ThreadPool 实现 Drop trait"></a>为 ThreadPool 实现 Drop trait</h2><p>当线程池被丢弃时，应该 join 所有线程以确保他们完成其操作。这个在 <code>Drop</code> trait 中实现。</p>
+<p><code>JoinHandler.join</code> 的作用</p>
+<ul>
+<li>等待关联的thread结束，如果关联的线程结束了这个方法会立刻返回。</li>
+<li>该方法需要获取实例的所有权。<ul>
+<li>为了解决这个问题，需要一个方法将 <code>thread</code> 移动出拥有其所有权的 <code>Worker</code> 实例以便 <code>join</code> 可以消费这个线程。</li>
+<li>如果 <code>Worker</code> 存放的是 <code>Option&lt;thread::JoinHandle&lt;()&gt;</code>，就可以在 <code>Option</code> 上调用 <code>take</code> 方法将值从 <code>Some</code> 成员中移动出来而对 <code>None</code> 成员不做处理。</li>
+</ul>
+</li>
+</ul>
+<h2 id="向线程发送信号使其停止接收任务"><a href="#向线程发送信号使其停止接收任务" class="headerlink" title="向线程发送信号使其停止接收任务"></a>向线程发送信号使其停止接收任务</h2><p>修改线程既监听是否有 <code>Job</code> 运行也要监听一个应该停止监听并退出无限循环的信号。</p>
+<p>否则，如果没有停止退出无限循环的信号，那么线程将永远不会退出，泽县城永远阻塞在等待第一个线程结束上。</p>
+<ul>
+<li>所以通道将发送这个枚举的两个成员之一而不是 <code>Job</code> 实例。</li>
+</ul>
+<p>为什么在 Drop trait 实现中不能将发送terminate的循环与获取join的循环放在一起？而是分为两个for循环？</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/20%E6%9C%80%E5%90%8E%E7%9A%84%E9%A1%B9%E7%9B%AE%EF%BC%9A%E6%9E%84%E5%BB%BA%E5%A4%9A%E7%BA%BF%E7%A8%8Bweb%20server.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/Ranger%E4%BD%BF%E7%94%A8%E9%81%87%E5%88%B0%E9%97%AE%E9%A2%98.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Ranger使用遇到问题
+          
+        </div>
+      </a>
+    
+    
+      <a href="/12%E4%B8%80%E4%B8%AAIO%E9%A1%B9%E7%9B%AE%EF%BC%9A%E6%9E%84%E5%BB%BA%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%A8%8B%E5%BA%8F.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">12一个IO项目：构建命令行程序</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

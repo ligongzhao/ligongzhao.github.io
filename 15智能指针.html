@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>15智能指针 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/15智能指针"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  15智能指针
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/15%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88.html" class="article-date">
+  <time datetime="2022-02-14T08:51:08.000Z" itemprop="datePublished">2022-02-14</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">5.5k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">20 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p><strong>指针</strong>（pointer）是一个包含内存地址的变量的通用概念。</p>
+<ul>
+<li>这个地址，引用或指向（points at）一些其他数据</li>
+<li>Rust 中最常用的指针是<strong>引用</strong>（reference）。<ul>
+<li>以<code>&amp;</code>符号为标志并借用它们所指向的值。</li>
+<li>引用除了借用数据没有任何其他功能，也没有额外开销。</li>
+</ul>
+</li>
+</ul>
+<p><strong>智能指针</strong>（smart pointers）是一类数据结构</p>
+<ul>
+<li>表现与指针类似；</li>
+<li>但拥有额外的元数据和功能；</li>
+<li>起源于 C++，在其他语言中也存在；</li>
+</ul>
+<p>普通引用与智能指针的一个额外区别：</p>
+<ul>
+<li>引用是一类只借用数据的指针；</li>
+<li>大部分情况下，智能指针<strong>拥有</strong>它们指向的数据的<strong>所有权</strong>；</li>
+</ul>
+<p>例如，<code>String</code> 和 <code>Vec&lt;T&gt;</code> 都属于智能指针。</p>
+<p>智能指针通常使用<strong>结构体</strong>实现</p>
+<ul>
+<li>与常规结构体的区别，实现了 <code>Deref</code> 和 <code>Drop</code> 两个 trait</li>
+<li><code>Deref</code> trait 允许智能指针结构体实例<strong>像引用一样工作</strong>；<ul>
+<li>这样可以编写既用于引用、又用于智能指针的代码；</li>
+</ul>
+</li>
+<li><code>Drop</code> trait 允许我们自定义当智能指针离开作用域时运行的代码；<ul>
+<li>例如，<code>Box&lt;T&gt;</code> 类型实现了 <code>Drop</code> trait ，box 所指向的堆数据也会被清除。</li>
+</ul>
+</li>
+</ul>
+<p>所以：</p>
+<p>智能指针是一类可以像引用一样工作的结构体。</p>
+<p>标准库中最常用的智能指针：</p>
+<ul>
+<li><code>Box&lt;T&gt;</code>，用于在对上分配值；</li>
+<li><code>Rc&lt;T&gt;</code>，一个引用计数类型，其数据可以有多个所有者；</li>
+<li><code>Ref&lt;T&gt;</code> 和 <code>RefMut&lt;T&gt;</code>，通过 <code>RefCell&lt;T&gt;</code> 访问，一个在运行时而不是在编译时执行借用规则的类型。</li>
+</ul>
+<h1 id="使用Box-lt-T-gt-指向堆上的数据"><a href="#使用Box-lt-T-gt-指向堆上的数据" class="headerlink" title="使用Box&lt;T&gt; 指向堆上的数据"></a>使用<code>Box&lt;T&gt;</code> 指向堆上的数据</h1><p>box 允许你将一个<strong>值放在堆上</strong>而不是栈上。留在栈上的则是指向堆数据的指针。</p>
+<p><strong>使用场景</strong>：</p>
+<ul>
+<li>当有一个在编译时未知大小的类型，而又想要在需要确切大小的上下文中使用这个类型值得时候；<ul>
+<li>例如，box 允许创建递归类型。</li>
+</ul>
+</li>
+<li>当有大量数据并希望在确保数据不被拷贝的情况下转移所有权的时候；<ul>
+<li>转移大量数据的所有权可能花费很长的时间，因为数据在栈上进行了拷贝，使用 box 可以将这些数据存储在堆上，然后只有少量指针数据在栈上被拷贝。</li>
+</ul>
+</li>
+<li>当希望拥有一个值并只关心它的类型是否实现了特定 trait 而不是其具体类型的时候；<ul>
+<li>称为 <strong>trait对象</strong>（trait object），<a href="17Rust%E7%9A%84%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B%E7%89%B9%E6%80%A7.md">17章</a> 有专门将这个主题。</li>
+</ul>
+</li>
+</ul>
+<h2 id="使用-Box-lt-T-gt-在堆上存储数据"><a href="#使用-Box-lt-T-gt-在堆上存储数据" class="headerlink" title="使用 Box&lt;T&gt; 在堆上存储数据"></a>使用 <code>Box&lt;T&gt;</code> 在堆上存储数据</h2><p>如何创建和使用 <code>Box&lt;T&gt;</code>?</p>
+<p>语法：</p>
+<p>创建<code>Box&lt;T&gt;</code> 对象</p>
+<p><code>Box::new(xxx)</code> 要创建的具体类型数据</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">b</span> = <span class="type">Box</span>::<span class="title function_ invoke__">new</span>(<span class="number">5</span>); <span class="comment">// 使用box 在堆上存储一个 i32 值；</span></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;b = &#123;&#125;&quot;</span>,b);</span><br></pre></td></tr></table></figure>
+
+<p>当b离开作用域时，它会被释放，box 本身（位于栈上）和它所指向的数据（位于堆上）。</p>
+<h2 id="Box-允许创建递归类型"><a href="#Box-允许创建递归类型" class="headerlink" title="Box 允许创建递归类型"></a>Box 允许创建递归类型</h2><p>Rust 需要在编译时知道类型占用多少空间。</p>
+<p><strong>递归类型</strong>（recursive type），其值得一部分可以是相同类型的另一个值。这种值得嵌套理论上可以无限的进行下去。</p>
+<ul>
+<li>从名字可以理解为与嵌套函数极为相似。</li>
+</ul>
+<p>如果 Rust 中使用这种递归类型，那么 Rust 在编译期是不知道递归类型需要多少空间的。</p>
+<p>解决：</p>
+<p>box 有一个已知大小，所以可以通过在循环类型定义中插入 box，就可以创建间接存储的递归类型了。</p>
+<h3 id="cons-list-的更多内容"><a href="#cons-list-的更多内容" class="headerlink" title="cons list 的更多内容"></a>cons list 的更多内容</h3><p>cons list 是一个来源于 Lisp 语言及其方言的数据结构。</p>
+<p><code>cons</code> 函数（construction function 的缩写）利用两个参数构造一个新的<strong>列表</strong>，它们通常是一个单独的值和另一个列表。</p>
+<ul>
+<li>写法虽然不一样，但是作用与 Java 中的列表list 一样</li>
+</ul>
+<p>cons list 的每一项都包含两个元素：</p>
+<ul>
+<li>当前项的值；</li>
+<li>下一项；<ul>
+<li>最后一项值包含一个叫做 <code>Nil</code> 的值，并且没有下一项</li>
+<li>代表递归的终止条件（base case）的规范名称是 <code>Nil</code>，它表示列表终止（是枚举的一项）</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>注意：Rust 中需要列表的时候， <code>Vec&lt;T&gt;</code> 是一个更好的选择。</p>
+</blockquote>
+<h2 id="计算非递归类型的大小"><a href="#计算非递归类型的大小" class="headerlink" title="计算非递归类型的大小"></a>计算非递归类型的大小</h2><p><a target="_blank" rel="noopener" href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch15-01-box.html">Box 指向堆上数据，并且可确定大小 · Rust 程序设计语言（第二版） 简体中文版 (gitbooks.io)</a></p>
+<h2 id="使用-Box-lt-T-gt-给递归类型一个已知的大小"><a href="#使用-Box-lt-T-gt-给递归类型一个已知的大小" class="headerlink" title="使用 Box&lt;T&gt; 给递归类型一个已知的大小"></a>使用 <code>Box&lt;T&gt;</code> 给递归类型一个已知的大小</h2><p>Rust 无法计算出要为定义为递归的类型分配多少空间。</p>
+<p>不同于直接存储一个值，我们可以通过 box 间接存储一个指向值得指针。</p>
+<ul>
+<li>因为 <code>Box&lt;T&gt;</code> 是一个指针，我们总是知道它需要多少空间：<ul>
+<li>指针的大小并不会根据其指向的数据量而改变。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不对的方式：</span></span><br><span class="line"><span class="keyword">enum</span> <span class="title class_">List</span> &#123;</span><br><span class="line">    <span class="title function_ invoke__">Cons</span>(<span class="type">i32</span>, List),</span><br><span class="line">    Nil,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用 Box 的方式</span></span><br><span class="line"><span class="keyword">enum</span> <span class="title class_">List</span> &#123;</span><br><span class="line">    <span class="title function_ invoke__">Cons</span>(<span class="type">i32</span>, <span class="type">Box</span>&lt;List&gt;),</span><br><span class="line">    Nil,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>例如上面例子，将 <code>Box</code> 放入 <code>Cons</code>成员中，而不是直接存放另一个 <code>List</code>值。</p>
+<p><code>Box</code> 会指向另一个位于堆上的 <code>List</code> 值，而不是存放在 <code>Cons</code> 成员中。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="title class_">List</span> &#123;</span><br><span class="line">    <span class="title function_ invoke__">Cons</span>(<span class="type">i32</span>, <span class="type">Box</span>&lt;List&gt;),</span><br><span class="line">    Nil,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> crate::List::&#123;Cons, Nil&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">list</span> = <span class="title function_ invoke__">Cons</span>(<span class="number">1</span>,</span><br><span class="line">        <span class="type">Box</span>::<span class="title function_ invoke__">new</span>(<span class="title function_ invoke__">Cons</span>(<span class="number">2</span>,</span><br><span class="line">            <span class="type">Box</span>::<span class="title function_ invoke__">new</span>(<span class="title function_ invoke__">Cons</span>(<span class="number">3</span>,</span><br><span class="line">                <span class="type">Box</span>::<span class="title function_ invoke__">new</span>(Nil))))));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>box 只提供了间接存储和堆分配；</p>
+<ul>
+<li><code>Box&lt;T&gt;</code> 实现了 <code>Deref</code> trait ，所以它允许 <code>Box&lt;T&gt;</code> 值被当做引用对待；</li>
+<li><code>Box&lt;T&gt;</code>实现了 <code>Drop</code> trait，所以当 <code>Box&lt;T&gt;</code> 值离开作用域时，box 所指向的堆数据也会被清除。</li>
+</ul>
+<h1 id="通过Deref-trait-将智能指针当作常规引用处理"><a href="#通过Deref-trait-将智能指针当作常规引用处理" class="headerlink" title="通过Deref trait 将智能指针当作常规引用处理"></a>通过<code>Deref</code> trait 将智能指针当作常规引用处理</h1><p>实现 <code>Deref</code> trait 允许我们重载<strong>解引用运算符</strong>（dereference operator）<code>*</code>（与乘法运算符或通配符相区别）。</p>
+<p>通过这种方式实现 <code>Deref</code> trait 的智能指针可以被当做常规引用来对待，可以编写操作应用的代码并用于智能指针。</p>
+<h2 id="通过解引用运算符追踪指针的值"><a href="#通过解引用运算符追踪指针的值" class="headerlink" title="通过解引用运算符追踪指针的值"></a>通过解引用运算符追踪指针的值</h2><p>常规引用，是一个指针类型，</p>
+<ul>
+<li>可以看成指向存储在其他地方值得箭头。</li>
+</ul>
+<p><strong>解引用</strong>运算符（<code>*</code>） 的作用：</p>
+<ul>
+<li>追踪引用所指向的数据</li>
+</ul>
+<blockquote>
+<p>这个知识点记住就可以了。</p>
+</blockquote>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = <span class="number">5</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span> = &amp;x;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span> = <span class="type">Box</span>::<span class="title function_ invoke__">new</span>(x);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">assert_eq!</span>(<span class="number">5</span>, x);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(<span class="number">5</span>, *y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="通过实现-Deref-trait-将某类型像引用一样处理"><a href="#通过实现-Deref-trait-将某类型像引用一样处理" class="headerlink" title="通过实现 Deref trait 将某类型像引用一样处理"></a>通过实现 <code>Deref</code> trait 将某类型像引用一样处理</h2><p><code>Deref</code> trait 由标准库提供，要求实现名为 <code>deref</code> 的方法，其借用 <code>self</code> 并返回一个内部数据的引用。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::ops::Deref;</span><br><span class="line"></span><br><span class="line"># <span class="keyword">struct</span> <span class="title class_">MyBox</span>&lt;T&gt;(T);</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">MyBox</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">// 定义了用于此 triat 的关联类型。见19章</span></span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 提供了*运算符访问的值的引用</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;T &#123;</span><br><span class="line">        &amp;<span class="keyword">self</span>.<span class="number">0</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>没有 <code>Deref</code> trait 的话，编译器只会解引用 <code>&amp;</code> 引用类型。</p>
+<p><code>deref</code> 方法向编译器提供了获取任何实现了 <code>Deref</code> trait 的类型的值，并且调用这个类型的 <code>deref</code> 方法来获取一个它知道如何解引用的 <code>&amp;</code> 引用的能力。</p>
+<ul>
+<li>上面这句话拆分一下，能做两件事<ol>
+<li>deref 方法让编译器可以获得任何实现了 <code>Deref</code> trait 的类型的值；</li>
+<li>编译器可以调用这些类型的 <code>deref</code> 方法获得一个<code>&amp;</code>引用类型（这样它就知道如何解引用了）。</li>
+</ol>
+</li>
+</ul>
+<p>示例 15-9 </p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">assert_eq!</span>(<span class="number">5</span>, *y);</span><br></pre></td></tr></table></figure>
+
+<p>上面这段代码，Rust 事实上在底层运行了如下代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*(y.<span class="title function_ invoke__">deref</span>())</span><br></pre></td></tr></table></figure>
+
+<p>– 我理解就是任何类型先调用它实现的 <code>Deref</code> trait 的 <code>deref</code>方法来获得一个 <code>&amp;</code>引用类型，然后使用 <code>*</code>解引用运算符解引用，获取引用指向的数据。</p>
+<p>官方解释：</p>
+<p>Rust 将 <code>*</code> 运算符替换为先调用 <code>deref</code> 方法再进行普通解引用的操作，如此我们便不用担心是否还需手动调用 <code>deref</code> 方法了。Rust 的这个特性可以让我们写出行为一致的代码，无论是面对的是常规引用还是实现了 <code>Deref</code> 的类型。</p>
+<p><code>deref</code> 方法返回值的引用，以及 <code>*(y.deref())</code> 括号外边的普通解引用仍为必须的原因在于所有权。如果 <code>deref</code> 方法直接返回值而不是值的引用，其值（的所有权）将被移出 <code>self</code>。在这里以及大部分使用解引用运算符的情况下我们并不希望获取 <code>MyBox&lt;T&gt;</code> 内部值的所有权。</p>
+<p>注意，每次当我们在代码中使用 <code>*</code> 时， <code>*</code> 运算符都被替换成了先调用 <code>deref</code> 方法再接着使用 <code>*</code> 解引用的操作，且只会发生一次，不会对 <code>*</code> 操作符无限递归替换，解引用出上面 <code>i32</code> 类型的值就停止了，这个值与示例 15-9 中 <code>assert_eq!</code> 的 <code>5</code> 相匹配</p>
+<h3 id="函数和方法的隐式解引用强制多态"><a href="#函数和方法的隐式解引用强制多态" class="headerlink" title="函数和方法的隐式解引用强制多态"></a>函数和方法的隐式解引用强制多态</h3><p><strong>解引用强制多态</strong>（<em>deref coercions</em>）是 Rust 在函数或方法传参上的一种便利。</p>
+<p>其将实现了 <code>Deref</code> 的类型的引用转换为原始类型通过 <code>Deref</code> 所能够转换的类型的引用。（有些拗口）</p>
+<p>当这种特定类型的引用作为实参传递给和形参类型不同的函数或方法时，<strong>解引用强制多态将自动发生</strong>。这时会有一系列的 <code>deref</code> 方法被调用，把我们提供的类型转换成了参数所需的类型。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">hello</span>(name: &amp;<span class="type">str</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 解引用强制多态</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">m</span> = MyBox::<span class="title function_ invoke__">new</span>(<span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;Rust&quot;</span>));</span><br><span class="line">    <span class="title function_ invoke__">hello</span>(&amp;m);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 没有解引用强制多态的写法</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">m</span> = MyBox::<span class="title function_ invoke__">new</span>(<span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;Rust&quot;</span>));</span><br><span class="line">    <span class="title function_ invoke__">hello</span>(&amp;(*m)[..]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>注：解引用强制多态分析发生在编译时，所以并没有运行时开销。</p>
+</blockquote>
+<h3 id="解引用强制多态如何与可变性交互"><a href="#解引用强制多态如何与可变性交互" class="headerlink" title="解引用强制多态如何与可变性交互"></a>解引用强制多态如何与可变性交互</h3><p>类似于如何使用 <code>Deref</code> trait 重载不可变引用的 <code>*</code> 运算符，Rust 提供了 <code>DerefMut</code> trait 用于重载可变引用的 <code>*</code> 运算符。</p>
+<p>Rust 在发现类型和 trait 实现满足三种情况时会进行解引用强制多态：</p>
+<ul>
+<li>当 <code>T: Deref&lt;Target=U&gt;</code> 时从 <code>&amp;T</code> 到 <code>&amp;U</code>。</li>
+<li>当 <code>T: DerefMut&lt;Target=U&gt;</code> 时从 <code>&amp;mut T</code> 到 <code>&amp;mut U</code>。</li>
+<li>当 <code>T: Deref&lt;Target=U&gt;</code> 时从 <code>&amp;mut T</code> 到 <code>&amp;U</code>。</li>
+</ul>
+<p>前两种情况除了可变性之外是相同的：</p>
+<ul>
+<li>第一种情况，表明如果有一个 <code>&amp;T</code> ，而 <code>T</code> 实现了返回 <code>U</code> 类型的 <code>Deref</code> ，则可以直接得到<code>&amp;U</code>。</li>
+<li>第二种情况表明对于可变引用也有着相同的行为。</li>
+<li>第三种情况有些微妙：Rust 也会将可变引用强转为不可变引用。但是反之<strong>不可能</strong>的。<ul>
+<li>转换不能打破<strong>借用规则</strong></li>
+<li>将不可变引用转换为可变引用则需要数据只能有一个不可变引用，而借用规则无法保证这一点。</li>
+</ul>
+</li>
+</ul>
+<h1 id="使用-Drop-Trait-运行清理代码"><a href="#使用-Drop-Trait-运行清理代码" class="headerlink" title="使用 Drop Trait 运行清理代码"></a>使用 <code>Drop</code> Trait 运行清理代码</h1><p><code>Drop</code> trait 允许我们在值要离开作用域时执行一些代码。</p>
+<ul>
+<li>是对于智能指针模式第二重要的 trait</li>
+</ul>
+<p>例如，<code>Box&lt;T&gt;</code> 自定义了<code>Drop</code> 用来释放 box 所指向的堆空间。</p>
+<p>在 Rust 中，通过实现 <code>Drop</code> trait ，可以指定每当值离开作用域时被执行的代码，编译器会自动插入这些代码。</p>
+<ul>
+<li>这样系统就不会因为忘记清理或释放资源导致负载过重而崩溃。</li>
+</ul>
+<blockquote>
+<p><strong>注意：</strong>这个特性并不需要为每个类型实现，只有在你的类型需要自己的析构函数（destructor ）逻辑时才需要实现它。</p>
+</blockquote>
+<p>实现 <code>Drop</code> trait：</p>
+<ul>
+<li>要实现 <code>drop</code> 方法，它获取一个 <code>self</code> 的可变引用。</li>
+</ul>
+<p><code>Drop</code> trait 包含在 prelude 中，所以使用时无需导入它。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ToDrop</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">Drop</span> <span class="keyword">for</span> <span class="title class_">ToDrop</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;ToDrop is being dropped&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = ToDrop;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Made a ToDrop!&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="通过-std-mem-drop-提早丢弃值"><a href="#通过-std-mem-drop-提早丢弃值" class="headerlink" title="通过 std::mem::drop 提早丢弃值"></a>通过 <code>std::mem::drop</code> 提早丢弃值</h3><p><code>Drop</code> 是Rust <strong>自动调用</strong>的，Rust 不允许我们主动调用 <code>Drop</code> trait 的 <code>drop</code> 方法。</p>
+<ul>
+<li>我们不能禁用当值离开作用域时自动插入的<code>drop</code>，并且不能显示调用<code>drop</code></li>
+</ul>
+<p>当我们希望在作用域结束之前就强制释放变量的话，应该使用由标准库提供的 <code>std::mem::drop</code>。</p>
+<ul>
+<li>例如，当使用智能指针管理锁时，你可能希望强制运行<code>drop</code> 方法来释放锁以便作用域中的其他代码可以获取锁；</li>
+</ul>
+<p> <code>std::mem::drop</code> 也在 prelude 中。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">c</span> = CustomSmartPointer &#123; data: <span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;some data&quot;</span>) &#125;;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;CustomSmartPointer created.&quot;</span>);</span><br><span class="line">    <span class="title function_ invoke__">drop</span>(c);  <span class="comment">// 这里调用了 std::mem::drop 方法。</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;CustomSmartPointer dropped before the end of main.&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="Rc-lt-T-gt-引用计数智能指针"><a href="#Rc-lt-T-gt-引用计数智能指针" class="headerlink" title="Rc&lt;T&gt; 引用计数智能指针"></a><code>Rc&lt;T&gt;</code> 引用计数智能指针</h1><p>背景：大部分情况下所有权是非常明确的，可以准确的世道哪个变量拥有某个值。但是，有些情况单个值可能会有多个所有者。例如，图数据结构中，点与边的关系。</p>
+<ul>
+<li><p>点从概念上讲为所有指向它的边所拥有。节点直到没有任何边指向它之前都不应该被清理；</p>
+</li>
+<li><p>问题：Rust中所有权规则规定，一个值仅能有一个所有者，这里为什么会说有多个所有者？多个值使用不可以使用引用吗？一个所有权拥有者，其他使用引用。–问题是类似点与边的关系中，编译时无法知道谁最后离开，把所有权给谁？只有在运行时才能知道，最后一个离开后才能清除数据；</p>
+<ul>
+<li>所以我理解多所有权即谁都有资格拥有它，这样最后一个离开的人只要确定没有多余引用了，就可以将数据清除。</li>
+</ul>
+</li>
+<li><p>例如，看电视，一人打开后，可以多人一起看，当最后一个人离开房间时，他关掉电视因为它不再被使用了。如果某人在其他人还在看的时候就关掉了电视，正在看电视的人肯定会抓狂的！</p>
+</li>
+</ul>
+<p><code>Rc&lt;T&gt;</code> 类型，为<strong>引用计数</strong>（reference counting）的缩写。</p>
+<ul>
+<li>引用计数意味着通过记录一个值引用的数量来知晓这个值是否仍在被使用。如果某个值有零个引用，就代码没有任何有效引用并可以清理。</li>
+</ul>
+<h3 id="使用场景："><a href="#使用场景：" class="headerlink" title="使用场景："></a>使用场景：</h3><p><code>Rc&lt;T&gt;</code> 用于当我们希望在堆上分配一些内存供程序的<strong>多个部分读取</strong>，但是<strong>无法在编译时确定</strong>程序的哪一个部分会最后结束使用它的时候。</p>
+<ul>
+<li>如果确定知道哪部分是最后一个结束使用的话，就可以令其成为数据所有者，正常的所有权规则就可以在编译时生效。</li>
+<li>多所有权，可以理解为是共享所有权。</li>
+<li>涉及生命周期问题</li>
+</ul>
+<blockquote>
+<p>注意，<code>Rc&lt;T&gt;</code> 只能用于<strong>单线程</strong>场景；</p>
+<p>多线程有自己的引用计数；</p>
+</blockquote>
+<p>使用方式：</p>
+<ol>
+<li><p>创建<code>Rc&lt;T&gt;</code>；</p>
+<p><code>Rc::new();</code></p>
+</li>
+<li><p>增加 Rc 实例的引用计数；每次被其他变量使用时都只用下面这个方法</p>
+<p>例如：<code>Rc::clone(&amp;a)</code></p>
+</li>
+<li><p>查看当前Rc的强引用数</p>
+<p><code>Rc::strong_count(&amp;a)</code></p>
+</li>
+<li><p><code>Rc&lt;T&gt;</code> 在与 <code>RefCell&lt;T&gt;</code>结合使用时，Rust 实现了自动解引用获取其中<code>RefCell&lt;T&gt;</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">value</span> = Rc::<span class="title function_ invoke__">new</span>(RefCell::<span class="title function_ invoke__">new</span>(<span class="number">5</span>));</span><br><span class="line">*value.<span class="title function_ invoke__">borrow_mut</span>() += <span class="number">10</span>;</span><br><span class="line"><span class="comment">// 1.首先，Rust 自动解引用，获取了Rc&lt;T&gt; 内部的 RefCell&lt;T&gt;</span></span><br><span class="line"><span class="comment">// 2.然后，RefCell&lt;T&gt; 的 borrow_mut() 返回的是 RefMut&lt;T&gt; ，所以使用 * 解引用运算符后获取数值5</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="使用-Rc-lt-T-gt-共享数据"><a href="#使用-Rc-lt-T-gt-共享数据" class="headerlink" title="使用 Rc&lt;T&gt; 共享数据"></a>使用 <code>Rc&lt;T&gt;</code> 共享数据</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="title class_">List</span> &#123;</span><br><span class="line">    <span class="title function_ invoke__">Cons</span>(<span class="type">i32</span>, Rc&lt;List&gt;),</span><br><span class="line">    Nil,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> crate::List::&#123;Cons, Nil&#125;;</span><br><span class="line"><span class="keyword">use</span> std::rc::Rc;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">a</span> = Rc::<span class="title function_ invoke__">new</span>(<span class="title function_ invoke__">Cons</span>(<span class="number">5</span>, Rc::<span class="title function_ invoke__">new</span>(<span class="title function_ invoke__">Cons</span>(<span class="number">10</span>, Rc::<span class="title function_ invoke__">new</span>(Nil)))));</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">b</span> = <span class="title function_ invoke__">Cons</span>(<span class="number">3</span>, Rc::<span class="title function_ invoke__">clone</span>(&amp;a));</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">c</span> = <span class="title function_ invoke__">Cons</span>(<span class="number">4</span>, Rc::<span class="title function_ invoke__">clone</span>(&amp;a));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上的例子中，如果使用 <code>Box&lt;T&gt;</code>，则会报错，因为<code>Box&lt;a&gt;</code> 时会发生所有权的转移，</p>
+<p>这里使用 <code>Rc::clone()</code>，只会增加 a 的引用计数；</p>
+<blockquote>
+<p>Rc::clone() 区别于大部分类型的 <code>clone</code>，</p>
+<p>Rc::clone() 只会<strong>增加引用计数</strong>，不会花费多少时间；</p>
+<p>而普通的 clone 则是深拷贝，则会花费很长时间；</p>
+<p>所以当查找代码中的性能时，只需考虑深拷贝的clone，而无需考虑<code>Rc::clone</code>调用。</p>
+</blockquote>
+<h2 id="克隆-Rc-lt-T-gt-会增加引用计数"><a href="#克隆-Rc-lt-T-gt-会增加引用计数" class="headerlink" title="克隆 Rc&lt;T&gt; 会增加引用计数"></a>克隆 <code>Rc&lt;T&gt;</code> 会增加引用计数</h2><p><code>Rc&lt;T&gt;</code> 离开作用域时，因为实现了 <code>Drop</code> trait 所以会自动减少引用计数；</p>
+<p>当引用计数为0时，会同时清理<code>Rc</code>。</p>
+<p>注意：通过不可变引用，<code>Rc&lt;T&gt;</code> 允许在程序的多个部分之间只读地共享数据，</p>
+<ul>
+<li>如果 <code>Rc&lt;T&gt;</code> 也允许多个可变引用，则会违反借用规则（相同位置的多个可变借用可能造成数据竞争和不一致）。</li>
+</ul>
+<h1 id="RefCell-与内部可变性模式"><a href="#RefCell-与内部可变性模式" class="headerlink" title="RefCell 与内部可变性模式"></a>RefCell 与内部可变性模式</h1><p><strong>内部可变性</strong>（<em>Interior mutability</em>）是 Rust 中的一个设计模式，它允许你即使在有不可变引用时也可以改变数据，这通常是借用规则所不允许的。为了改变数据，该模式在数据结构中使用 <code>unsafe</code> 代码来模糊 Rust 通常的可变性和借用规则。</p>
+<h2 id="通过-RefCell-lt-T-gt-在运行时检查借用规则"><a href="#通过-RefCell-lt-T-gt-在运行时检查借用规则" class="headerlink" title="通过 RefCell&lt;T&gt; 在运行时检查借用规则"></a>通过 <code>RefCell&lt;T&gt;</code> 在运行时检查借用规则</h2><p>对于引用和 <code>Box&lt;T&gt;</code> ，借用规则的不可变性作用于编译时；</p>
+<ul>
+<li>违反借用规则，得到一个编译错误；</li>
+</ul>
+<p>对于<code>RefCell&lt;T&gt;</code>，借用规则的不可变性作用于<strong>运行时</strong>。</p>
+<ul>
+<li>违反则会运行时触发panic并退出；</li>
+</ul>
+<p>Rust 的编译器是天生保守的，为了保证安全，会拒绝编译器无法理解的代码，无论是否正确。</p>
+<p>所以<code>RefCell&lt;T&gt;</code> 适用于，开发者确信代码遵守借用规则，而编译器不能理解和确定的时候。</p>
+<h2 id="Box-lt-T-gt-Rc-lt-T-gt-和-RefCell-lt-T-gt-选择依据"><a href="#Box-lt-T-gt-Rc-lt-T-gt-和-RefCell-lt-T-gt-选择依据" class="headerlink" title="Box&lt;T&gt;,Rc&lt;T&gt; 和 RefCell&lt;T&gt; 选择依据"></a><code>Box&lt;T&gt;,Rc&lt;T&gt; 和 RefCell&lt;T&gt;</code> 选择依据</h2><table>
+<thead>
+<tr>
+<th></th>
+<th><code>Box&lt;T&gt;</code></th>
+<th><code>Rc&lt;T&gt;</code></th>
+<th><code>RefCell&lt;T&gt;</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>所有权</td>
+<td>单一所有权</td>
+<td>多所有权</td>
+<td>单一所有权</td>
+</tr>
+<tr>
+<td>检查时期</td>
+<td>编译时</td>
+<td>编译时</td>
+<td>运行时</td>
+</tr>
+<tr>
+<td>借用可变性</td>
+<td>可变或不可变借用</td>
+<td>不可变借用</td>
+<td>可变或不可变借用</td>
+</tr>
+</tbody></table>
+<h2 id="内部可变性-mock"><a href="#内部可变性-mock" class="headerlink" title="内部可变性 mock"></a>内部可变性 mock</h2><p><strong>测试替身</strong>（test double）是一个通用编程概念，它代表一个在测试中替代某个类型的类型。</p>
+<p><strong>mock 对象</strong>是特定类型的测试替身，它们记录测试过程中发生了什么以便可以断言操作是正确的。</p>
+<h2 id="RefCell-lt-T-gt-在运行时记录借用"><a href="#RefCell-lt-T-gt-在运行时记录借用" class="headerlink" title="RefCell&lt;T&gt; 在运行时记录借用"></a><code>RefCell&lt;T&gt;</code> 在运行时记录借用</h2><p>当创建不可变和可变引用时，我们分别使用 <code>&amp;</code> 和 <code>&amp;mut</code> 语法。</p>
+<p>对于 <code>RefCell&lt;T&gt;</code> 来说，则是 <code>borrow</code> 和 <code>borrow_mut</code> 方法，这属于 <code>RefCell&lt;T&gt;</code> 安全 API 的一部分。</p>
+<ul>
+<li><code>borrow</code> 方法返回 <code>Ref</code> 类型的智能指针，</li>
+<li><code>borrow_mut</code> 方法返回 <code>RefMut</code> 类型的智能指针。</li>
+<li>这两个类型都实现了 <code>Deref</code>，所以可以当作常规引用对待。</li>
+</ul>
+<p><code>RefCell&lt;T&gt;</code> 记录当前有多少个活动的 <code>Ref&lt;T&gt;</code> 和 <code>RefMut&lt;T&gt;</code> 智能指针。</p>
+<p>每次调用 <code>borrow</code>，<code>RefCell&lt;T&gt;</code> 将活动的不可变借用计数加一。当 <code>Ref</code> 值离开作用域时，不可变借用计数减一。</p>
+<p>就像<strong>编译时借用规则</strong>一样，<code>RefCell&lt;T&gt;</code> 在任何时候<strong>只允许</strong>有多个不可变借用或一个可变借用。</p>
+<h2 id="结合-Rc-lt-T-gt-和-RefCell-lt-T-gt-来拥有多个可变数据所有者"><a href="#结合-Rc-lt-T-gt-和-RefCell-lt-T-gt-来拥有多个可变数据所有者" class="headerlink" title="结合 Rc&lt;T&gt; 和 RefCell&lt;T&gt; 来拥有多个可变数据所有者"></a>结合 <code>Rc&lt;T&gt;</code> 和 <code>RefCell&lt;T&gt;</code> 来拥有多个可变数据所有者</h2><p><code>RefCell&lt;T&gt;</code> 的一个常见用法是<strong>与 <code>Rc&lt;T&gt;</code> 结合</strong>。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Rc&lt;RefCell&lt;<span class="type">i32</span>&gt;&gt;  <span class="comment">// 这样就可以得到有多个所有者并且可以修改的值了。</span></span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>注意，因为 <code>Rc&lt;T&gt;</code> 只存放不可变值，所以一旦创建值后就不能修改。</p>
+<p>加入 <code>RefCell&lt;T&gt;</code> 来获得修改其中值的能力。</p>
+</blockquote>
+<p>注意： <code>Rc&lt;T&gt;</code> 与 <code>RefCell&lt;T&gt;</code> 结合使用时，Rust会自动解引用获取其内部的值</p>
+<h1 id="引用循环与内存泄漏是安全的"><a href="#引用循环与内存泄漏是安全的" class="headerlink" title="引用循环与内存泄漏是安全的"></a>引用循环与内存泄漏是安全的</h1><p><strong>内存泄漏</strong>（memory leak）是指永远也不会被清理的内存部分</p>
+<p><code>Rc&lt;T&gt;</code> 和 <code>RefCell&lt;T&gt;</code> 结合很灵活但是也可以创建出引用循环的可能。</p>
+<ul>
+<li>这会造成内存泄漏，因为每一项的引用计数永远也到不了0，其值也永远也不会被丢弃。</li>
+</ul>
+<p><strong>只有</strong>所有权关系才能影响值是否可以被丢弃。</p>
+<h2 id="避免引用循环：将Rc-lt-T-gt-变为-Weak-lt-T-gt"><a href="#避免引用循环：将Rc-lt-T-gt-变为-Weak-lt-T-gt" class="headerlink" title="避免引用循环：将Rc&lt;T&gt; 变为 Weak&lt;T&gt;"></a>避免引用循环：将<code>Rc&lt;T&gt;</code> 变为 <code>Weak&lt;T&gt;</code></h2><p><strong>弱引用</strong>（weak reference），无需计数为 0 就能使<code>Rc</code> 实例被清理。</p>
+<p>强引用代表如何共享 <code>Rc&lt;T&gt;</code> 实例的所有权，但弱引用并不属于所有权关系。</p>
+<ul>
+<li>弱引用不会造成引用循环。因为任何弱引用的循环会在其相关的强引用计数为 0 时被打断。</li>
+</ul>
+<p>如何用 <code>Weak&lt;T&gt;</code> ?</p>
+<p>调用<code>Rc::downgrade</code> 时，会得到<code>Weak&lt;T&gt;</code>类型的智能指针，<code>Rc&lt;T&gt;</code> 实例的弱引用计数（weak_count）会加1。</p>
+<p>为了使用<code>Weak&lt;T&gt;</code>所指向的值，要保证其值仍然有效。可以调用 <code>Rc::upgrade</code>，会返回<code>Option&lt;Rc&lt;T&gt;&gt;</code> ，如果<code>Rc&lt;T&gt;</code> 的值还未被丢弃，则返回<code>Some</code>；如果已经被丢弃，则返回<code>None</code>。</p>
+<ul>
+<li>因为返回是<code>Option&lt;T&gt;</code>，Rust 会处理 <code>Some</code> 和 <code>None</code> 的情况，不会返回非法指针。</li>
+</ul>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/15%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/17Rust%E7%9A%84%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B%E7%89%B9%E6%80%A7.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            17Rust的面向对象编程特性
+          
+        </div>
+      </a>
+    
+    
+      <a href="/13%E5%87%BD%E6%95%B0%E5%BC%8F%E8%AF%AD%E8%A8%80%E7%89%B9%E6%80%A7%EF%BC%9A%E8%BF%AD%E4%BB%A3%E5%99%A8%E5%92%8C%E9%97%AD%E5%8C%85.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">13函数式语言特性：迭代器和闭包</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

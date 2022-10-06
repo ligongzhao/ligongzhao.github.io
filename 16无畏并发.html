@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>16无畏并发 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/16无畏并发"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  16无畏并发
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/16%E6%97%A0%E7%95%8F%E5%B9%B6%E5%8F%91.html" class="article-date">
+  <time datetime="2022-02-22T02:59:07.000Z" itemprop="datePublished">2022-02-22</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">3.1k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">12 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p><strong>并发编程</strong>（Concurrent programming），代表程序的不同部分<strong>相互独立</strong>的执行。</p>
+<p><strong>并行编程</strong>（parallel programming），代表程序不同部分<strong>同时</strong>执行。</p>
+<p>Rust 利用所有权系统和类型检查，在编译时发现并发错误。</p>
+<ul>
+<li>如何创建线程来同时运行多段代码。</li>
+<li><strong>消息传递</strong>（Message passing）并发，其中通道（channel）被用来在线程间传递消息。</li>
+<li><strong>共享状态</strong>（Shared state）并发，其中多个线程可以访问同一片数据。</li>
+<li><code>Sync</code> 和 <code>Send</code> trait，将 Rust 的并发保证扩展到用户定义的以及标准库提供的类型中。</li>
+</ul>
+<h1 id="使用线程同时运行代码"><a href="#使用线程同时运行代码" class="headerlink" title="使用线程同时运行代码"></a>使用线程同时运行代码</h1><p><strong>进程</strong>（process）</p>
+<p><strong>线程</strong>（threads）</p>
+<p>将程序中的计算拆分为多个线程可以改善性能。不过同时会增加复杂性。</p>
+<p>编程语言实现线程的方式：</p>
+<ul>
+<li><p><code>1:1</code> 模型，一个OS线程对应一个语言线程；</p>
+<ul>
+<li>编程语言调用操作系统创建新线程的API；</li>
+</ul>
+</li>
+<li><p><code>M:N</code> 模型 ，M个绿色线程，对应 N个OS线程（M和N不必相同）</p>
+<ul>
+<li><p>编程语言提供了自己特殊的线程实现，这些线程被称为绿色（green）线程；</p>
+</li>
+<li><p>使用绿色线程的语言会在不同数量的OS线程的上下文中执行它们。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="使用-spawn-创建新线程"><a href="#使用-spawn-创建新线程" class="headerlink" title="使用 spawn 创建新线程"></a>使用 <code>spawn</code> 创建新线程</h2><p><code>thread::spawn</code> 函数用于创建新线程，</p>
+<ul>
+<li>需要传递一个<strong>闭包</strong>作为参数，闭包体是希望在新线程运行的代码</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">    <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">1</span>..<span class="number">10</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;hi number &#123;&#125; from the spawned thread!&quot;</span>, i);</span><br><span class="line">        thread::<span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">1</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="使用-join-等待所有线程结束"><a href="#使用-join-等待所有线程结束" class="headerlink" title="使用 join 等待所有线程结束"></a>使用 <code>join</code> 等待所有线程结束</h3><p>默认各个线程单独运行，主线程结束不会等待其他线程运行。</p>
+<ul>
+<li>可能导致的问题，主线程结束后，其他线程可能没有执行或者没有执行完提早结束。</li>
+</ul>
+<p>解决：</p>
+<p> <code>thread::spawn</code> 的返回值类型是 <code>JoinHandle</code> ，拥有所有权，调用其 <code>join</code> 方法，会<strong>阻塞</strong>（Blocking）当前线程，直到<code>JoinHandle</code>所代表的线程结束。</p>
+<ul>
+<li><strong>阻塞</strong>（Blocking）线程意味着阻止该线程执行工作或退出。</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::thread;</span><br><span class="line"><span class="keyword">use</span> std::time::Duration;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">handle</span> = thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">        <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">1</span>..<span class="number">10</span> &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;hi number &#123;&#125; from the spawned thread!&quot;</span>, i);</span><br><span class="line">            thread::<span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">1</span>));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">1</span>..<span class="number">5</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;hi number &#123;&#125; from the main thread!&quot;</span>, i);</span><br><span class="line">        thread::<span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">1</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    handle.<span class="title function_ invoke__">join</span>().<span class="title function_ invoke__">unwrap</span>();   <span class="comment">// 等待线程结束</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>JoinHandle 类型是泛型的，其参数类型是线程的返回值，</p>
+<ul>
+<li>如果没有返回值，那么默认就是<code>()</code>，所以就是<code>JoinHandle&lt;()&gt;</code>；</li>
+<li>如果有返回值时，就是返回值类型，例如，<code>JoinHandle&lt;i32&gt;</code>；</li>
+</ul>
+<p>通常在主线程中会调用 <code>joinhandle.join()</code> 方法来阻塞主线程，<code>join()</code> 的返回值是 <code>Result&lt;T&gt;</code>，所以想获得线程返回值，那么可以使用<code>unwrap()</code> 或者处理 Result 类型的其他方法。</p>
+<h2 id="线程与-move-闭包"><a href="#线程与-move-闭包" class="headerlink" title="线程与 move 闭包"></a>线程与 <code>move</code> 闭包</h2><p>什么情况下需要使用 <code>move</code>关键字？</p>
+<p>线程中的闭包直接使用外部环境值，分为两种情况：</p>
+<ol>
+<li><p>获取其所有权；</p>
+<ul>
+<li>没有问题，所有权转移到线程中的闭包里，可以直接使用。</li>
+</ul>
+</li>
+<li><p>借用；</p>
+<ul>
+<li>有问题，不能直接用；需要添加 <code>move</code>关键字；</li>
+<li>线程中的闭包不能直接借用环境值，为什么？<ul>
+<li>因为在这种情况下， Rust 无法判断新线程会执行多久，所以无法知晓外部的引用是否一直有效。所以会出现如下报错：<code>may outlive borrowed value v</code></li>
+</ul>
+</li>
+<li>如何正确使用？<ul>
+<li>当线程中的闭包需要借用外部环境值时（即使用引用），在闭包前添加 <code>move</code> 关键字，强制将其所有权转移到闭包内。（即转为第1种）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 第一种情况，闭包内获取环境值所有权，</span></span><br><span class="line"><span class="comment">// ok，直接用</span></span><br><span class="line">thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="title function_ invoke__">handle_connection</span>(stream);</span><br><span class="line">        &#125;);</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">handle_connection</span>(<span class="keyword">mut</span> stream: TcpStream) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 第二种情况，闭包内借用环境值，</span></span><br><span class="line"><span class="comment">// wrong，不能直接用</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">v</span> = <span class="built_in">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">	<span class="comment">// 下面代码会报错的</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">handle</span> = thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">        <span class="comment">// println! 是仅借用vec</span></span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Here&#x27;s a vector: &#123;:?&#125;&quot;</span>, v);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 第二种情况的，正确方式，</span></span><br><span class="line"><span class="comment">// 添加 move</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">handle</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Here&#x27;s a vector: &#123;:?&#125;&quot;</span>, v);</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p><code>move</code> 闭包，经常与 <code>thread::spawn</code> 一起使用</p>
+<ul>
+<li><p><code>move</code> 关键字，强制闭包获取其使用的环境值的所有权；</p>
+</li>
+<li><p>最佳使用方式：在创建新线程，将值得所有权从一个线程移到另一个线程；</p>
+</li>
+</ul>
+<h1 id="使用消息传递在线程间传递数据"><a href="#使用消息传递在线程间传递数据" class="headerlink" title="使用消息传递在线程间传递数据"></a>使用消息传递在线程间传递数据</h1><p>消息传递（message passing），线程或actor 通过发送包含数据的消息来相互沟通。</p>
+<p><strong>通道</strong>（channel），是 Rust 中实现消息传递并发的主要工具。</p>
+<ul>
+<li>由两部分组成：<ul>
+<li>发送者（transmitter），位于上游位置</li>
+<li>接受者（receiver），位于下游位置</li>
+</ul>
+</li>
+<li>代码中的一部分调用发送者的方法以及希望发送的数据，另一部分则检查接收端收到的消息。</li>
+<li>当发送者或接受者任一被丢弃时，可以认为通道被关闭（closed）了。</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::mpsc;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> (tx, rx) = mpsc::<span class="title function_ invoke__">channel</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>mpsc</code> 是<strong>多个生产者，单个消费者</strong>（multiple producer,single consumer）的缩写。</p>
+<ul>
+<li><p><code>mpsc::channel</code> 函数可以创建一个新的通道。</p>
+<ul>
+<li>返回一个元祖，第一个元素是发送端，第二个元素是接收端。</li>
+<li>通常，tx 为发送者（transmitter），rx 为接受者（receiver）的缩写。（有历史原因）</li>
+</ul>
+</li>
+<li><p>Rust 标准库实现通道的方式，意味着一个通道可以有多个生产者，但只能有一个消费者。</p>
+<ul>
+<li>类似于多条小何最终汇聚成大河。</li>
+</ul>
+</li>
+</ul>
+<p>发送端的方法：</p>
+<ul>
+<li><code>send</code> 将数据放入通道，<ul>
+<li>返回一个<code>Result&lt;T,E&gt;</code> 类型，如果没有接受者，发送操作会返回错误。</li>
+</ul>
+</li>
+</ul>
+<p>接收端的方法：</p>
+<ul>
+<li><code>recv</code>，（receive 的缩写）<ul>
+<li>会阻塞主线程执行，知道从通道中接收一个值；</li>
+<li>返回 <code>Result&lt;T,E&gt;</code>，如果通道发送端关闭，则返回一个错误表明不会有新值过来；</li>
+</ul>
+</li>
+<li><code>try_recv</code>，<ul>
+<li>不会阻塞，会立刻返回一个 <code>Result&lt;T,E&gt;</code><ul>
+<li><code>Ok</code> 值包含可用的信息，</li>
+<li><code>Err</code> 值代表此时没有任何信息。</li>
+</ul>
+</li>
+<li>如果线程在等待消息过程中还有其他工作时，使用 <code>try_recv</code>很有用，可以编写一个循环来频繁调用<code>try_recv</code>，在有可用消息时进行处理，其他时候则处理一会儿其他工作知道再次检查。</li>
+</ul>
+</li>
+</ul>
+<p><code>mspc::channel</code> 返回的接受者可以被作为迭代器使用在 for 循环中。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">   <span class="keyword">let</span> (tx, rx) = mpsc::<span class="title function_ invoke__">channel</span>();</span><br><span class="line"><span class="comment">//--snip--</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> <span class="variable">received</span> <span class="keyword">in</span> rx &#123;</span><br><span class="line">       <span class="built_in">println!</span>(<span class="string">&quot;Got: &#123;&#125;&quot;</span>, received);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="通过克隆发送者来创建多个生产者"><a href="#通过克隆发送者来创建多个生产者" class="headerlink" title="通过克隆发送者来创建多个生产者"></a>通过克隆发送者来创建多个生产者</h2><p>对通道的发送端调用 <code>clone</code> 方法，可以实现克隆通道的发送端来实现多个发送端。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> (tx, rx) = mpsc::<span class="title function_ invoke__">channel</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">tx1</span> = mpsc::Sender::<span class="title function_ invoke__">clone</span>(&amp;tx);</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="通道和所有权转移"><a href="#通道和所有权转移" class="headerlink" title="通道和所有权转移"></a>通道和所有权转移</h2><p><code>send</code> 函数获取其参数的所有权并移动这个值归接受者所有。</p>
+<ul>
+<li>这可以防止在发送后再次意外地使用这个值。</li>
+</ul>
+<h1 id="共享状态并发"><a href="#共享状态并发" class="headerlink" title="共享状态并发"></a>共享状态并发</h1><p>在某种程度上，任何编程语言中的通道都类似于单所有权，即一旦将一个值传送到通道中，将无法再使用这个值。</p>
+<p>共享内存类似于多所有权：多个线程可以同时访问相同的内存位置。</p>
+<h2 id="互斥器一次只允许一个线程访问数据"><a href="#互斥器一次只允许一个线程访问数据" class="headerlink" title="互斥器一次只允许一个线程访问数据"></a>互斥器一次只允许一个线程访问数据</h2><p><strong>互斥器</strong>（mutex）是 mutual exclusion 的缩写，</p>
+<ul>
+<li>即任意时刻，其只允许一个线程访问某些数据。</li>
+</ul>
+<p>如何访问互斥器中的数据？</p>
+<ol>
+<li>线程通过获取互斥器的<strong>锁</strong>（lock）来表明其希望访问数据；</li>
+</ol>
+<p><strong>锁</strong>是一个作为互斥器一部分的数据结构，</p>
+<ul>
+<li>记录谁有数据的排他访问权；</li>
+</ul>
+<h2 id="Mutex-lt-T-gt-的-API"><a href="#Mutex-lt-T-gt-的-API" class="headerlink" title="Mutex&lt;T&gt; 的 API"></a><code>Mutex&lt;T&gt;</code> 的 API</h2><p><code>Mutex::new</code> 创建 <code>Mutex&lt;T&gt;</code>，即互斥器</p>
+<p><code>lock</code> 方法获取锁，以访问互斥器中的数据；</p>
+<ul>
+<li><p>这个方法调用会阻塞当前线程，知道线程拥有锁为止。</p>
+</li>
+<li><p>如果拥有锁的线程 panic了，那么其他线程调用 <code>lock</code> 会失败。且没有线程能再获取锁。</p>
+</li>
+<li><p><code>lock</code> 方法返回一个 <code>MutexGuard</code> 类型的智能指针，所以一旦获取锁，就可以将返回值视为一个引用了。</p>
+<ul>
+<li><p><code>MutexGuard</code> 实现了 <code>Deref</code> 来指向其内部数据，<code>Drop</code> 实现了当 <code>MutexGuard</code> <strong>离开作用域时自动释放锁</strong>。</p>
+<blockquote>
+<p>锁自动释放，这个功能使得我们不会忘记释放锁，导致其他线程无法使用互斥器。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<p>获取锁之后，因为返回值是一个智能指针，所以要使用内部数据，需要使用 <code>*</code>解引用运算符</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::Mutex;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">m</span> = Mutex::<span class="title function_ invoke__">new</span>(<span class="number">5</span>);  <span class="comment">// 返回类型为 Mutex&lt;i32&gt;</span></span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">num</span> = m.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>();  <span class="comment">// num 的类型为 MutexGuard&lt;i32&gt; 的智能指针</span></span><br><span class="line">        *num = <span class="number">6</span>;   <span class="comment">// * 解引用</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;m = &#123;:?&#125;&quot;</span>, m);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="在线程间共享-Mutex-lt-T-gt"><a href="#在线程间共享-Mutex-lt-T-gt" class="headerlink" title="在线程间共享 Mutex&lt;T&gt;"></a>在线程间共享 <code>Mutex&lt;T&gt;</code></h2><h3 id="多线程和多所有权"><a href="#多线程和多所有权" class="headerlink" title="多线程和多所有权"></a>多线程和多所有权</h3><p><code>Arc&lt;T&gt;</code> <strong>原子引用计数</strong>（atomically reference counted）</p>
+<ul>
+<li>类似 <code>Rc&lt;T&gt;</code> ，可以安全的用在并发环境的类型。A 是原子性（atomic）</li>
+<li>原子性乐行工作起来类似原始类型，不过可以安全的在线程间共享。</li>
+<li>具体查看<code>std::sync::atomic</code>的文档</li>
+</ul>
+<p>为什么不是所有原始类型都是原子性的？或所有类型都使用 <code>Arc&lt;T&gt;</code>?</p>
+<ul>
+<li>因为线程安全带有性能惩罚（即消耗多一些），所以只在必要时才做。单线程没有必要</li>
+</ul>
+<h2 id="RefCell-lt-T-gt-x2F-Rc-lt-T-gt-与-Mutex-lt-T-gt-x2F-Arc-lt-T-gt-的相似性"><a href="#RefCell-lt-T-gt-x2F-Rc-lt-T-gt-与-Mutex-lt-T-gt-x2F-Arc-lt-T-gt-的相似性" class="headerlink" title="RefCell&lt;T&gt;&#x2F;Rc&lt;T&gt; 与 Mutex&lt;T&gt;&#x2F;Arc&lt;T&gt; 的相似性"></a><code>RefCell&lt;T&gt;</code>&#x2F;<code>Rc&lt;T&gt;</code> 与 <code>Mutex&lt;T&gt;</code>&#x2F;<code>Arc&lt;T&gt;</code> 的相似性</h2><p>单线程中，</p>
+<p><code>RefCell&lt;T&gt;</code>&#x2F;<code>Rc&lt;T&gt;</code> 组合，可以提供多所有权且可以修改内部可变性，</p>
+<p>并发环境中，</p>
+<p> <code>Mutex&lt;T&gt;</code>&#x2F;<code>Arc&lt;T&gt;</code>组合也有相同功效，<code>Mutex&lt;T&gt;</code> 提供了内部可变性的功能。</p>
+<p>问题：</p>
+<p><code>RefCell&lt;T&gt;</code>&#x2F;<code>Rc&lt;T&gt;</code> 组合，可能造成引用循环的风险，</p>
+<p><code>Mutex&lt;T&gt;</code> 也有造成死锁（deadlock）的风险，</p>
+<ul>
+<li>当一个操作需要锁住两个资源，而两个线程各持一个锁，这会造成它们永远相互等待。</li>
+<li>查看标准库的<code>Mutex&lt;T&gt;</code> 和 <code>MutexGuard</code> 的 API 文档获取规避死锁的策略。</li>
+</ul>
+<h1 id="使用-Sync-和-Send-trait-的可扩展并发"><a href="#使用-Sync-和-Send-trait-的可扩展并发" class="headerlink" title="使用 Sync 和 Send trait 的可扩展并发"></a>使用 <code>Sync</code> 和 <code>Send</code> trait 的可扩展并发</h1><p>Rust 语言本身不提供并发相关的基础设施。这章节所提到的所有内容都属于标准库。</p>
+<p><code>std::marker</code> 中的 <code>Sync</code> 和 <code>Send</code> trait 是内嵌于语言中的两个并发概念。</p>
+<h2 id="通过-Send-允许在线程间转移所有权"><a href="#通过-Send-允许在线程间转移所有权" class="headerlink" title="通过 Send 允许在线程间转移所有权"></a>通过 <code>Send</code> 允许在线程间转移所有权</h2><p><code>Send</code> trait 表明类型的<strong>所有权可以在线程间传递</strong>。</p>
+<p>几乎所有的 Rust 类型都是 <code>Send</code> 的，</p>
+<ul>
+<li><p>目前学到的<code>Rc&lt;T&gt;</code>不是，这个不能<code>Send</code>，因为如果克隆了<code>Rc&lt;T&gt;</code> 的值并尝试将克隆的所有权转移到另一个线程，这两个线程可能同时更新引用计数。</p>
+</li>
+<li><p>裸指针（raw pointer） 除外，裸指针也不是<code>Send</code>的。</p>
+</li>
+</ul>
+<p>任何完全由 <code>Send</code> 的类型组成的类型也会<strong>自动</strong>被标记为 <code>Send</code>。</p>
+<h2 id="Sync-允许多线程访问"><a href="#Sync-允许多线程访问" class="headerlink" title="Sync 允许多线程访问"></a><code>Sync</code> 允许多线程访问</h2><p><code>Sync</code> trait 表明一个实现了<code>Sync</code> 的类型可以安全的在多个线程中拥有其值的引用（传递引用）。</p>
+<ul>
+<li>对于任意类型<code>T</code>，如果<code>&amp;T</code>（<code>T</code>的引用）是<code>Send</code>的话，<code>T</code>就是 <code>Sync</code>的，这意味着其引用就可以安全的发送到另一个线程。</li>
+<li>类似于 <code>Send</code>，基本类型都是<code>Sync</code>的，</li>
+<li>完全由<code>Sync</code>的类型组成的类型也是<code>Sync</code>的，</li>
+<li><code>Mutex&lt;T&gt;</code> 是 <code>Sync</code> 的</li>
+</ul>
+<p><strong>目前已学不是<code>Sync</code>的类型：</strong></p>
+<ul>
+<li><p><code>Rc&lt;T&gt;</code> 也不是 <code>Sync</code> 的，理由与不是 <code>Send</code>相同。</p>
+</li>
+<li><p><code>RefCell&lt;T&gt;</code> 和 <code>Cell&lt;T&gt;</code> 系列类型都不是 <code>Sync</code>的。</p>
+<ul>
+<li><code>RefCell&lt;T&gt;</code> 在运行时所进行的借用检查也不是线程安全的。</li>
+</ul>
+</li>
+</ul>
+<h2 id="手动实现Send-和Sync-是不安全的"><a href="#手动实现Send-和Sync-是不安全的" class="headerlink" title="手动实现Send 和Sync 是不安全的"></a>手动实现<code>Send</code> 和<code>Sync</code> 是不安全的</h2><p>通常不需要手动实现<code>Send</code> 和 <code>Sync</code> trait，因为由<code>Send</code> 和 <code>Sync</code> 的类型组成的类型，自动就是 <code>Send</code> 和<code>Sync</code>的。</p>
+<p>它们都是标记 trait，不需要实现任何方法，只是用来加强并发相关的不可变性的。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>因为 Rust 本身很少有处理并发的部分内容，有很多的并发方案都由 crate 实现。他们比标准库要发展的更快；请在网上搜索当前最新的用于多线程场景的 crate。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/16%E6%97%A0%E7%95%8F%E5%B9%B6%E5%8F%91.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/VirtualBox%E5%90%AF%E5%8A%A8%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%8A%A5%E9%94%99.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            VirtualBox启动虚拟机报错
+          
+        </div>
+      </a>
+    
+    
+      <a href="/08%E5%B8%B8%E8%A7%81%E9%9B%86%E5%90%88.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">08常见集合</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

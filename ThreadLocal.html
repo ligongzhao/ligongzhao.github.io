@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>ThreadLocal |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Java/Java并发/ThreadLocal"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  ThreadLocal
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/ThreadLocal.html" class="article-date">
+  <time datetime="2021-11-29T09:22:09.000Z" itemprop="datePublished">2021-11-29</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a> / <a class="article-category-link" href="/categories/Java/Java%E5%B9%B6%E5%8F%91/">Java并发</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.5k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">9 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p><code>ThreadLocal</code> 实例在类中通常是 private static 字段，这些类希望将状态与 Thread 相关联。</p>
+<p>使用位置：</p>
+<ul>
+<li>多线程情况下，一般在线程的 <code>run()</code> 方法中使用</li>
+</ul>
+<blockquote>
+<p>使用位置决定了，在设计的时候，要通过传递 <code>ThreadLocal</code> 实例自身作为 key，从而获取当前线程存储的 value，同时存储&lt;key，value&gt; 的 map 需要在 Thread 中。</p>
+</blockquote>
+<h2 id="创建-ThreadLocal实例的方法"><a href="#创建-ThreadLocal实例的方法" class="headerlink" title="创建 ThreadLocal实例的方法"></a>创建 <code>ThreadLocal</code>实例的方法</h2><p>方法一：使用 <code>ThreadLocal.withInitial(Supplier&lt;? extends S&gt; supplier)</code> 方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">例如：</span><br><span class="line">ThreadLocal&lt;String&gt; threadLocalName = ThreadLocal</span><br><span class="line">      .withInitial(() -&gt; Thread.currentThread().getName());</span><br></pre></td></tr></table></figure>
+
+<p>方法二：创建新的 ThreadLocal 或其子类，并重写 <code>initialValue()</code> 方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">例如：</span><br><span class="line">ThreadLocal&lt;String&gt; threadLocalName = <span class="keyword">new</span> <span class="title class_">ThreadLocal</span>&lt;String&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> String <span class="title function_">initialValue</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> Thread.currentThread().getName();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">注：</span><br><span class="line">其实 ThreadLocal.withINitial() 方法内部是通过创建 ThreadLocal 子类并重写initialValue() 方法来实现的，看源码部分：</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">SuppliedThreadLocal</span>&lt;T&gt; <span class="keyword">extends</span> <span class="title class_">ThreadLocal</span>&lt;T&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="为什么要重写-initialValue-方法？"><a href="#为什么要重写-initialValue-方法？" class="headerlink" title="为什么要重写 initialValue()方法？"></a>为什么要重写 <code>initialValue()</code>方法？</h3><p>具体分析：</p>
+<p>因为创建了一个 <code>ThreadLocal</code>实例后，在线程内调用<code>ThreadLocal#get()</code> 方法的时候，首次调用时是需要创建 <code>ThreadLocalMap</code> 的，根据源码 <code>get() -&gt; setInitialValue() -&gt; T value = initialValue();</code>  我们知道 value 的内容取决于 <code>initialValue()</code> 方法，而默认该方法返回值为 null，所以需要重写该方法。</p>
+<h3 id="问题：ThreadLocal-get-是如何找到当前-Thread-中存储的Map的？"><a href="#问题：ThreadLocal-get-是如何找到当前-Thread-中存储的Map的？" class="headerlink" title="问题：ThreadLocal#get() 是如何找到当前 Thread 中存储的Map的？"></a>问题：<code>ThreadLocal#get()</code> 是如何找到当前 <code>Thread</code> 中存储的Map的？</h3><p>答：通过 <code>Thread t = Thread.currentThread();</code>方法获取对应 Thread，然后 Thread 中有 Map 的变量<code>ThreadLocal.ThreadLocalMap threadLocals = null;</code>，这样将 <code>ThreadLocal</code>本身作为key，传入Thread 内部独立的 Map，对于每个 Thread 来说，就可以实现相同的 key，获取 Thread 自身独自的 value 的功能。</p>
+<h2 id="如何设计-ThreadLocal"><a href="#如何设计-ThreadLocal" class="headerlink" title="如何设计 ThreadLocal?"></a>如何设计 <code>ThreadLocal</code>?</h2><p>在线程对象内部搞个 map，把 <code>ThreadLocal</code>对象自身作为 key，把它的值作为 map 的值。</p>
+<p><code>ThreadLocal</code> 作为一个容器来使用（对于线程来说是，资源本地化容器），重要的实现就是 <code>get()</code> ，<code>set()</code>方法和其内部的 <code>ThreadLocalMap</code>。</p>
+<h2 id="ThreadLocal如何设计ThreadLocalMap中的Entry的？"><a href="#ThreadLocal如何设计ThreadLocalMap中的Entry的？" class="headerlink" title="ThreadLocal如何设计ThreadLocalMap中的Entry的？"></a><code>ThreadLocal</code>如何设计<code>ThreadLocalMap</code>中的<code>Entry</code>的？</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Entry</span> <span class="keyword">extends</span> <span class="title class_">WeakReference</span>&lt;ThreadLocal&lt;?&gt;&gt; &#123;</span><br><span class="line">    <span class="comment">/** The value associated with this ThreadLocal. */</span></span><br><span class="line">    Object value;</span><br><span class="line"></span><br><span class="line">    Entry(ThreadLocal&lt;?&gt; k, Object v) &#123;</span><br><span class="line">        <span class="built_in">super</span>(k);  <span class="comment">// k 被 WeakReference 引用，所以 k 是弱引用</span></span><br><span class="line">        value = v; <span class="comment">// v 还是强引用</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面代码可知，<code>Entry</code> 继承了 <code>WeakReference</code>类，在它的构造函数中 k 被 <code>WeakReference</code> 所引用即<code>super(k)</code>，所以这个 <strong>key 才是弱引用</strong>，Entry 自己并不是弱引用。</p>
+<h1 id="ThreadLocal-为什么要用弱引用？"><a href="#ThreadLocal-为什么要用弱引用？" class="headerlink" title="ThreadLocal 为什么要用弱引用？"></a>ThreadLocal 为什么要用弱引用？</h1><ol>
+<li><p>Entry 对 key 是弱引用，那么为什么要使用弱引用呢？</p>
+<ul>
+<li>如果一个对象没有强引用，<strong>只有弱引用的情况下</strong>， 这个对象是活不过一次 GC 的（遇到GC就会被清除），所以这样的设计就是为了让当外部对 <code>ThreadLocal对象</code>没有强引用的时候，可以将 <code>ThreadLocal对象</code> 给清理掉。</li>
+</ul>
+</li>
+<li><p>那么为什么 Entry 中的 value 不弱引用？</p>
+<ul>
+<li>Entry 中的 value 如果弱引用，那么只要一次 GC，value 就会被清理掉，这时如果通过 <code>ThreadLocal 对象</code> 查对应的值，就是 null 了。<ul>
+<li>（value 只有与 Entry 这一条引用链，而 key(ThreadLocal) 除了与 Entry 这条引用链，栈上还有 <code>ThreadLocal 引用</code>指向堆中的 <code>ThreadLocal 对象</code>，这个引用是强引用，只要这条强引用存在，那说明此时的 ThreadLocal 是有用的。）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>那么为什么不能是 <code>ThreadLocalMap</code> 与 <code>Entry</code> 是弱引用？</p>
+<ul>
+<li>原因同上，Entry 也只有ThreadLocalMap 这一条引用链，如果弱引用，那么 Entry 一次 GC 后就会被清理掉，无法正常使用了，所以只能强引用。</li>
+</ul>
+</li>
+</ol>
+<p>综上如果想及时清除无用的 ThreadLocal 对象，通过弱化引用的形式，只能操作 Entry 和 key 之间的引用，所以它们之间用弱引用来实现。</p>
+<p>下图是 ThreadLocal 在堆栈用的完整引用链：</p>
+<p><img src="https://ligongzhao-pics.oss-cn-hangzhou.aliyuncs.com/imgthreadlocal_%E5%A0%86%E6%A0%88%E5%BC%95%E7%94%A8%E9%93%BE.jpg" alt="threadlocal_堆栈引用链"></p>
+<p>从上图可知，当随着方法的执行完毕，相应的栈帧也出栈了，此时 <code>threadlocal引用</code> 与 <code>threadlocal对象</code> 这条强引用链也就没了，如果没有别的栈有对 <code>threadlocal对象</code>的引用，那么说明 <code>threadlocal对象</code>无法再被访问到（<strong>定义成静态变量的另说</strong>）。</p>
+<p>那么此时 <code>ThreadLocal</code> 只存在于 Entry 之间的弱引用，那此时发生 GC，它就可以被清除了，因为它无法被外部使用了，就等于没用了，应该被处理来省空间。</p>
+<p>因为平日线程的使用方式，基本都是线程池，所以线程的生命周期会很长，可能从你部署上线后一直存在，而 <code>ThreadLocal</code>对象的生命周期可能没有这么长。所以为了能让已经没用的 <code>ThreadLocal对象</code>得以回收，Entry 和 key 要设计成弱引用，不然 Entry 和 key 是强引用的话， ThreadLocal 对象会一直在内存中存在。</p>
+<h2 id="为什么这样的设计会有内存泄漏？"><a href="#为什么这样的设计会有内存泄漏？" class="headerlink" title="为什么这样的设计会有内存泄漏？"></a>为什么这样的设计会有内存泄漏？</h2><p>什么是<strong>内存泄漏</strong>？</p>
+<p>指：程序中已经无用的内存无法被释放，造成系统内存的浪费。</p>
+<p>当 Entry 中的 key 即 <code>ThreadLocal</code> 对象被回收之后，会发生 <strong>Entry 中 key 为 null 的情况</strong>，其实这个 Entry 就已经没用了，但是又无法被回收，因为有 <code>Thread -&gt; ThreadLocalMap -&gt; Entry</code> 这条强引用在，这样没用的内存无法被回收，就是内存泄漏</p>
+<h3 id="ThreadLocal-是如何设计处理内存泄漏的？"><a href="#ThreadLocal-是如何设计处理内存泄漏的？" class="headerlink" title="ThreadLocal 是如何设计处理内存泄漏的？"></a>ThreadLocal 是如何设计处理内存泄漏的？</h3><p>设计者在多个地方都做了清理无用 Entry ，即 key 已经被回收的 Entry 的操作。</p>
+<p>代码中表现为 <code>expungeStaleEntry()</code> 方法。</p>
+<p>在 <code>get()</code> , <code>set()</code> 和 <code>rehash()</code> 方法中都 <code>expungeStaleEntry()</code> 调用。</p>
+<h1 id="ThreadLocal-最佳实践"><a href="#ThreadLocal-最佳实践" class="headerlink" title="ThreadLocal 最佳实践"></a>ThreadLocal 最佳实践</h1><p>等着无用 Entry 被动回收不是最好方法，如果不调用 set 或 get方法，或者调用 get 都直接命中，或者不发生扩种，那无用的 Entry 岂不是一直存在了吗？<code>expungeStaleEntry()</code>只能防止一部分的内存泄漏。</p>
+<p>所以最佳实践是用完之后，调用一下 <code>remove()</code>方法，手动把 Entry 清理掉，这样就不会发生内存泄漏了！</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">foo</span><span class="params">()</span> &#123;</span><br><span class="line">    threadlocal.set(xxx);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// do something</span></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        threadlocal.remove();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即不需要的时候，显示的 remove 掉。</p>
+<p>当然，如果不是线程池使用方法的话，其实不用关心内存泄漏，反正线程执行完就都回收了，<strong>但一般我们都是只用线程池的</strong>，比如你用了 tomcat，其实请求的执行用的就是 tomcat 的线程池，这就是隐式使用的线程池。</p>
+<h1 id="扩展知识：Java-的引用"><a href="#扩展知识：Java-的引用" class="headerlink" title="扩展知识：Java 的引用"></a>扩展知识：Java 的引用</h1><p>扩展知识：Java 的引用</p>
+<ul>
+<li><p>强引用</p>
+<ul>
+<li>正常的引用，只要有强引用在，JVM 即使发生 OOM 也不会回收被引用的对象的。</li>
+</ul>
+</li>
+<li><p>软引用</p>
+<ul>
+<li><p>与弱引用及其相似，除了回收时机不同（存活时间比弱引用可能长一些）；</p>
+</li>
+<li><p>只要内存足够，在 GC 时就不会清除软可达对象，这些对象就会一直保存在内存中。回收时机由 JVM 根据算法来决定。</p>
+</li>
+<li><p>在触发OOM之前，垃圾收集器一定会清理掉所有所的软可达对象；</p>
+</li>
+<li><p>适合用来做一些小的 cache，然后让 JVM 去决定什么时候把对象从缓存中清除；</p>
+<blockquote>
+<p>但是对于严重依赖缓存来提升性能的应用而言，软引用做缓存并不合适，此时应该使用更全面的缓存框架或者应用来处理。</p>
+</blockquote>
+</li>
+<li><p>疑惑点：关于何时被回收？是不是可以理解为，在young GC 时并不会清除软引用，只有在 Full GC 时才会清除？只要堆内有足够内存，即使发生 GC ，也不会清除掉 软引用 ？毕竟 GC 是分带收集的？</p>
+</li>
+</ul>
+</li>
+<li><p>弱引用（WeakReference）</p>
+<ul>
+<li><p>一个<strong>只</strong>被<code>WeakReference</code>引用的对象，它被称为 <code>weakly reachable object</code>（弱可达性对象）。而这样的对象不能阻止垃圾收集器对它的回收</p>
+</li>
+<li><p>注意：如果一个对象被用<code>WeakReference</code>引用，但是在其他方法中作为方法参数传入时（例如 WeakHashMap#get 方法），那么在该方法（get方法）中，key 并不会被垃圾回收。因为给定的key已经被方法参数所引用。当该方法执行完出栈后，该引用就会消失后才可被垃圾回收。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">WeakReference</span> <span class="variable">weakWidget</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">WeakReference</span>(widget);</span><br><span class="line"><span class="comment">// 当有强引用指向 Widget 对象时，调用 weakWidget.get() 方法时，会获得真正的 Widget 对象；否则得到的就是 null</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>虚引用</p>
+<ul>
+<li><p>get() 方法返回 <code>null</code>，即，无法获取引用对象引用的真正的对象；</p>
+</li>
+<li><p>唯一作用就是它可以监测到对象的死亡。即，当你的对象真正从内存中移除时，指向这个对象的 <code>PhantomReference</code>对象就会被加入到<code>ReferenceQueue</code>队列中。</p>
+<blockquote>
+<p>因为 <code>PhantomReference</code>类的构造器必须制定一个 <code>ReferenceQueue</code> 对象。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p>ReferenceQueue 的作用</p>
+<ul>
+<li>在构造 Soft Reference ,Weak Reference, Phantom Reference 时，如果关联一个 <code>ReferenceQueue</code>对象，那么当一个 <code>Reference</code>引用的对象被清除的时候，该<code>Reference</code>对象会被放入给定的队列当中。可以通过从该队列中获取<code>Reference</code>对象，然后做相关的工作。</li>
+<li>WeakHashMap 中清除 key 为null 的Entry时使用<code>ReferenceQueue</code>，具体参考 <code>WeakHashMap.expungeStaleEntries()</code>方法</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>一个对象可以被不同引用类型引用，例如，ThreadLocal 对象可以同时被外部变量强引用，和被ThreadLocalMap 的Entry 作为 key 弱引用。</p>
+</blockquote>
+<p>关于 <code>finalize()</code>方法的作用？</p>
+<p>答：<strong>最佳实践就是不要使用 <code>finalize()</code>方法</strong>，因为它不能保证运行。JVM完全可以决定何时运行垃圾收集器以及收集什么，即使对象符合垃圾收集的条件。</p>
+<p>参考：</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/xlinsist/article/details/57089288">深入理解 java 中的 Soft references &amp; Weak references &amp; Phantom reference</a></p>
+<p>软引用与弱引用的不同？</p>
+<blockquote>
+<p>软引用与弱引用唯一的不同就是，垃圾回收器（garbage collector）会通过<strong>算法决定</strong>是否回收软可达对象（softly reachable object），但是会<strong>直接回收</strong>弱可达对象（weakly reachable object）。</p>
+</blockquote>
+<p>类有三种变量：</p>
+<ul>
+<li>在类中的成员变量 - fields（字段）</li>
+<li>在方法或者代码块中的变量 - local variables（本地变量）</li>
+<li>在方法定义中的变量 - parameters （参数）</li>
+</ul>
+<p>首先要明白各种引用在遇到 GC 之后，引用与被引用对象之间的变化。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/ThreadLocal.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%B9%B6%E5%8F%91/" rel="tag">Java并发</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/" rel="tag">ThreadLocal</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F%E5%8C%96.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            时间格式化
+          
+        </div>
+      </a>
+    
+    
+      <a href="/Logback%E4%BD%BF%E7%94%A8.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Logback使用</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

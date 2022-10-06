@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Python知识点小结 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Python/Python知识点小结"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Python知识点小结
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/Python%E7%9F%A5%E8%AF%86%E7%82%B9%E5%B0%8F%E7%BB%93.html" class="article-date">
+  <time datetime="2022-04-02T12:36:03.000Z" itemprop="datePublished">2022-04-02</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Python/">Python</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">3.8k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">15 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>﻿Python知识点：</p>
+<p>1、<br>python的函数</p>
+<p>所有的对象都是通过引用来出传递的，函数也不例外。</p>
+<p>函数参数传递，<br>直接给出数据时，参数按照预定义的顺序传递给相关形参，<br>当以关键字输入时，顺序就不重要了，解释器会自动匹配对应的形参关键字</p>
+<p>函数中，关键字参数总是出现在形参之后，如int(x,base &#x3D; 2)</p>
+<p>任何能通过函数操作符“()”来调用的对象，都是“可调用的”</p>
+<p>2、<br>lambda表达式<br>lambda [arg1[,arg2,…argN]]:expression</p>
+<p>lambda可以生成函数对象，同时注意，lambda的函数体只能为单句表达式，甚至print语句都不行</p>
+<p>例1：<br>def true():<br>    return True<br>&lt;&#x3D;&#x3D;&#x3D;&gt; lambda :True<br>例2：<br>def add(x, y):return x + y &lt;&#x3D;&#x3D;&#x3D;&#x3D;&gt; lambda x,y:x+y</p>
+<p>通过lambda来创建函数的对象，除了没有命名之外，享有和用户自定义函数相同的属性。<br>lambda的__name__属性被定义为字符串”<lambda>“</p>
+<p>3、<br>内建函数<br>apply()</p>
+<p>filter()</p>
+<p>map()</p>
+<p>reduce()</p>
+<p>函数句点属性标识对于两个模块意味了不同的命名空间<br>foo.x ,bar.x</p>
+<p>python有四种可调用对象：<br>函数，方法，类，以及一些类的实例</p>
+<p>【注意】：可调用对象的任何引用或者别名都是可调用的。</p>
+<p>只有内建类型（built-in type,BIT）有内建方法<br>内建方法和内建函数享有相同的属性，<br>不同之处在于BIM的__self__属性指向一个Python对象，而BIF指向None</p>
+<p>4、<br>实例化，与类的调用<br>类,我们可以利用类的可调用性来创建实例。“调用”类的结果是创建了实例，也就是“实例化”</p>
+<p>一般情况下，类的实例是不可被调用的，只有在类中实现了__call__()方法，类的实例才能成为可调用的。</p>
+<p>5、exec()和eval()<br>一个很重要观点，exec和eval()都可以执行字符串格式的Python代码。<br>当执行字符串形式的代码时，每次都必须对这些代码进行字节编译处理</p>
+<p>eval()对表达式求值，表达式可以为字符串或内建函数complie()创建的预编译代码对象。<br>eval()在执行时，可以理解为对字符串两边的引号视而不见<br>利用eval()可以将字符串转换为真正的Python对象<br>例如：eval(“2*3”)  –&gt; 6</p>
+<p>exec与eval()相似，exec语句执行代码对象或字符串形式的Python代码（单一语句或多个语句组成的语句组）。<br>exec obj<br>注：多个语句作为一个字符串发给exec时，一般用”””引号。<br>exec还可以接受有效的Python文件对象。<br>例：<br>exec(“print ‘hello world.’”)   —&gt; hello world.<br>f &#x3D; open(filename,’r’)<br>exec f     #[注意]exec执行f之后，文件指针会移动到文件末尾EOF，再次执行时不会有任何效果，可以通过f.seek(0)移动文件指针至文件开始<br>f.close()</p>
+<p>用compile()预编译重复代码有助于改善性能，因为调用时不必经过字节编译处理。</p>
+<p>内建函数input()是eval()和raw_input()的组合，&lt;&#x3D;&#x3D;&gt; eval(raw_input())</p>
+<p>6、<br>执行其他（Python）程序</p>
+<p>可以利用os模块调用外部程序</p>
+<p>关于模块的导入，<br>注意：当导入模块时，解释器会执行模块中所有最高级别的（即没有缩进的）Python代码</p>
+<p>如果有些代码不想被导入，那么就写在if <strong>name</strong> &#x3D;&#x3D; ‘<strong>main</strong>‘语句中，<br>导入的副作用：导致最高级别代码运行。</p>
+<p>将模块作为脚本执行<br>命令行中，Python -m 标准库中的模块</p>
+<p>**14.5.3章节，与进程有关的一些说明。<br>**14.5.5章节，subprocess模块的常用方法用法介绍</p>
+<p>shelve模块</p>
+<p>shelve.open()方法<br>open(filename, flag&#x3D;’c’, protocol&#x3D;None, writeback&#x3D;False)<br>    Open a persistent dictionary for reading and writing.<br>    filename文件名参数是一个数据库相关的基础文件名（不能是一个txt文件）<br>    The filename parameter is the base filename for the underlying<br>    database. </p>
+<hr>
+<p>python文件操作</p>
+<p>几个不太懂的词汇：</p>
+<p>“钩子”</p>
+<p>“句柄”</p>
+<p>“文件描述符”</p>
+<p>永久性存储<br>大部分永久性存储模块是用来存储字符串数据的<br>数据的序列化，扁平化，顺序化</p>
+<p>“文件描述符”<br>形式：文件描述符是非负整数。<br>作用：内核（kernel）利用文件描述符（file descriptor）来访问文件,用于指代被打开的文件,所有执行I&#x2F;O操作的系统调用都通过文件描述符。</p>
+<p>文件描述符这一概念往往只适用于UNIX、Linux这样的操作系统。<br>在UNIX、Linux的系统调用中，大量的系统调用都是依赖于文件描述符。<br>由于Linux的设计思想便是把一切设备都视作文件。</p>
+<p>在Windows操作系统上，’文件描述符’被称作’文件句柄’。</p>
+<hr>
+<p>1、相当于打开收音机<br>2、定于指定频道<br>3、接收信息（有两个方法，一个阻塞型的，另一个非阻塞型（新版本中才有，2.x版本没有））<br>4、发送方，指定频道并发送信息（数据）</p>
+<p>注，接收一次后会断掉，如果想要不断地监听，最好写成一个循环，如：while True:后面是接收信息。</p>
+<p>return True  –&gt; 可以用作条件判断时使用，return true时，if等条件语句为true</p>
+<p>base64 模块的作用</p>
+<p>command模块的作用</p>
+<hr>
+<p>Python面试中常提到的内容：</p>
+<p>一、爬虫<br>爬虫必要的几个基本需求：<br>1、抓取；<br>html看不懂（w3cschool学习，看懂各种标签的含义，要求能看懂html文件里的内容），http原理不懂（需要能看懂http请求头）<br>2、存储；<br>3、分析；<br>提取信息，<br>4、展示；</p>
+<p>二、一般问题：<br>1、函数中设置全局变量<br>global<br>2、匿名函数<br>lambda x:xx</p>
+<p>RE<br>3、Python中match()和search()区别<br>match()，只匹配开始位置<br>search()，扫描整个字符串并返回第一个成功的匹配<br>4、怎样查询并替换一个文本字符串？<br>sub()</p>
+<p>异常；<br>try:<br>except</p>
+<p>raise手动触发</p>
+<p>pass语句<br>占位符</p>
+<p>range()函数，</p>
+<p>随机生成器<br>random</p>
+<p>Python内存管理，是由Python解释器负责，不需要程序员关心</p>
+<p>如何用Python来发送邮件<br>使用smtplib标准库</p>
+<p>如何设置很多项目，不同版本<br>virtualenv</p>
+<p>装饰器，<br>使用@decorator_name</p>
+<p>你知道列表和元组之间的区别么？举个例子？<br>列表时可变对象<br>元组是不可变对象</p>
+<p>with…as..<br>用于处理打开关闭文件</p>
+<p>hasattr(a,b) –&gt; a有b属性</p>
+<p>if语句<br>if xxx:<br>    if-statement<br>[else:xxx]</p>
+<p>if条件表达式<br>result1 if xxx else result2<br>如果xxx为true,则result1，否则result2</p>
+<hr>
+<p>符号的另外含义使用：</p>
+<p>1、”+” : 连接操作符<br>除了用在数字加减，<br>还可以用于”序列+序列” ，–&gt; 把两个序列组合成新的序列</p>
+<p>2、”<em>“ : 重复操作符<br>-序列</em>整数， —&gt; 重复序列整数次</p>
+<hr>
+<p>yield<br>生成器，</p>
+<p>每次生成一个值的特殊函数</p>
+<p>遇到yield，会返回yield生产出来的值，</p>
+<p>可以调用yield生成器对象的next()方法</p>
+<p>可以在for循环中使用生成器， 	for循环会创建一个生成器对象，并连续滴啊用其next()方法，获得值赋予for变量</p>
+<p>python 的文件处理方法，<br>open()&#x2F;file() 本身也是一个生成器<br>默认f &#x3D; open(‘’,’r’) 	f本身也是一个生成器，默认一次读取一行</p>
+<hr>
+<p>【linux】【expect】</p>
+<p>expect是linux中一个，用于实现自动和交互式程序进行通讯，不需人工干预的工具</p>
+<p>【pexpect】Python</p>
+<p>expect的python封装，同样实现命令行进行自动交互，达到无需人工干涉自动化的目的</p>
+<p>注：pexpect无法解析shell命令行中的 “&gt;”,”|”和”*”(通配符),这三个特殊的元字符</p>
+<pre><code>解决：
+    将有这三个特殊元字符的命令作为/bin/bash的参数进行调用：
+例：
+    child = pexpect.spawn(&quot;/bin/bash -c &#39;ls -l | grep LOG &gt; log.txt&#39;&quot;)
+    child.expect(pexpect.EOF)
+  或
+    用python列表作为参数项
+    shell_cmd = &#39;ls -l | grep LOG &gt; log.txt&#39;
+    child = pexpect.spawn(&#39;/bin/bash&#39;, [&#39;-c&#39;, shell_cmd])  # 对我的启发，当直接写不容易的时候，多用变量进行传值
+    child.expect(pexpect.EOF)
+</code></pre>
+<p>pexpect的几个核心组件 ：spawn类，run函数, pxssh派生类</p>
+<p>spawn 类 ， # 作用，启动和控制子应用程序</p>
+<p>【获取pexpect的输入和输出信息】<br>1、写到日志文件</p>
+<pre><code>child = pexpect.spawn(&#39;some_command&#39;)
+fout = open(&#39;mylog.txt&#39;, &#39;w&#39;)
+child.logfile = fout  # 
+</code></pre>
+<p>2、输出到标准输出STDOUT</p>
+<pre><code>child = pexpect.spawn(&#39;some_command&#39;)
+child.logfile = sys.stdout
+</code></pre>
+<p>expect(pattern, timeout&#x3D;-1, searchwindowsize&#x3D;-1)</p>
+<p>pattern 可以为一个list<br>    若为list，则返回的结果是<br>              子程序输出最先出现的那个元素，<br>              或者是列表最左边的元素（索引最小的）</p>
+<p>如果pexpect.EOF,pexpect.TIMEOUT作为expect的列表参数时，匹配时将返回所处列表中的索引ID</p>
+<p>before;<br>after;</p>
+<p>向子程序发送响应命令的方法s：<br>send(self, s)	# 发送命令，不回车<br>sendline(self, s&#x3D;””)	# 发送命令， 回车<br>sendcontrol(self, char)  # 发送控制字符，如child.sendcontrol(‘c’) 等价于”ctrl + c”<br>sendof()  # 发送eof</p>
+<hr>
+<h2 id="判断是文件还是文件夹"><a href="#判断是文件还是文件夹" class="headerlink" title="判断是文件还是文件夹"></a>判断是文件还是文件夹</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">if</span> os.path.isdir(path):</span><br><span class="line">    <span class="built_in">print</span> <span class="string">&quot;it&#x27;s a directory&quot;</span></span><br><span class="line"><span class="keyword">elif</span> os.path.isfile(path):</span><br><span class="line">    <span class="built_in">print</span> <span class="string">&quot;it&#x27;s a normal file&quot;</span></span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    <span class="built_in">print</span> <span class="string">&quot;it&#x27;s a special file(socket,FIFO,device file)&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="使用os模块可以获取指定文件夹下所有文件名，有两个方法os-walk-和os-listdir"><a href="#使用os模块可以获取指定文件夹下所有文件名，有两个方法os-walk-和os-listdir" class="headerlink" title="使用os模块可以获取指定文件夹下所有文件名，有两个方法os.walk()和os.listdir()"></a>使用os模块可以获取指定文件夹下所有文件名，有两个方法os.walk()和os.listdir()</h2><ol>
+<li><p>os.listdir()</p>
+<p>注意：该方法会将目录下的一层文件和目录全部列出来，需要再结合上级路径判断哪些是文件，哪些是目录。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">excel_files = os.listdir(files)</span><br><span class="line"><span class="keyword">for</span> excel_f <span class="keyword">in</span> excel_files:</span><br><span class="line">    input_excel = os.path.join(files, excel_f)</span><br><span class="line">    <span class="keyword">if</span> os.path.isdir(input_excel):</span><br><span class="line">        <span class="built_in">print</span> input_excel + <span class="string">&#x27;is a dir&#x27;</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="built_in">print</span> input_excel + <span class="string">&#x27;is a file&#x27;</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Python获取文件路径、文件名和扩展名"><a href="#Python获取文件路径、文件名和扩展名" class="headerlink" title="Python获取文件路径、文件名和扩展名"></a>Python获取文件路径、文件名和扩展名</h2><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+<th>返回值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>os.path.realpath(__file__)</code></td>
+<td>获取当前文件绝对路径</td>
+<td>字符串</td>
+</tr>
+<tr>
+<td><code>os.path.dirname(__file__)</code></td>
+<td><strong>注意</strong>，这个函数仅能获取当前文件的上一级目录名，并不是所在父级路径</td>
+<td>字符串</td>
+</tr>
+<tr>
+<td>os.path.splitext()</td>
+<td>分割文件名和扩展名</td>
+<td>元组</td>
+</tr>
+<tr>
+<td>os.path.split()</td>
+<td>分割路径和文件名</td>
+<td>元组</td>
+</tr>
+</tbody></table>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot;http://images/logo.png&quot;</span></span><br><span class="line"></span><br><span class="line">(file, ext) = os.path.splitext(url)</span><br><span class="line"><span class="built_in">print</span>(file)  <span class="comment"># http://images/logo</span></span><br><span class="line"><span class="built_in">print</span>(ext)   <span class="comment"># .png</span></span><br><span class="line"></span><br><span class="line">(path, filename) = os.path.split(url)</span><br><span class="line"><span class="built_in">print</span>(path)      <span class="comment"># http://images</span></span><br><span class="line"><span class="built_in">print</span>(filename)  <span class="comment"># logo.png</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># /root/devops/export-zabbix/zabbix-export.py</span></span><br><span class="line"><span class="comment"># 上一级目录</span></span><br><span class="line">file_path = os.path.dirname(__file__) <span class="comment"># export-zabbix</span></span><br><span class="line"><span class="comment"># 文件路径</span></span><br><span class="line">file_path = os.path.split(os.path.realpath(__file__))[<span class="number">0</span>]  <span class="comment"># /root/devops/export-zabbix</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="python-创建目录"><a href="#python-创建目录" class="headerlink" title="python 创建目录"></a>python 创建目录</h2><p><code>os.mkdir</code> 创建单层目录</p>
+<ul>
+<li>类似于 Linux 命令： <code>mkdir xxx</code></li>
+</ul>
+<p><code>os.makedirs</code> 递归创建目录</p>
+<ul>
+<li>类似于 Linux 命令：<code>mkdir -p xxx</code></li>
+</ul>
+<h2 id="处理Python的编码问题"><a href="#处理Python的编码问题" class="headerlink" title="处理Python的编码问题"></a>处理Python的编码问题</h2><ol>
+<li><p>python 文件包含中文</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SyntaxError: Non-ASCII character <span class="string">&#x27;\xe4\xe5&#x27;</span> <span class="keyword">in</span> file xxxxx</span><br></pre></td></tr></table></figure>
+
+<p>解决：在 python 文件开头添加文件编码注释</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"></span><br><span class="line">或者 </span><br><span class="line"></span><br><span class="line"><span class="comment"># coding=utf-8</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>报错如下：<code>typeerror decoding unicode is not supported</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u&#x27;foo&#x27;</span>, <span class="string">&#x27;utf-8&#x27;</span>)</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">&quot;&lt;pyshell#1&gt;&quot;</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    unicode(<span class="string">u&#x27;foo&#x27;</span>, <span class="string">&#x27;utf-8&#x27;</span>)</span><br><span class="line">TypeError: decoding Unicode <span class="keyword">is</span> <span class="keyword">not</span> supported</span><br><span class="line">    </span><br><span class="line">从上面内容可知，已经是unicode的对象是无法用unicode()方法再编码的，</span><br><span class="line"></span><br><span class="line">可以利用下面方法将<span class="string">u&#x27;foo&#x27;</span>编码为<span class="string">&#x27;utf-8&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="string">u&#x27;foo&#x27;</span>.encode(<span class="string">&#x27;utf-8&#x27;</span>)</span><br><span class="line"></span><br><span class="line">同时，在python程序中，通过方法返回的结果编码是unicode，那么不能再次调用unicode()方法</span><br><span class="line"></span><br><span class="line">样例<span class="number">1</span>：</span><br><span class="line">workbook = xlrd.open_workbook(excel_file)</span><br><span class="line">sheet_names = workbook.sheet_names()</span><br><span class="line"><span class="keyword">for</span> worksheet_name <span class="keyword">in</span> sheet_names:</span><br><span class="line">    <span class="built_in">print</span> worksheet_name   √</span><br><span class="line">    <span class="built_in">print</span> unicode(worksheet_name,<span class="string">&#x27;utf-8&#x27;</span>)  x</span><br><span class="line"></span><br><span class="line">样例<span class="number">2</span>：</span><br><span class="line">(pre_file, suffix_file) = os.path.splitext(base_naem)</span><br><span class="line"><span class="built_in">print</span> unicode(pre_file, <span class="string">&#x27;utf-8&#x27;</span>)  √</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>&#96;&#96;&#96;python<br>unicodedecodeerror ‘ascii’ codec can’t decode byte 0xe6 in position 25:ordinal not in range(128)</p>
+<p>isinstance(aa, unicode)  # 判断是否为unicode编码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">   &gt;  在解决错误之前，首先要了解unicode和utf-8的区别。</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; ​     unicode指的是万国码，是一种“字码表”。而utf-8是这种字码表储存的编码方法。unicode不一定要由utf-8这种方式编成bytecode储存，也可以使用utf-16,utf-7等其他方式。目前大多都以utf-8的方式来变成bytecode。</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; ​     其次，[**Python**](http://lib.csdn.net/base/11)中字符串类型分为byte string 和 unicode string两种。</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; ​     如果在python文件中指定编码方式为utf-8(#coding=utf-8)，那么所有带中文的字符串都会被认为是utf-8编码的byte  string（例如：mystr=&quot;你好&quot;），但是在函数中所产生的字符串则被认为是unicode string。</span><br><span class="line">   &gt; ​     问题就出在这边，unicode string 和 byte string 是不可以混合使用的，一旦混合使用了，就会产生这样的错误。例如：</span><br><span class="line">   &gt; ​     self.response.out.write(&quot;你好&quot;+self.request.get(&quot;argu&quot;))</span><br><span class="line">   &gt; ​     其中，&quot;你好&quot;被认为是byte string，而self.request.get(&quot;argu&quot;)的返回值被认为是unicode string。由于预设的解码器是ascii，所以就不能识别中文byte string。然后就报错了。</span><br><span class="line"></span><br><span class="line">   &gt; 以下有两个解决方法：</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 1.将字符串全都转成byte string。</span><br><span class="line">   &gt;        self.response.out.write(&quot;你好&quot;+self.request.get(&quot;argu&quot;).encode(&quot;utf-8&quot;))</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 2.将字符串全都转成unicode string。</span><br><span class="line">   &gt;        self.response.out.write(u&quot;你好&quot;+self.request.get(&quot;argu&quot;))</span><br><span class="line">   &gt;        byte string转换成unicode string可以这样转unicode(unicodestring, &quot;utf-8&quot;)</span><br><span class="line"></span><br><span class="line">   更详细的内容查看 [stackoverflow上的这个回答](https://stackoverflow.com/questions/21129020/how-to-fix-unicodedecodeerror-ascii-codec-cant-decode-byte)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## 处理Pandas遇到的问题</span><br><span class="line"></span><br><span class="line">1. pandas从excel读取数据数字类型过长出现科学计数法的问题</span><br><span class="line"></span><br><span class="line">   - 原因：excel显示数字时，如果数字大于12位就会自动转化为科学计数法。如果数字大于15位，它不仅用于科学技术费表示，还会只保留高15位，其他位都变0。所以本场景就是因为超过15位了，导致读取有问题，需要将数字类型转换位文本类型(str类型)</span><br><span class="line"></span><br><span class="line">   - 解决：在excel读取的时候，添加`dtype=object`的参数 （也有人说添加dtype=str，可能由于版本问题，我没有成功）</span><br><span class="line"></span><br><span class="line">     ```python</span><br><span class="line">     pd.read_excel(excel_file, worksheet_name,index_col=None,dtype=object)</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="Python-计算百分比保留多位小数"><a href="#Python-计算百分比保留多位小数" class="headerlink" title="Python 计算百分比保留多位小数"></a>Python 计算百分比保留多位小数</h1><p>两种方式，</p>
+<ol>
+<li><p>格式化</p>
+<ol>
+<li><code>&#39;%.2f&#39; % x</code> ，这里以保留两位小数为例</li>
+<li><code>&#39;&#123;:.2f&#125;&#39;.format(x)</code></li>
+</ol>
+</li>
+<li><p>round函数</p>
+<ul>
+<li><p>round(x, 2)</p>
+<blockquote>
+<p>注意，该函数会省略为0的数字，比如 round(10.00, 2)  –&gt; 10.0</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="计算百分比"><a href="#计算百分比" class="headerlink" title="计算百分比"></a>计算百分比</h2><p>同样是采用格式化，两种方法</p>
+<ul>
+<li>方法1，格式化为 float，然后处理 <code>%</code> 格式，需要计算 <code>分子 / 分母 * 100</code>，</li>
+<li>方法2，直接使用参数格式化： <code>&#123;:.2%&#125;</code>，这里为显示小数点后2位，</li>
+</ul>
+<p>例如：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">print</span> <span class="string">&#x27;&#123;:.2f&#125;%&#x27;</span>.<span class="built_in">format</span>(<span class="number">42</span> / <span class="number">50</span> * <span class="number">100</span>)</span><br><span class="line"><span class="built_in">print</span> <span class="string">&#x27;&#123;:.2%&#125;&#x27;</span>.<span class="built_in">format</span>(<span class="number">42</span> / <span class="number">50</span> * <span class="number">100</span>)<span class="string">&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="元组列表转为字典"><a href="#元组列表转为字典" class="headerlink" title="元组列表转为字典"></a>元组列表转为字典</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">tups = [(<span class="string">&quot;akash&quot;</span>, <span class="number">10</span>), (<span class="string">&quot;gaurav&quot;</span>, <span class="number">12</span>), (<span class="string">&quot;anand&quot;</span>, <span class="number">14</span>), </span><br><span class="line">    (<span class="string">&quot;suraj&quot;</span>, <span class="number">20</span>), (<span class="string">&quot;akhil&quot;</span>, <span class="number">25</span>), (<span class="string">&quot;ashish&quot;</span>, <span class="number">30</span>)]</span><br><span class="line">di = <span class="built_in">dict</span>(tups)</span><br><span class="line"><span class="built_in">print</span> di</span><br><span class="line"></span><br><span class="line">输出结果：</span><br><span class="line">&#123;<span class="string">&#x27;anand&#x27;</span>: <span class="number">14</span>, <span class="string">&#x27;akash&#x27;</span>: <span class="number">10</span>, <span class="string">&#x27;akhil&#x27;</span>: <span class="number">25</span>, </span><br><span class="line"> <span class="string">&#x27;suraj&#x27;</span>: <span class="number">20</span>, <span class="string">&#x27;ashish&#x27;</span>: <span class="number">30</span>, <span class="string">&#x27;gaurav&#x27;</span>: <span class="number">12</span>&#125;</span><br></pre></td></tr></table></figure>
+
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/Python%E7%9F%A5%E8%AF%86%E7%82%B9%E5%B0%8F%E7%BB%93.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Python/" rel="tag">Python</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/%E8%AE%A4%E8%AF%86%E8%99%9A%E6%8B%9F%E5%8C%96.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            认识虚拟化
+          
+        </div>
+      </a>
+    
+    
+      <a href="/%E6%9B%B4%E6%94%B9%E8%BF%9C%E7%A8%8B%E6%A1%8C%E9%9D%A2%E4%BE%A6%E5%90%AC%E7%AB%AF%E5%8F%A3.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">更改远程桌面侦听端口</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

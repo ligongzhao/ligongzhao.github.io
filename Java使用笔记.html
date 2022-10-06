@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Java使用笔记 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Java/Java使用笔记"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Java使用笔记
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/Java%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0.html" class="article-date">
+  <time datetime="2022-10-04T10:55:43.000Z" itemprop="datePublished">2022-10-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">3.6k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">13 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="运行环境"><a href="#运行环境" class="headerlink" title="运行环境"></a>运行环境</h1><p>任何语言，都需要有其开发运行环境</p>
+<p>jre： java runtime environment java运行环境<br>    包括jvm和java程序所需的核心类库等，<br>    如果想要运行一个开发好的java程序，只需要安装jre即可</p>
+<p>jdk：java development kit java开发工具包<br>    jdk提供给java开发人员使用，包含了jre<br>    也包含了一些开发工具：编译工具java.exec，打包工具jar.exe</p>
+<p>总结：使用jdk开发完的java程序，交给jre运行</p>
+<h1 id="Java-文件"><a href="#Java-文件" class="headerlink" title="Java 文件"></a>Java 文件</h1><p>java 的可以执行文件”.class”</p>
+<p>【windows】<br>命令行中设置临时环境变量</p>
+<p><code>set Path=E:\jdk\bin\;%path%</code></p>
+<p>【linux】<br><code>$path=$PATH:xxxx</code></p>
+<p>java中无论从jar包加载还是从.class文件加载，都有一个classpath的概念，类似于PATH。<br>    系统会从当前路径下寻找，然后在PATH中寻找，都没有则会报错<br>    classpath也一样<br>不同的是，PATH只能包含目录，classpath可以包含jar包</p>
+<p>java.lang.NoClassDefFoundError错误：</p>
+<ul>
+<li>没有在classpath中忘掉了需要的jar包</li>
+</ul>
+<p>classpah 的作用就是告诉系统java运行环境，告诉java虚拟机到哪里去寻找需要的jar包或文件</p>
+<p>classpath 中需要注意的：</p>
+<ol>
+<li>classpath告诉jvm到指定目录下寻找需要的jar文件，</li>
+<li>jvm默认只会寻找classpath中的路径</li>
+<li>如果classpath路径后加了”;”，则jvm在寻找完指定路径后，会搜索当前路径；</li>
+<li>如果不想让jvm自动去寻找当前路径，则不需要在最后的路径后添加”;”，</li>
+<li>如果需要jvm在当前路径寻找，又在指定的其他路径寻找，classpath&#x3D;.;xxxx<br>这样，就会现在当前路径寻找，再到指定路径寻找</li>
+<li>添加以后的classpath,</li>
+</ol>
+<p>windows下想已有的classpath中添加临时的路径，<br>    <code>set classpath=.;%classpath%</code></p>
+<p>每个.java文件中，可以包含多个class ，但是每个class后面的名称都不能相同；</p>
+<ul>
+<li>一个.java文件中，只能有一个public修饰的class</li>
+<li>为方便，每个.java文件的名称都必须与public的类名称完全一致</li>
+</ul>
+<h1 id="包"><a href="#包" class="headerlink" title="包"></a>包</h1><p>如果java原文件中包含了package信息，例如com.data.data,则这个原文件要放在相应的目录下，</p>
+<ul>
+<li>如：person.java使用了package com.data.data,</li>
+<li>那么，person.java应该放在src&#x2F;com&#x2F;data&#x2F;data目录下</li>
+</ul>
+<p>java生成的.class文件也会遵循类似的目录结构和命名方式</p>
+<p>Java程序中源代码文件那么多，编译之后生成那么多.class文件，怎么方便管理呢？</p>
+<p>jar工具，用来给我们的程序打包，</p>
+<ul>
+<li>打包之后会生成一个.jar文件，</li>
+<li>这个文件跟zip文件的结构是一样的，可以用解压工具打开，方便管理。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jar -cfv test.jar  Test.class</span><br></pre></td></tr></table></figure>
+java 包</li>
+</ul>
+<p>包 </p>
+<ul>
+<li>有层次关系</li>
+<li>包嵌套的层次可以保证包名的唯一性，</li>
+<li>建议用Internet域名的倒序作为包的前缀<ul>
+<li>lzy.com –&gt; com.lzy.mypackage,</li>
+</ul>
+</li>
+<li>包名用小写字母表示</li>
+<li>包名与文件系统的目录结构一一对应</li>
+<li>要使java知道包在文件系统中的地址，需要修改classpath（类路径）</li>
+</ul>
+<p>在包中添加类</p>
+<ul>
+<li>只需在程序的最前端加上<br> <code>package PACKAGE_NAME</code></li>
+</ul>
+<h1 id="Java注释"><a href="#Java注释" class="headerlink" title="Java注释"></a>Java注释</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//单行注释</span></span><br><span class="line"><span class="comment">/**/多行注释</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">/** 文档注释</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>注：文档注释可以通过javadoc程序自动提取生成相关说明文档<br>类似于python中<br>“””<br>“”” 三引号中的紧跟在函数或类下面的说明文档</p>
+<p>注释很重要，<br>与人方便，于己方便</p>
+<p>代码仅仅是思想的一种体现形式</p>
+<p>想好了可以先用中文或更容易表现的形式展示出来。</p>
+<p>类的形式就是一个字节码，给计算机看的</p>
+<h1 id="常量"><a href="#常量" class="headerlink" title="常量"></a>常量</h1><p>整数常量<br>小数常量<br>布尔(boolean)常量：<br>字符常量 –&gt; 用’’单引号标识的,单个&#x2F;一个[数字(0-9)和字母，符号]<br>字符串常量 –&gt; 用””双引号标识的<br>null常量</p>
+<p>整数：有四种表现形式<br>二进制：0,1，满2进1<br>八进制：0-7，满8进1，用0开头表示<br>十进制：0-9，满10进1<br>十六进制：0-9，A-F，满16进1，用0x表示</p>
+<p>进制“一种计数的形式”</p>
+<h1 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h1><p>内存中的一个存储区域</p>
+<ul>
+<li>该区域有自己的名称(变量名)和类型(数据类型)<ul>
+<li>（名字用来寻找，类型用来约束存放的内容）</li>
+</ul>
+</li>
+<li>该区域的数据可以在同一类型范围内不断变化</li>
+</ul>
+<p>用来不断的存放同一类型的常量，并可以重复使用</p>
+<p>注意：<br>变量的作用范围(一对{}之间有效，作用域，超出作用域之后，变量在内存中会被释放)</p>
+<ul>
+<li>{} 局部代码块，可以定义局部变量的生命周期。<br>初始化值</li>
+</ul>
+<p>定义变量的格式：<br>    数据类型 变量名 &#x3D; 初始化值；<br>(格式固定)</p>
+<p>Java强类型 –&gt; 每种数据都定义了明确的数据类型，</p>
+<pre><code>每种数据类型在内存中分配的内存空间大小不相同
+</code></pre>
+<p>基本数据类型 –&gt; 数值型 :–&gt; 整数 byte,short, int ,long<br>                         –&gt; 浮点数 float, double<br>                 字符型 char<br>                 布尔型 boolean</p>
+<p>引用数据类型</p>
+<ul>
+<li>类class</li>
+<li>接口interface</li>
+<li>数组[]</li>
+</ul>
+<p>注：整数默认为：int ,小数默认为：double</p>
+<p>String 不是基本数据类型，是Java库的预定义类，任何Java类，都为引用类型</p>
+<p>数据类型的设置，应该以需要赋值的类型来判定</p>
+<p>类型转换：</p>
+<p>自动类型转换<br>强制类型转换（显示类型转换）<br>什么时候使用强制类型转换？？？<br>如：(int)(a + b)强制转换为int</p>
+<h1 id="运算符"><a href="#运算符" class="headerlink" title="运算符"></a>运算符</h1><ul>
+<li>只要是运算符，计算之后都会有结果</li>
+</ul>
+<h2 id="算数运算符"><a href="#算数运算符" class="headerlink" title="算数运算符"></a>算数运算符</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/ : Java中两个整数相除，商为整数，<span class="number">5</span> / <span class="number">9</span> == <span class="number">0</span>，</span><br><span class="line">所以，要想得到小数，--&gt; <span class="number">5.0</span> / <span class="number">9</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="赋值运算符"><a href="#赋值运算符" class="headerlink" title="赋值运算符"></a>赋值运算符</h2><h2 id="比较运算符"><a href="#比较运算符" class="headerlink" title="比较运算符"></a>比较运算符</h2><p>结果true；false</p>
+<h2 id="逻辑运算符（关系运算符）"><a href="#逻辑运算符（关系运算符）" class="headerlink" title="逻辑运算符（关系运算符）"></a>逻辑运算符（关系运算符）</h2><p>逻辑运算符，用于连接两个boolean类型的表达式</p>
+<ul>
+<li>&amp;	(单)与运算：两边都参与运算</li>
+<li>|	(单)或运算：同上</li>
+<li>！	非</li>
+<li>^	异或	</li>
+<li>&amp;&amp;	(短路)与运算：当前面一个运算不满足时，后面的不需要运算</li>
+<li>||	(短路)或运算：同上</li>
+</ul>
+<h2 id="位运算符："><a href="#位运算符：" class="headerlink" title="位运算符："></a>位运算符：</h2><p>用于二进制位运算<br>（算法运算时用）<br>^ 异或运算时，</p>
+<ul>
+<li>一个数异或同一个数两次，结果还是这个数</li>
+<li>（异或的小应用：对一个数据异或一次，相当于加密，在异或一次相同于解密（USBKey））</li>
+</ul>
+<h2 id="移位运算符"><a href="#移位运算符" class="headerlink" title="移位运算符"></a>移位运算符</h2><h2 id="三元运算符"><a href="#三元运算符" class="headerlink" title="三元运算符"></a>三元运算符</h2><p><code>A?B:C</code><br>与下面代码效果相同</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (A)&#123;</span><br><span class="line">	B</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">	C</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>只要是运算符，计算之后都会有结果</li>
+</ul>
+<h2 id="位运算"><a href="#位运算" class="headerlink" title="位运算"></a>位运算</h2><ol>
+<li><p>最有效的方法计算2*8</p>
+<ul>
+<li>凡是涉及到2进制运算，位运算是最高效的方式<br><code>2&lt;&lt;3 == 2*8 =16</code></li>
+</ul>
+</li>
+<li><p>对两个整数变量的值进行互换（不用第三方变量）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a = a ^ b;</span><br><span class="line">b = a ^ b;</span><br><span class="line">a = a ^ b; 计算的结果a、b实现互换  </span><br></pre></td></tr></table></figure>
+<p>这里的利用^ 的规律，一个数^同一个数两次，值不变</p>
+</li>
+</ol>
+<p>if条件判断</p>
+<h1 id="switch语句"><a href="#switch语句" class="headerlink" title="switch语句"></a>switch语句</h1><p>格式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span>(表达式)&#123;</span><br><span class="line">	<span class="keyword">case</span> 取值<span class="number">1</span>:</span><br><span class="line">		执行语句;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> 取值<span class="number">2</span>:</span><br><span class="line">		执行语句<span class="number">2</span>;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		执行语句n;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注：靠近结尾大括号的语句的break可以省略；</p>
+<p>多个选项对应一个内容：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span>(month)&#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="number">3</span>:</span><br><span class="line">	<span class="keyword">case</span> <span class="number">4</span>:</span><br><span class="line">	<span class="keyword">case</span> <span class="number">5</span>:</span><br><span class="line">		System.out.println(month + <span class="string">&quot;...&quot;</span>);</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（switch语句不常用）</p>
+<h1 id="for-循环"><a href="#for-循环" class="headerlink" title="for 循环"></a>for 循环</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(初始化表达式; 循环条件表达式; 循环后的操作表达式)&#123;</span><br><span class="line">    执行语句; (注意: 循环体)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>多个表达式之间用 <code>,</code> 逗号隔开</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(;;)&#123;&#125;	 <span class="comment">//无限循环</span></span><br></pre></td></tr></table></figure>
+
+
+<p>循环通常需要变量的变化来控制</p>
+<p>for与while的特点：</p>
+<ol>
+<li>for和while可以互换；</li>
+<li>区别<ul>
+<li>如果需要通过变量来对循环控制，且该变量只作为循环增量(变量)存在时，用for更好,循环结束后，这个变量就被回收了。</li>
+</ul>
+</li>
+</ol>
+<p>当对一个条件进行一次判断时，可以使用if语句；<br>当对一个条件进行多次判断时，可以使用while语句；</p>
+<p>注意：</p>
+<ol>
+<li>在使用循环时，一定要明确哪些语句需要参与循环，哪些不需要；</li>
+<li>循环通常情况下，需要定义条件，需要控制次数；</li>
+</ol>
+<h1 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h1><p>存储结构</p>
+<ul>
+<li>简单的说，HashMap的存储结构是由<code>数组和链表</code>共同完成的。</li>
+</ul>
+<p>数组：</p>
+<ol>
+<li>在内存中的地址是连续的，大小固定，一旦分配，不能被其他引用占用</li>
+<li>查询快，时间复杂度是O(1), 插入和删除的操作比较慢，时间复杂度是O(n),</li>
+</ol>
+<p>链表：</p>
+<ol>
+<li>存储方式是非连续的，大小不固定，特点与数组相反，</li>
+<li>插入和删除快，查询慢。</li>
+</ol>
+<p>HashMap是一种折中方案</p>
+<ul>
+<li>HashMap, Y轴方向是数组，X轴方向是链表，的存储方式</li>
+</ul>
+<h2 id="HashMap基本原理："><a href="#HashMap基本原理：" class="headerlink" title="HashMap基本原理："></a>HashMap基本原理：</h2><p>2、根据Hash值，要找到对应的数组，所以对Entry[]的长度length求余，得到的就是Entry数组的index<br>3、找到对应的数组，就找到了所在的链表，然后按照链表的操作对Value进行插入、删除和查询操作</p>
+<p><code>h%length</code>求余，一般什么情况下利用该算法？</p>
+<ul>
+<li>典型应用：分组</li>
+</ul>
+<h1 id="HashCode"><a href="#HashCode" class="headerlink" title="HashCode"></a>HashCode</h1><p>用最简单的方法来说，hashcode就是一个签名。当两个对象的hashcode一样时，两个对象就有可能一样。如果不一样的话两个对象就肯定不一样。<br>一般用hashcode来进行比较两个东西是不是一样的，可以很容易的排除许多不一样的东西。<br>最常用的地方就是在一堆东西里找一个东西。先用你要找的东西的hashcode和所有东西的hashcode比较，如果不一样的话就肯定不是你要找的东西。如果一样的话就很可能是你要找的东西。然后再进行仔细的比较两个东西是不是真的一模一样。</p>
+<p>两个不同的东西的hashcode可以是一样的，不过这样会减慢运行速度，所以尽量避免（也就是所谓的碰撞）。</p>
+<ol>
+<li>一个对象的散列码，什么是散列码呢，简单的说就是通过哈希算法算出来的一大窜数字之类的东西，和内存有关.<br>如果对象1和对象2相等，说明他们的散列码相等！反过来就不一样了！</li>
+<li>另外hashcode可以减少equals比较的次数，提高运算效率。</li>
+</ol>
+<p>网上，<br>hashcode 常常和 equal 一起提到</p>
+<p>Java</p>
+<p>垃圾回收器只释放那些经由new分配的内存</p>
+<p>只有当垃圾回收发生时，才会释放那些不用的内存空间，当时垃圾回收不一定什么时候发生</p>
+<p>Java中的垃圾回收与C++的析构函数的不同：</p>
+<ul>
+<li>垃圾回收不一定会发生，所以在程序执行过程中，对象不一定会被回收，</li>
+<li>析构一定会发生，</li>
+</ul>
+<p>垃圾回收只与内存有关，</p>
+<ul>
+<li>使用垃圾回收器的唯一原因是为了回收程序不在使用的内存</li>
+</ul>
+<h1 id="Java-继承"><a href="#Java-继承" class="headerlink" title="Java 继承"></a>Java 继承</h1><p>继承，也是一种代码复用</p>
+<p>关键字：extends，</p>
+<p>可以得到基类中所有的成员变量(域)和方法</p>
+<h1 id="Java-初始化的顺序"><a href="#Java-初始化的顺序" class="headerlink" title="Java 初始化的顺序"></a>Java 初始化的顺序</h1><ol>
+<li>在类的内部，变量定义的先后顺序决定了初始化的顺序。</li>
+<li>即使变量定义散布于方法定义之间（这里是指变量没有放在一起定义，而是散布在方法定义的前后），他们仍旧会在任何方法（包括构造器）被调用之前得到初始化<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> demoTest;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">InitSeq</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">		<span class="type">House</span> <span class="variable">h</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">House</span>();</span><br><span class="line">		h.f();  <span class="comment">// show that construction is done</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Window</span> &#123;</span><br><span class="line">	Window(<span class="type">int</span> marker)&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;Window(&quot;</span> + marker + <span class="string">&quot;)&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">House</span> &#123;</span><br><span class="line">	<span class="type">Window</span> <span class="variable">w1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Window</span>(<span class="number">1</span>);  <span class="comment">// before constructor</span></span><br><span class="line">	House() &#123;</span><br><span class="line">		<span class="comment">//show that we&#x27;re in the constructor</span></span><br><span class="line">		System.out.println(<span class="string">&quot;House()&quot;</span>);</span><br><span class="line">		w3 = <span class="keyword">new</span> <span class="title class_">Window</span>(<span class="number">33</span>);  <span class="comment">// reinitialize the w3</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="type">Window</span> <span class="variable">w2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Window</span>(<span class="number">2</span>);  <span class="comment">// after the constructor</span></span><br><span class="line">	<span class="keyword">void</span> <span class="title function_">f</span><span class="params">()</span> &#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;f()&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="type">Window</span> <span class="variable">w3</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Window</span>(<span class="number">3</span>);  <span class="comment">// at end</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+在上面的代码中，House中，故意把几个Window对象的定义散布在各处，以证明他们会在构造函数及其他函数调用之前得到初始化</li>
+</ol>
+<p>static的对象，会优先于非static对象初始化</p>
+<ul>
+<li>即先静态，后非静态</li>
+</ul>
+<p>构造器可以看做是static方法</p>
+<p>非静态实例初始化</p>
+<ul>
+<li>java 中有一种称为“实例初始化”，用来初始化每一个对象的非静态变量</li>
+</ul>
+<p>数组初始化：</p>
+<ul>
+<li>java 中可以将一个数组赋值给另一个数组，即： <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a2 = a1; (<span class="type">int</span>[] a2; <span class="type">int</span>[] a1 = &#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>&#125;)</span><br></pre></td></tr></table></figure>
+ 这中间真正做的是复制了一个引用，即a2和a1其实都是相同数组([1,2,3,4])的别名，即对a2的修改其实就是对相同数组的修改，a1也能看到修改后的内容；</li>
+</ul>
+<p>在编写程序时，并不能确定在数组中需要多少个元素，该怎么办？</p>
+<p>可变参数：<br>有可变参数的好处是，<br>    就不用再显示地编写数组语法了<br>        String[] args<br>        String… args 	可变参数仍旧可以是一个数组，	可以用于“具有可选的尾随参数”时</p>
+<p>Integer是int的包装类型<br>    自动包装机制可以将int提升为Integer</p>
+<h1 id="Java的-if…else-与switch-结构总结"><a href="#Java的-if…else-与switch-结构总结" class="headerlink" title="Java的 if…else 与switch 结构总结"></a>Java的 if…else 与switch 结构总结</h1><p>swtich 从字节码上看是优于 if，<br>但是从测试结果来看在分支很多的情况下能显示出优势，一般情况下还是打不过 if</p>
+<p><strong>额外知识点：</strong></p>
+<p>现代 CPU 都支持分支预测 (branch prediction) 和指令流水线 (instruction pipeline)，这两个结合可以极大提高 CPU 效率。对于像简单的 if 跳转，CPU 是可以比较好地做分支预测的。但是对于 switch 跳转，CPU 则没有太多的办法。 switch 本质上是根​据索引，从地址数组里取地址再跳转。</p>
+<p>if 是跳转指令，如果是简单的跳转指令的话 CPU 可以利用分支预测来预执行指令，而 switch 是要先根据值去一个类似数组结构找到对应的地址，然后再进行跳转，这样的话 CPU 预测就帮不上忙了。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/Java%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/java%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            java单元测试库
+          
+        </div>
+      </a>
+    
+    
+      <a href="/Java%E7%8E%B0%E5%9C%BA%E6%8A%80%E5%B7%A7%E6%B1%87%E6%80%BB.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Java现场技巧汇总</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

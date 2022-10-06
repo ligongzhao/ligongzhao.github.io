@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>14更多关于Cargo和Crate.io的内容 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/14更多关于Cargo和Crate.io的内容"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  14更多关于Cargo和Crate.io的内容
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/14%E6%9B%B4%E5%A4%9A%E5%85%B3%E4%BA%8ECargo%E5%92%8CCrate.io%E7%9A%84%E5%86%85%E5%AE%B9.html" class="article-date">
+  <time datetime="2022-03-11T09:43:53.000Z" itemprop="datePublished">2022-03-11</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.8k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">6 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <ul>
+<li>使用发布配置来自定义构建</li>
+<li>将库发布到 crates.io</li>
+<li>使用工作空间来组织更大的项目</li>
+<li>从 crates.io 安装二进制文件</li>
+<li>使用自定义的命令来扩展 Cargo</li>
+</ul>
+<p>更多内容，参考 <a target="_blank" rel="noopener" href="https://doc.rust-lang.org/cargo/">Cargo 文档</a></p>
+<h1 id="采用发布配置自定义构建"><a href="#采用发布配置自定义构建" class="headerlink" title="采用发布配置自定义构建"></a>采用发布配置自定义构建</h1><p>在 Rust 中 发布配置（release profiles）是预定义的、可定制的带有不同选项的配置</p>
+<p>Cargo 有两个主要配置：</p>
+<ul>
+<li>运行 <code>cargo build</code> 时采用的 <code>dev</code> 配置<ul>
+<li>是开发时的默认配置</li>
+</ul>
+</li>
+<li>运行 <code>cargo build --release</code> 的 <code>release</code> 配置<ul>
+<li>时发布构建时的默认配置</li>
+</ul>
+</li>
+</ul>
+<p>如果需要修改，在 Cargo.toml 文件中添加对应的 <code>[profile.*]</code> 部分</p>
+<p>例如：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[profile.dev]</span><br><span class="line">opt-level = <span class="number">0</span>    # opt-level 控制 Rust 对代码进行何种程度的优化，<span class="number">0</span>~<span class="number">3</span>，数值越高优化级别越高，需要的编译时间也越多。</span><br><span class="line"></span><br><span class="line">[profile.release]</span><br><span class="line">opt-level = <span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="将-crate-发布到-crates-io"><a href="#将-crate-发布到-crates-io" class="headerlink" title="将 crate 发布到 crates.io"></a>将 crate 发布到 crates.io</h1><h2 id="编写有用的文档注释"><a href="#编写有用的文档注释" class="headerlink" title="编写有用的文档注释"></a>编写有用的文档注释</h2><p><code>///</code> 为 Rust 的文档注释（documentation comments）</p>
+<ul>
+<li>支持 Markdown 格式；</li>
+<li>会生成 HTML 文档，这些文档展示<strong>公有 API</strong> （有 pub 标注的api）的注释部分的内容；</li>
+<li>这些文档帮助使用者如何<strong>使用</strong>这个 crate，而不是关注如何实现的。</li>
+</ul>
+<p>生成：</p>
+<ul>
+<li><code>cargo doc</code> 命令生成文档，这个命令实际由 Rust 分发的工具 <code>rustdoc</code> 运行并将生成的 HTML 文档放入 <code>target/doc</code> 目录。</li>
+<li>使用 <code>cargo doc --open</code> 会构建当前 crate 文档（同时还有所有 crate 依赖的文档）的 HTML 并在浏览器中打开。</li>
+</ul>
+<h3 id="文档注释作为测试"><a href="#文档注释作为测试" class="headerlink" title="文档注释作为测试"></a>文档注释作为测试</h3><p>文档注释中可添加代码示例，好处：</p>
+<ol>
+<li>清楚的表明如何使用库的方法；</li>
+<li><code>cargo test</code> 也会像测试那样运行文档中的示例代码；<ul>
+<li>这样可以避免当代码修改后，注释与代码不匹配的问题。</li>
+<li>运行 <code>cargo test</code> ，结果中的 Doc-test 部分就是文档测试部分</li>
+</ul>
+</li>
+</ol>
+<h3 id="注释包含项的结构"><a href="#注释包含项的结构" class="headerlink" title="注释包含项的结构"></a>注释包含项的结构</h3><p><code>//!</code> 这中注释风格，通常用于 crate 根文件（通常是 <code>src/lib.rs</code>）或模块的根文件，为 crate 或模块整体提供文档。</p>
+<h2 id="使用-pub-use-导出合适的公有-API"><a href="#使用-pub-use-导出合适的公有-API" class="headerlink" title="使用 pub use 导出合适的公有 API"></a>使用 <code>pub use</code> 导出合适的公有 API</h2><p>有时我们项目的结构可能是一个包含多个层级的分层结构，对外公布时，对于使用者来说过多的层级可能不是很方便。</p>
+<p>解决：</p>
+<p>通过使用 <code>pub use</code> 重导出（re-export）项来调整公有 API 的结构，使对外的公有结构不同于内部结构。</p>
+<ul>
+<li>重导出获取位于一个位置的公有项并将其公开到另一个位置，好像它就定义在这个新位置一样。</li>
+</ul>
+<p>问题：如何将原有的内部结构重新导出到顶层结构？语法是什么？</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">self::&lt;mod名称&gt;::...? 原有内部结构路径？</span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>注：使用 pub use 重导出公有 API 结构之后，用户仍然可以使用原有的内部结构</p>
+</blockquote>
+<h2 id="发布新-crate-之前"><a href="#发布新-crate-之前" class="headerlink" title="发布新 crate 之前"></a>发布新 crate 之前</h2><p>通过 <code>cargo publish</code> 命令可以将本地 crate 发布到 crates.io 仓库中。</p>
+<p>发布之前，需要修改要对外发布的 crate 的 元信息（在 Cargo.toml 文件中）。</p>
+<ul>
+<li>crate 在 crates.io 上是唯一的，发布之前需要查询确认，名称遵循先到先得的分配原则。</li>
+<li>其他元信息可以通过执行 <code>cargo publish</code> 命令后看编译器报错修改。</li>
+<li>可以参考 <a target="_blank" rel="noopener" href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch14-02-publishing-to-crates-io.html">发布 crate 章节内容</a> 。</li>
+</ul>
+<h2 id="发布到-crates-io"><a href="#发布到-crates-io" class="headerlink" title="发布到 crates.io"></a>发布到 crates.io</h2><p>注意，发布时需要注意，发布是<strong>永久性的</strong>（permanent）。</p>
+<p>对应版本不可能被覆盖，代码不能被删除。</p>
+<ul>
+<li>主要目的时保证所有项目的依赖都可以正常获取；</li>
+</ul>
+<h2 id="发布现存-crate-的新版本"><a href="#发布现存-crate-的新版本" class="headerlink" title="发布现存 crate 的新版本"></a>发布现存 crate 的新版本</h2><p>通过修改 Cargo.toml 文件中的 <code>version</code>的值，</p>
+<p>然后运行 <code>cargo publish</code>。</p>
+<h2 id="从-crates-io-撤回版本"><a href="#从-crates-io-撤回版本" class="headerlink" title="从 crates.io 撤回版本"></a>从 crates.io 撤回版本</h2><p>通过命令 <code>cargo yank --vers &lt;要撤回的版本号&gt;</code></p>
+<ul>
+<li>注意，撤回并没有删除任何代码。撤回只是新项目不能依赖该版本，原有已经依赖的项目不受影响。</li>
+</ul>
+<p>撤销撤回操作：</p>
+<p><code>cargo yank --vers &lt;之前撤回的版本号&gt; --undo</code></p>
+<h1 id="Cargo-工作空间"><a href="#Cargo-工作空间" class="headerlink" title="Cargo 工作空间"></a>Cargo 工作空间</h1><p>随着项目的扩大，希望将原有的库 crate 拆分成多个库 crat。</p>
+<p>这种情况使用 Cargo 提供的<strong>工作空间</strong>（workspaces）。</p>
+<ul>
+<li>它可以帮助我们管理多个相关的系统开发的包；</li>
+</ul>
+<h2 id="创建工作空间"><a href="#创建工作空间" class="headerlink" title="创建工作空间"></a>创建工作空间</h2><p><strong>工作空间</strong> 是一系列共享同样的 Cargo.lock 和输出目录的包。</p>
+<p>有很多组织工作空间的方式，需要之后多学习。</p>
+<p>先学习最常用的一种方式。</p>
+<h2 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h2><p>共有内容：</p>
+<ul>
+<li>Cargo.lock</li>
+<li>target 结果目录</li>
+</ul>
+<p>工作空间在顶级目录下有一个 target 目录，是所有 crate 共有的，不管在外面还是在子 crate 目录下编译都会将构建结果生成在顶级目录下的 target 目录中。</p>
+<ul>
+<li>这样避免单独在 crate 中编译生成构建结果导致的重复构建问题；</li>
+</ul>
+<p>最外层 Carog.toml 文件内容，样例：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[workspace]</span><br><span class="line"></span><br><span class="line">members = [</span><br><span class="line">    <span class="string">&quot;adder&quot;</span>,</span><br><span class="line">    <span class="string">&quot;add-one&quot;</span>,</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>目录结构样例：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">├── Cargo.lock</span><br><span class="line">├── Cargo.toml</span><br><span class="line">├── add-one</span><br><span class="line">│   ├── Cargo.toml</span><br><span class="line">│   └── src</span><br><span class="line">│       └── lib.rs</span><br><span class="line">├── adder</span><br><span class="line">│   ├── Cargo.toml</span><br><span class="line">│   └── src</span><br><span class="line">│       └── main.rs</span><br><span class="line">└── target</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="工作空间中-crate-相互依赖"><a href="#工作空间中-crate-相互依赖" class="headerlink" title="工作空间中 crate 相互依赖"></a>工作空间中 crate 相互依赖</h2><p>cargo 并不假设工作空间中的 crates 会相互依赖，所以需要明确表明工作空间中 crate 的依赖关系。</p>
+<ul>
+<li>在需要依赖其他库 crate 的 crate 中 Cargo.toml 文件的 <code>[dependencies]</code> 部分添加路径依赖</li>
+</ul>
+<p>例如：</p>
+<p>在上面给出的目录结构中，让 <code>adder</code> 依赖库crate <code>add-one</code>，需要在 <code>adder/Cargo.toml</code>中添加路径依赖</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[dependencies]</span><br><span class="line"></span><br><span class="line">add-one = &#123; path = <span class="string">&quot;../add-one&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>为了在顶层 <em>add</em> 目录运行二进制 crate，需要通过 <code>-p</code> 参数和包名称来运行 <code>cargo run</code> 指定工作空间中我们希望使用的包</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">cargo run -p adder</span></span><br><span class="line">    Finished dev [unoptimized + debuginfo] target(s) in 0.0 secs</span><br><span class="line">     Running `target/debug/adder`</span><br><span class="line">Hello, world! 10 plus one is 11!</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="在工作空间中依赖外部-crate"><a href="#在工作空间中依赖外部-crate" class="headerlink" title="在工作空间中依赖外部 crate"></a>在工作空间中依赖外部 crate</h2><p>工作空间中只在根目录有一个 Cargo.lock 文件，</p>
+<ul>
+<li>这保证了所有的 crate都使用完全相同版本的依赖。</li>
+</ul>
+<p><strong>但是</strong>，每个库crate 中依赖的外部 crate仅能在它自己项目中使用，不能在其他crate中使用，除非需要使用该依赖的crate也在它们的 Cargo.toml 文件中添加依赖声明。</p>
+<p><strong>解决：</strong></p>
+<p>如果工作空间中多个 crate 中需要使用相同的外部crate，那么可以在工作空间的顶级 Cargo.toml 中声明依赖</p>
+<h1 id="使用-Cargo-install-从-crates-io安装二进制程序"><a href="#使用-Cargo-install-从-crates-io安装二进制程序" class="headerlink" title="使用 Cargo install 从 crates.io安装二进制程序"></a>使用 Cargo install 从 crates.io安装二进制程序</h1><p><code>cargo install</code> 命令用于在本地安装和使用二进制 crate。</p>
+<p>用于开发者们安装 crates.io 上共享的工具。</p>
+<p>只有拥有二进制目标文件的crate 能够被安装。</p>
+<ul>
+<li>二进制目标文件，是在 crate 有 <code>src/main.rs</code> 或者其他指定为二进制文件时所创建的可执行程序。<ul>
+<li>库crate 是自身不能执行但适合包含在其他程序中。</li>
+</ul>
+</li>
+</ul>
+<h1 id="Cargo-自定义扩展命令"><a href="#Cargo-自定义扩展命令" class="headerlink" title="Cargo 自定义扩展命令"></a>Cargo 自定义扩展命令</h1><p><code>cargo --list</code> 查看所有 cargo 可以使用的本地命令</p>
+<h1 id="开发依赖"><a href="#开发依赖" class="headerlink" title="开发依赖"></a>开发依赖</h1><p>当为编写测试引入依赖包时，仅希望该包在测试阶段使用，添加到 <code>Cargo.toml</code> 文件中的 <code>[dev-dependencies]</code> 中</p>
+<p>还可以参考如下内容</p>
+<p><a target="_blank" rel="noopener" href="https://rust-cli.github.io/book/tutorial/packaging.html">Packaging and distributing a Rust tool - Command Line Applications in Rust (rust-cli.github.io)</a></p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/14%E6%9B%B4%E5%A4%9A%E5%85%B3%E4%BA%8ECargo%E5%92%8CCrate.io%E7%9A%84%E5%86%85%E5%AE%B9.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/%E6%9B%B4%E6%94%B9%E8%BF%9C%E7%A8%8B%E6%A1%8C%E9%9D%A2%E4%BE%A6%E5%90%AC%E7%AB%AF%E5%8F%A3.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            更改远程桌面侦听端口
+          
+        </div>
+      </a>
+    
+    
+      <a href="/%E8%A7%A3%E5%86%B3VM%20Workstation%E5%AE%89%E8%A3%85VMware%20Tools%E6%98%BE%E7%A4%BA%E7%81%B0%E8%89%B2%E7%9A%84%E5%8A%9E%E6%B3%95.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">解决VM Workstation安装VMware Tools显示灰色的办法</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

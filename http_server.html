@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>http_server |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/Rust小项目练习/rust_web/http_server"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  http_server
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/http_server.html" class="article-date">
+  <time datetime="2022-05-10T02:41:03.000Z" itemprop="datePublished">2022-05-10</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a> / <a class="article-category-link" href="/categories/Rust/Rust%E5%B0%8F%E9%A1%B9%E7%9B%AE%E7%BB%83%E4%B9%A0/">Rust小项目练习</a> / <a class="article-category-link" href="/categories/Rust/Rust%E5%B0%8F%E9%A1%B9%E7%9B%AE%E7%BB%83%E4%B9%A0/rust-web/">rust_web</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.5k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">6 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="需要使用的库"><a href="#需要使用的库" class="headerlink" title="需要使用的库"></a>需要使用的库</h1><p>标准库中的网络模块</p>
+<p>std::net 模块</p>
+<ul>
+<li>标准库的 std::net 模块，提供网络基本功能</li>
+<li>支持 TCP 和 UDP 通信</li>
+</ul>
+<p>使用到的主要内容：</p>
+<ul>
+<li>TcpListener 和 TcpStream</li>
+</ul>
+<h3 id="TcpListener"><a href="#TcpListener" class="headerlink" title="TcpListener"></a>TcpListener</h3><p>A TCP socket server,listening for connections.</p>
+<ul>
+<li>TCP 服务端</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">一个TCP套接字服务器，监听连接。</span><br><span class="line">通过将TcpListener绑定到套接字地址来创建TcpListener，之后，它侦听传入的TCP连接。可以通过调用accept或遍历传入迭代器返回的传入迭代器，来接受这些对象。</span><br><span class="line">当该值被删除时，套接字将被关闭。</span><br></pre></td></tr></table></figure>
+
+
+
+<p>TcpListener 的使用步骤：</p>
+<ol>
+<li>使用 <strong>TcpListener::bind</strong> 方法绑定一个 socket，创建一个 TcpListener 对象；</li>
+<li>调用 TcpListener 对象的 <strong>accept</strong> 方法或者通过 <strong>incoming</strong> 方法创建迭代器来获取 TcpStream ；<ul>
+<li>accept 与 incoming 方法的区别；</li>
+<li><strong>accept</strong> 是一次性的，仅能获取<strong>一个新连接</strong>；</li>
+<li>incoming 会返回一个迭代器，一直获取传入的连接，相当于在 loop 中调用 accept；</li>
+<li>同时 incoming 的迭代器中仅有 TcpStream 没有 SocketAddr；</li>
+</ul>
+</li>
+<li>操作创建的 TcpStream 对象进行读写数据。</li>
+<li>TcpStream 端有 shutdown 方法，TcpListener 端没有。</li>
+</ol>
+<h3 id="TcpStream"><a href="#TcpStream" class="headerlink" title="TcpStream"></a>TcpStream</h3><p>A TCP stream between a local and a remote socket.</p>
+<ul>
+<li>TCP 客户端</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">通过连接到远程主机或在TcpListener上接受连接创建TcpStream后，可以对其进行读写数据传输。</span><br></pre></td></tr></table></figure>
+
+<p>两个常用的可以创建 TcpStream 类型的方法是：</p>
+<ol>
+<li>TcpStream::connect<ul>
+<li><code>pub fn connect&lt;A: ToSocketAddrs&gt;(addr: A) -&gt; Result&lt;TcpStream&gt;</code></li>
+<li>打开到指定主机的<strong>一个 TCP 连接</strong></li>
+<li>是作为客户端去连接服务器，</li>
+<li>需要远程主机的指定端口是被监听状态</li>
+</ul>
+</li>
+<li>listener.accept()<ul>
+<li>这是 TcpListener 中的方法</li>
+<li><code>pub fn accept(&amp;self) -&gt; Result&lt;(TcpStream, SocketAddr)&gt;</code></li>
+<li>TcpListener 通过bind的绑定socket，这个方法可以从这个监听器接收新的传入连接（incoming connection）</li>
+<li>该方法会阻塞线程直到新的 TCP 连接建立。</li>
+<li>会返回 TcpStream和 远端地址</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::net::TcpStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 需要先启动一个监听8080端口的本地服务；</span></span><br><span class="line"><span class="keyword">if</span> <span class="keyword">let</span> <span class="variable">Ok</span>(stream) = TcpStream::<span class="title function_ invoke__">connect</span>(<span class="string">&quot;127.0.0.1:8080&quot;</span>) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Connected to the server!&quot;</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Couldn&#x27;t connect to server...&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>注意：</p>
+<ul>
+<li>TcpListener 端的描述：The socket will be closed when the value is dropped.</li>
+<li>TcpStream 端的描述：The connection will be closed when the value is dropped.</li>
+<li>同样有表示连接的作用，<ul>
+<li>服务端，称为 socket 服务，用来监听 incoming connection 传入连接；</li>
+<li>客户端，称为 connection；</li>
+</ul>
+</li>
+</ul>
+<p>注意2：</p>
+<p>TcpListener 和 TcpStream 函数的返回值</p>
+<h3 id="TcpStream-write"><a href="#TcpStream-write" class="headerlink" title="TcpStream::write"></a><code>TcpStream::write</code></h3><p>在向 TcpStream 中写的时候，可以直接调用 <code>TcpStream::write</code> 方法，也可以调用 <code>write!()</code> 宏来操作，不过无论使用哪种调用方式，注意内容参数是要输出到 <code>write</code> 中，注意与 <code>TcpStream::read</code> 使用参数上的区别。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// response 是要输出到 stream 中的，</span></span><br><span class="line">stream.<span class="title function_ invoke__">write</span>(response.<span class="title function_ invoke__">as_bytes</span>()).<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">stream.<span class="title function_ invoke__">flush</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// response_string 是要输出到 write_stream 中的，</span></span><br><span class="line"><span class="built_in">write!</span>(write_stream, <span class="string">&quot;&#123;&#125;&quot;</span>, response_string);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：使用 TcpStream::write 时，需要手动调用 TcpStream::flush 方法将数据写入到 stream 中。</p>
+</blockquote>
+<p>第三方序列化和反序列化库</p>
+<ul>
+<li><p>serde</p>
+</li>
+<li><p>serde_json</p>
+</li>
+</ul>
+<h2 id="使用问题"><a href="#使用问题" class="headerlink" title="使用问题"></a>使用问题</h2><ol>
+<li>TcpStream 的写操作如何调用？<ul>
+<li>read</li>
+<li>write</li>
+</ul>
+</li>
+</ol>
+<p>TCP 协议一次发送多少字节数据？</p>
+<ul>
+<li>一个TCP报文可以发送多少？</li>
+</ul>
+<p>一次网络传输可以发送多少字节？</p>
+<p>程序调用 TcpStream::read&#x2F;write 的缓冲区设置多大合适？遇到很多的数据，代码怎样写&#x2F;方法怎样调用是合理的？</p>
+<h2 id="拾遗"><a href="#拾遗" class="headerlink" title="拾遗"></a>拾遗</h2><ol>
+<li><p><code>into()</code> 方法在正常使用时，是需要手动声明目标类型；但是在构建 struct 实例的时候，因为指定 struct 在定义时都指定了类型，所以可以直接使用；</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">http_string</span>: <span class="type">String</span> = response.<span class="title function_ invoke__">into</span>();</span><br><span class="line"></span><br><span class="line"><span class="comment">// HttpResponse &#123;</span></span><br><span class="line"><span class="comment">//    body: Option(String),</span></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line">HttpResponse &#123;</span><br><span class="line">    ...</span><br><span class="line">    body: <span class="title function_ invoke__">Some</span>(<span class="string">&quot;message&quot;</span>.into),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="构建-HTTP-Server"><a href="#构建-HTTP-Server" class="headerlink" title="构建 HTTP Server"></a>构建 HTTP Server</h1><ul>
+<li>编写 HTTP Server</li>
+<li>测试 HTTP Server</li>
+</ul>
+<h2 id="前置内容"><a href="#前置内容" class="headerlink" title="前置内容"></a>前置内容</h2><p>Rust 没有内置的 HTTP 支持</p>
+<ul>
+<li>手写</li>
+<li>使用第三方库</li>
+</ul>
+<p>Web Server 组成</p>
+<ul>
+<li>Server<ul>
+<li>监听进来的 TCP 字节流</li>
+</ul>
+</li>
+<li>Router<ul>
+<li>接受 HTTP 请求，并决定调用哪个 Handler</li>
+</ul>
+</li>
+<li>Handler<ul>
+<li>处理 HTTP 请求，构建 HTTP 响应</li>
+</ul>
+</li>
+<li>HTTP Library<ul>
+<li>解释字节流，把它转化为 HTTP 请求</li>
+<li>把 HTTP 响应转化回字节流</li>
+</ul>
+</li>
+</ul>
+<p>1.server -&gt; 2. HTTP Library -&gt; 3. Router -&gt; 4. Handler -&gt; 5. HTTP Library -&gt; 6. Client</p>
+<h2 id="构建步骤"><a href="#构建步骤" class="headerlink" title="构建步骤"></a>构建步骤</h2><ul>
+<li>解析 HTTP 请求消息</li>
+<li>构建 HTTP 响应消息</li>
+<li>路由与 Handler</li>
+<li>测试 Web Server</li>
+</ul>
+<h2 id="解析-HTTP-请求"><a href="#解析-HTTP-请求" class="headerlink" title="解析 HTTP 请求"></a>解析 HTTP 请求</h2><p>需要熟悉 HTTP 协议组成</p>
+<p>需要四个数据结构</p>
+<table>
+<thead>
+<tr>
+<th>数据结构名称</th>
+<th>数据类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HttpRequest</td>
+<td>struct</td>
+<td>表示 HTTP 请求</td>
+</tr>
+<tr>
+<td>Method</td>
+<td>enum</td>
+<td>指定所允许的 HTTP 方法</td>
+</tr>
+<tr>
+<td>Version</td>
+<td>enum</td>
+<td>指定所允许的 HTTP 版本</td>
+</tr>
+<tr>
+<td>Resource</td>
+<td>enum</td>
+<td>指定 HTTP 请求中的路径</td>
+</tr>
+</tbody></table>
+<p>同时上面三个数据结构都需要实现下面三个 Trait</p>
+<table>
+<thead>
+<tr>
+<th>Trait</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>From&lt;&amp;str&gt;</td>
+<td>用于把传进来的<em>字符串切片</em> 转化为 HttpRequest （提供类型转换的能力）</td>
+</tr>
+<tr>
+<td>Debug</td>
+<td>打印调试信息</td>
+</tr>
+<tr>
+<td>PartialEq</td>
+<td>用于解析和自动化测试脚本里做比较</td>
+</tr>
+</tbody></table>
+<h2 id="构建-HTTP-响应"><a href="#构建-HTTP-响应" class="headerlink" title="构建 HTTP 响应"></a>构建 HTTP 响应</h2><p>熟悉 HTTP 响应结构体</p>
+<p>为什么 httpresponse 结构体中字段类型是 &amp;str？而 httprequest 结构体中涉及到字符的是 String？</p>
+<p>HttpResponse 需要实现的方法 或 Trait</p>
+<ul>
+<li>将 HttpResponse 转换成可以通过 TCP 传送的形式；</li>
+<li>为上面的目标设计结构体和方法；</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>需要实现的方法或 Trait</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Default trait</td>
+<td>指定成员的默认值</td>
+</tr>
+<tr>
+<td>new()</td>
+<td>使用默认值创建一个新的结构体</td>
+</tr>
+<tr>
+<td>send_response()</td>
+<td>构建响应，将原始字节通过 TCP 传送</td>
+</tr>
+<tr>
+<td>getter 方法</td>
+<td>获得成员的值</td>
+</tr>
+<tr>
+<td>From trait</td>
+<td>能够将 HttpResponse 转化为 String</td>
+</tr>
+</tbody></table>
+<h2 id="构建-Server"><a href="#构建-Server" class="headerlink" title="构建 Server"></a>构建 Server</h2><p>需要实现的数据结构</p>
+<table>
+<thead>
+<tr>
+<th>Server</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Server</td>
+<td>监听 tcp，运行并处理请求</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>包含字段和需要实现的方法</p>
+<table>
+<thead>
+<tr>
+<th>字段和方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>socket_addr</td>
+<td>监听地址</td>
+</tr>
+<tr>
+<td>new()</td>
+<td>创建对象</td>
+</tr>
+<tr>
+<td>run()</td>
+<td>运行</td>
+</tr>
+</tbody></table>
+<h2 id="构建-Router"><a href="#构建-Router" class="headerlink" title="构建 Router"></a>构建 Router</h2><p>Router 需要实现的数据结构</p>
+<ul>
+<li>Router ，struct，接受 HTTP 请求，和 TcpStream，并决定调用哪个 Handler</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">需要实现的方法</th>
+<th align="center">用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">route</td>
+<td align="center">接受 HTTP 请求，并决定调用哪个 Handler</td>
+</tr>
+</tbody></table>
+<h2 id="构建-Handler"><a href="#构建-Handler" class="headerlink" title="构建 Handler"></a>构建 Handler</h2><p>Handler Trait</p>
+<p>一个需要实现的方法</p>
+<ul>
+<li>handler</li>
+</ul>
+<p>一个默认方法</p>
+<ul>
+<li>load_file  用于加载响应 handler 的配置文件；</li>
+</ul>
+<p>需要实现多个不同的 Handler 用以处理不同的业务情况。</p>
+<ul>
+<li>StaticPageHandler</li>
+<li>PageNotFoundHander</li>
+<li>WebServiceHandler</li>
+</ul>
+<h1 id="拆分项目单个文件到目录"><a href="#拆分项目单个文件到目录" class="headerlink" title="拆分项目单个文件到目录"></a>拆分项目单个文件到目录</h1> 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/http_server.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust%E5%B0%8F%E9%A1%B9%E7%9B%AE%E7%BB%83%E4%B9%A0/" rel="tag">Rust小项目练习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rust-web/" rel="tag">rust_web</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/07%E4%BD%BF%E7%94%A8%E5%8C%85%E3%80%81Crate%E5%92%8C%E6%A8%A1%E5%9D%97.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            07使用包、Crate和模块
+          
+        </div>
+      </a>
+    
+    
+      <a href="/09%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">09错误处理</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

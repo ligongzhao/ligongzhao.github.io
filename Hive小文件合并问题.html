@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Hive小文件合并问题 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/BigData/Hive/Hive小文件合并问题"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Hive小文件合并问题
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/Hive%E5%B0%8F%E6%96%87%E4%BB%B6%E5%90%88%E5%B9%B6%E9%97%AE%E9%A2%98.html" class="article-date">
+  <time datetime="2022-10-04T09:00:07.000Z" itemprop="datePublished">2022-10-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/BigData/">BigData</a> / <a class="article-category-link" href="/categories/BigData/Hive/">Hive</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">10 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="Hive小文件合并问题"><a href="#Hive小文件合并问题" class="headerlink" title="Hive小文件合并问题"></a>Hive小文件合并问题</h1><h2 id="输入合并"><a href="#输入合并" class="headerlink" title="输入合并"></a>输入合并</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--hive-0.8.0及其之后默认就是CombineHiveInputFormat,可以将多个小文件合并成一个split切片，也可以将一个大文件，分成N个split（即N个map的输入）</span></span><br><span class="line">hive.input.format<span class="operator">=</span>org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;</span><br><span class="line"><span class="comment">--切片大小最大值，不设置,则所有输入只启动一个map任务</span></span><br><span class="line">mapreduce.input.fileinputformat.split.maxsize</span><br><span class="line"><span class="comment">--同一节点的数据块形成切片时，切片大小的最小值</span></span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.node</span><br><span class="line"><span class="comment">--同一机架的数据块形成切片时，切片大小的最小值</span></span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.rack</span><br></pre></td></tr></table></figure>
+<p>大小关系：</p>
+<ul>
+<li>maxSplitSize &gt;&#x3D; minSplitSizeRack &gt;&#x3D; minSplitSizeNode</li>
+<li>否则会抛出IOException</li>
+</ul>
+<p>周一测试一下，minSplitSizeNode与minSplitSizeRack大小设置是否会报IOException异常？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CombineFileInputFormat.java 代码中有这样一段，表示minsize.per.node &lt;= minsize.per.rack ，否则抛异常</span></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (minSizeRack != <span class="number">0L</span> &amp;&amp; minSizeNode &gt; minSizeRack) &#123;</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IOException</span>(<span class="string">&quot;Minimum split size per node&quot;</span> + minSizeNode + <span class="string">&quot; cannot be smaller than minimum split size per rack &quot;</span> + minSizeRack);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br></pre></td></tr></table></figure>
+
+<p>&#x2F;&#x2F; hive-1.2.1 上进行验证：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">hive<span class="operator">&gt;</span> <span class="keyword">set</span> mapreduce.input.fileinputformat.split.minsize.per.node<span class="operator">=</span><span class="number">2</span>;</span><br><span class="line">hive<span class="operator">&gt;</span> <span class="keyword">set</span> mapreduce.input.fileinputformat.split.minsize.per.rack<span class="operator">=</span><span class="number">1</span>;</span><br><span class="line">Job Submission failed <span class="keyword">with</span> exception <span class="string">&#x27;java.io.IOException(Minimum split size per node 2 cannot be larger than minimum split size per rack 1)&#x27;</span></span><br><span class="line">FAILED: Execution Error, <span class="keyword">return</span> code <span class="number">1</span> <span class="keyword">from</span> org.apache.hadoop.hive.ql.exec.mr.MapRedTask. Minimum split size <span class="keyword">per</span> node <span class="number">2</span> cannot be larger than minimum split size <span class="keyword">per</span> rack <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>mapreduce.input.fileinputformat.split.maxsize<br>mapreduce.input.fileinputformat.split.minsize.per.node<br>mapreduce.input.fileinputformat.split.minsize.per.rack<br>上面三个参数如果&#x3D;0，那么在调用CombineFileInputFormat.getSplit()方式时，会分别使用下面三个参数值填充<br>mapred.max.split.size<br>mapred.min.split.size.per.node<br>mapred.min.split.size.per.rack</p>
+<ul>
+<li>这个需要到hive中确认一下默认参数</li>
+</ul>
+<p>形成切片的过程：<br>可以参考下面博客内容：<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/hellojoy/article/details/104866468">https://blog.csdn.net/hellojoy/article/details/104866468</a></p>
+<ol>
+<li>不断迭代节点列表，逐个节点（以数据块为单位）形成切片（Local Split）：<ol>
+<li>如果maxSplitSize&#x3D;&#x3D;0，则整个节点上的block数据形成一个切片</li>
+<li>如果maxSplitSize!&#x3D;0，遍历并累加每个节点上的数据，如果累加数据块大小&gt;&#x3D; maxSplitSize，则将这些数据块形成一个切片。继续该过程，直到剩余数据块累加大小 &lt; maxSplitSize。则进行一下步</li>
+<li>如果剩下数据块累加大小 &gt;&#x3D; minSplitSizeNode， 则将这些累加的剩余数据块形成一个切片。继续该过程，直到剩余数据块累加大小 &lt; minSplitSizeNode。则进行一下步，并将这些数据块留下来待后续处理。</li>
+</ol>
+</li>
+<li>不断迭代机架列表，逐个机架（以数据块为单位）形成切片（Rack Split）：<ol>
+<li>遍历并累加这个机架上所有节点的数据块（这些数据块即上一步遗留下来的数据块），如果累加数据块大小 &gt;&#x3D; maxSplitSize，则将这些数据块形成一个切片。继续该步骤，直到剩余数据块累加大小 &lt; maxSplitSize，则进行下一步。</li>
+<li>如果剩余数据块累加大小 &gt;&#x3D; minSplitSizeRack，则将这些剩余数据块形成一个切片。如果剩余数据块累加大小 &lt; minSplitSizeRack，则这些数据块留待后续处理。</li>
+</ol>
+</li>
+<li>遍历并累加所有Rack上的剩余数据块，如果累加数据块大小 &gt;&#x3D; maxSplitSize，则将这些数据块形成一个切片。继续该过程，直到剩余数据块累加大小 &lt; maxSplitSize，则进行下一步。</li>
+<li>将最终剩余的数据块形成一个切片</li>
+</ol>
+<blockquote>
+<p>重点是，当启用自动合并功能时，避免因为文件过小，而参数过大，导致最终小文件只能通过步骤4来进行合并，应该尽可能利用前面的方式来处理</p>
+</blockquote>
+<p>对hive输入格式设置为CombineHiveInputFormat的进行分析map数是如何计算的。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.input.format=org.apache.hadoop.hive.al.io.CombineHiveInputFormat</span><br></pre></td></tr></table></figure>
+
+<p>map数与逻辑split数是一致的，决定map的主要因素有：</p>
+<p>1、相关表或分区input的文件个数</p>
+<p>2、input文件的大小</p>
+<p>3、input文件在node和rack的分布</p>
+<p>4、set mapred.max.split.size; 最大split大小</p>
+<p>5、set mapred.min.split.size.per.node; 一个节点上最小的split大小</p>
+<p>6、set mapred.min.split.size.per.rack;  一个机架上最小的split大小</p>
+<h2 id="输出合并"><a href="#输出合并" class="headerlink" title="输出合并"></a>输出合并</h2><p>例如：</p>
+<h3 id="1-不能设置为0，否则，还是合并为一个mapper。"><a href="#1-不能设置为0，否则，还是合并为一个mapper。" class="headerlink" title="1. 不能设置为0，否则，还是合并为一个mapper。"></a>1. 不能设置为0，否则，还是合并为一个mapper。</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">hive<span class="operator">&gt;</span> <span class="keyword">set</span> mapreduce.input.fileinputformat.split.minsize.per.rack<span class="operator">=</span><span class="number">0</span>;</span><br><span class="line">hive<span class="operator">&gt;</span> <span class="keyword">set</span> mapreduce.input.fileinputformat.split.minsize.per.node<span class="operator">=</span><span class="number">0</span>;</span><br><span class="line">...</span><br><span class="line">Hadoop job information <span class="keyword">for</span> Stage<span class="number">-1</span>: number <span class="keyword">of</span> mappers: <span class="number">1</span>; number <span class="keyword">of</span> reducers: <span class="number">0</span></span><br><span class="line"><span class="number">2019</span><span class="number">-05</span><span class="number">-28</span> <span class="number">15</span>:<span class="number">42</span>:<span class="number">09</span>,<span class="number">538</span> Stage<span class="number">-1</span> map <span class="operator">=</span> <span class="number">0</span><span class="operator">%</span>,  reduce <span class="operator">=</span> <span class="number">0</span><span class="operator">%</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">set</span> mapreduce.input.fileinputformat.split.minsize.per.node<span class="operator">=</span><span class="number">0</span></span><br><span class="line">	<span class="comment">-- 不能设置为0，否则，还是合并为一个mapper。</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-测试开启输出合并小文件的参数后，第二个merge-job的per-node和per-rack数值的变化"><a href="#2-测试开启输出合并小文件的参数后，第二个merge-job的per-node和per-rack数值的变化" class="headerlink" title="2. 测试开启输出合并小文件的参数后，第二个merge job的per.node和per.rack数值的变化"></a>2. 测试开启输出合并小文件的参数后，第二个merge job的per.node和per.rack数值的变化</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> titan_mass.t_20210309145  <span class="type">row</span> format delimited fields terminated <span class="keyword">by</span> <span class="string">&#x27;\t&#x27;</span> stored <span class="keyword">as</span> orc tblproperties (<span class="string">&#x27;orc.compress&#x27;</span><span class="operator">=</span><span class="string">&#x27;SNAPPY&#x27;</span>) <span class="keyword">as</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">set</span> mapreduce.input.fileinputformat.split.maxsize<span class="operator">=</span><span class="number">4096000000</span>;</span><br><span class="line"><span class="keyword">set</span> hive.merge.mapfiles<span class="operator">=</span><span class="literal">false</span>;</span><br><span class="line"><span class="keyword">set</span> mapreduce.input.fileinputformat.split.minsize.per.node<span class="operator">=</span><span class="number">2</span>;</span><br><span class="line"><span class="keyword">set</span> mapreduce.input.fileinputformat.split.minsize.per.rack<span class="operator">=</span><span class="number">1</span>;</span><br><span class="line"><span class="keyword">set</span> mapreduce.job.queuename<span class="operator">=</span>titan_low;</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> titan_mass.tmp_052815_02  <span class="type">row</span> format delimited fields terminated <span class="keyword">by</span> <span class="string">&#x27;\t&#x27;</span> stored <span class="keyword">as</span> orc tblproperties (<span class="string">&#x27;orc.compress&#x27;</span><span class="operator">=</span><span class="string">&#x27;SNAPPY&#x27;</span>) <span class="keyword">as</span> <span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> simba.dw_evt <span class="keyword">where</span> usernum<span class="operator">=</span><span class="string">&#x27;15295558956&#x27;</span> <span class="keyword">and</span> import_time<span class="operator">&gt;=</span><span class="string">&#x27;2021032800&#x27;</span> <span class="keyword">and</span> import_time<span class="operator">&lt;</span><span class="string">&#x27;2021032900&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>表的文件个数和大小</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@web04.simba.bd.com ~]# hdfs dfs -count -h -v /apps/hive/warehouse/titan_mass.db/tmp_052815_02</span><br><span class="line">   DIR_COUNT   FILE_COUNT       CONTENT_SIZE PATHNAME</span><br><span class="line">           1          159            336.2 K /apps/hive/warehouse/titan_mass.db/tmp_052815_02</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">--测试开启输出合并小文件的参数后，第二个merge job的per.node和per.rack数值的变化</span><br><span class="line">hive&gt; set hive.merge.mapfiles=true;</span><br><span class="line">hive&gt; set hive.merge.mapredfiles=true;</span><br><span class="line">hive&gt; set mapreduce.input.fileinputformat.split.maxsize=4096000000;</span><br><span class="line">hive&gt; set hive.merge.size.per.task=256000000;</span><br><span class="line">hive&gt; set hive.merge.smallfiles.avgsize=16000000;</span><br><span class="line">hive&gt; set mapreduce.input.fileinputformat.split.minsize.per.node=1;</span><br><span class="line">hive&gt; set mapreduce.input.fileinputformat.split.minsize.per.rack=1;</span><br><span class="line">hive&gt; set mapreduce.job.queuename=titan_low;</span><br><span class="line">hive&gt; create table test.tmp_smallf_04021417  row format delimited fields terminated by &#x27;\t&#x27; stored as orc tblproperties (&#x27;orc.compress&#x27;=&#x27;SNAPPY&#x27;) as select * from titan_mass.tmp_052815_02;</span><br><span class="line">Query ID = root_20210402142118_d7bd5e86-1772-4cd3-863b-812db5214b9c</span><br><span class="line">Total jobs = 1</span><br><span class="line">Launching Job 1 out of 1</span><br><span class="line">Number of reduce tasks is set to 0 since there&#x27;&#x27;s no reduce operator</span><br><span class="line">Starting Job = job_1615708732706_61993, Tracking URL = http://ambari01.simba.bd.com:8088/proxy/application_1615708732706_61993/</span><br><span class="line">Kill Command = /usr/hdp/2.6.1.0-129/hadoop/bin/hadoop job  -kill job_1615708732706_61993</span><br><span class="line">Hadoop job information for Stage-1: number of mappers: 29; number of reducers: 0</span><br><span class="line">2021-04-02 14:21:30,821 Stage-1 map = 0%,  reduce = 0%</span><br><span class="line">2021-04-02 14:21:37,394 Stage-1 map = 34%,  reduce = 0%, Cumulative CPU 18.55 sec</span><br><span class="line">2021-04-02 14:21:38,447 Stage-1 map = 76%,  reduce = 0%, Cumulative CPU 94.1 sec</span><br><span class="line">2021-04-02 14:21:39,502 Stage-1 map = 90%,  reduce = 0%, Cumulative CPU 110.59 sec</span><br><span class="line">2021-04-02 14:21:40,552 Stage-1 map = 100%,  reduce = 0%, Cumulative CPU 124.24 sec</span><br><span class="line">MapReduce Total cumulative CPU time: 2 minutes 4 seconds 240 msec</span><br><span class="line">Ended Job = job_1615708732706_61993</span><br><span class="line">Stage-4 is filtered out by condition resolver.</span><br><span class="line">Stage-3 is selected by condition resolver.</span><br><span class="line">Stage-5 is filtered out by condition resolver.</span><br><span class="line">Starting Job = job_1615708732706_61996, Tracking URL = http://ambari01.simba.bd.com:8088/proxy/application_1615708732706_61996/</span><br><span class="line">Kill Command = /usr/hdp/2.6.1.0-129/hadoop/bin/hadoop job  -kill job_1615708732706_61996</span><br><span class="line">Hadoop job information for Stage-3: number of mappers: 1; number of reducers: 0</span><br><span class="line">2021-04-02 14:21:49,260 Stage-3 map = 0%,  reduce = 0%</span><br><span class="line">2021-04-02 14:21:55,635 Stage-3 map = 100%,  reduce = 0%, Cumulative CPU 5.09 sec</span><br><span class="line">MapReduce Total cumulative CPU time: 5 seconds 90 msec</span><br><span class="line">Ended Job = job_1615708732706_61996</span><br><span class="line">Moving data to directory hdfs://ambari01/apps/hive/warehouse/test.db/tmp_smallf_04021417</span><br><span class="line">Table test.tmp_smallf_04021417 stats: [numFiles=1, numRows=146, totalSize=90414, rawDataSize=446513]</span><br><span class="line">MapReduce Jobs Launched:</span><br><span class="line">Stage-Stage-1: Map: 29   Cumulative CPU: 124.24 sec   HDFS Read: 742866 HDFS Write: 127642 SUCCESS</span><br><span class="line">Stage-Stage-3: Map: 1   Cumulative CPU: 5.09 sec   HDFS Read: 338055 HDFS Write: 90414 SUCCESS</span><br><span class="line">Total MapReduce CPU Time Spent: 2 minutes 9 seconds 330 msec</span><br><span class="line">OK</span><br><span class="line">Time taken: 39.689 seconds</span><br></pre></td></tr></table></figure>
+
+
+<p>结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">application_1615708732706_61993的Configuration</span><br><span class="line"></span><br><span class="line">mapreduce.input.fileinputformat.split.maxsize	4096000000	job.xml ⬅ programatically</span><br><span class="line">hive.merge.size.per.task	256000000	job.xml ⬅ programatically</span><br><span class="line">hive.merge.smallfiles.avgsize	16000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.node	1	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.rack	1	job.xml ⬅ programatically</span><br><span class="line"></span><br><span class="line">开启merge参数后自动启来的job</span><br><span class="line">application_1615708732706_61996的Configuration</span><br><span class="line"></span><br><span class="line">mapreduce.input.fileinputformat.split.maxsize	256000000	job.xml ⬅ programatically</span><br><span class="line">hive.merge.size.per.task	256000000	job.xml ⬅ programatically</span><br><span class="line">hive.merge.smallfiles.avgsize	16000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.node	256000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.rack	256000000	job.xml ⬅ programatically</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-在session级别per-node和per-rack参数都设置-x3D-1的情况下，下面几个任务都是merge-map-job"><a href="#3-在session级别per-node和per-rack参数都设置-x3D-1的情况下，下面几个任务都是merge-map-job" class="headerlink" title="3. 在session级别per.node和per.rack参数都设置&#x3D;1的情况下，下面几个任务都是merge map job"></a>3. 在session级别per.node和per.rack参数都设置&#x3D;1的情况下，下面几个任务都是merge map job</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">http://115.15.3.203:19888/jobhistory/conf/job_1558144373688_14700</span><br><span class="line"></span><br><span class="line">hive.merge.size.per.task	256000000	job.xml ⬅ file:/data/bigdata/tbds/etc/hive/conf.server/hive-site.xml</span><br><span class="line">hive.merge.smallfiles.avgsize	16000000	job.xml ⬅ file:/data/bigdata/tbds/etc/hive/conf.server/hive-site.xml</span><br><span class="line">mapreduce.input.fileinputformat.split.maxsize	256000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize	4096000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.node	256000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.rack	256000000	job.xml ⬅ programatically</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">http://115.15.3.203:19888/jobhistory/conf/job_1558144373688_13167</span><br><span class="line"></span><br><span class="line">hive.merge.size.per.task	2000000	job.xml ⬅ programatically</span><br><span class="line">hive.merge.smallfiles.avgsize	16000000	job.xml ⬅ file:/data/bigdata/tbds/etc/hive/conf.server/hive-site.xml</span><br><span class="line">mapreduce.input.fileinputformat.split.maxsize	16000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize	4096000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.node	16000000	job.xml ⬅ programatically</span><br><span class="line">mapreduce.input.fileinputformat.split.minsize.per.rack	16000000	job.xml ⬅ programatically</span><br></pre></td></tr></table></figure>
+
+<p>从上面2,3的结果可知道，开启merge参数后自动启来的job中决定生成split的三个参数会受到<code>hive.merge.size.per.task</code>和<code>hive.merge.smallfiles.avgsize</code>两个参数中值较大的参数的影响</p>
+<h3 id="处理输出合并时的操作结论"><a href="#处理输出合并时的操作结论" class="headerlink" title="处理输出合并时的操作结论"></a>处理输出合并时的操作结论</h3><p>所以我们的策略是不开启 merge job，而是单独起一个任务来处理，执行insert overwrite来重新插入一次，主要是防止merge job仅起一个map导致加载数据过慢</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/Hive%E5%B0%8F%E6%96%87%E4%BB%B6%E5%90%88%E5%B9%B6%E9%97%AE%E9%A2%98.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BigData/" rel="tag">BigData</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hive/" rel="tag">Hive</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%B0%8F%E6%96%87%E4%BB%B6%E5%90%88%E5%B9%B6/" rel="tag">小文件合并</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/%E7%8E%B0%E5%9C%BAHive%E7%94%A8%E8%BF%87%E7%9A%84%E8%AF%AD%E6%B3%95.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            现场Hive用过的语法
+          
+        </div>
+      </a>
+    
+    
+      <a href="/Hive-wiki%E5%BB%BA%E8%AE%AE%E5%8F%82%E6%95%B0%E6%B5%8B%E8%AF%95%E4%B8%80%E4%B8%8B.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Hive-wiki建议参数测试一下</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

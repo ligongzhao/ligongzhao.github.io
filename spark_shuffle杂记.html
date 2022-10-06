@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>spark_shuffle杂记 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/BigData/Spark/spark_shuffle杂记"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  spark_shuffle杂记
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/spark_shuffle%E6%9D%82%E8%AE%B0.html" class="article-date">
+  <time datetime="2022-10-04T09:36:59.000Z" itemprop="datePublished">2022-10-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/BigData/">BigData</a> / <a class="article-category-link" href="/categories/BigData/Spark/">Spark</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.1k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">7 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="为什么会发生shuffle？"><a href="#为什么会发生shuffle？" class="headerlink" title="为什么会发生shuffle？"></a>为什么会发生shuffle？</h1><ol>
+<li>分布式系统中，并行计算任务涉及到聚合数据需求时，前一个任务向后一个任务传输数据的过程会涉及不同executor或不同节点间将相同key传输到一台机器上，这个过程存在大量数据读取，写入，网络传输，涉及IO，压缩，解压，序列化和反序列化等等。</li>
+</ol>
+<p>所以如涉及跨节点的聚合需求时，往往就很快。</p>
+<p>Spark会根据宽依赖把它一系列的算子划分成不同的 Stage，Stage 的内部会进行 Pipeline，Stage 与 Stage 之间进行 Shuffle，Shuffle 的过程包含三部份。</p>
+<p>第一部份是 Shuffle 的 Write；第二部份是网络的传输；第三部份就是 Shuffle 的 Read，这三大部份涉及了<strong>内存操作、磁盘IO、网络IO以及 JVM 的管理</strong>。</p>
+<h3 id="整体优化方向："><a href="#整体优化方向：" class="headerlink" title="整体优化方向："></a>整体优化方向：</h3><ul>
+<li>减少数据IO，磁盘写，网络传输</li>
+<li>提高shuffle需要的内存（这里也有一个点需要注意，java gc）</li>
+</ul>
+<p>shuffle的演进：</p>
+<p>hashshuffle –》 sorted-based shuffle –》 Tungsten shuffle</p>
+<p>spark中，将map端划分数据、持久化数据的过程称为shuffle write，而reducer端读取数据，聚合数据的过程称为shuffle read</p>
+<ul>
+<li>map端也会发生聚合操作，需要看具体实现</li>
+</ul>
+<p>Mapper端进行aggregate的好处是，减少些磁盘的写次数，减少网络传输的数据量，减少reduce task获取mapper task数据的次数</p>
+<p>Reducer端如果内存不够，写磁盘的代价是双倍的，在mapper端无论内存够不够，它都需要先写磁盘。而reducer端在计算的时候，需要又一次的把数据从磁盘上抓回来，所以实际生产环境下需要适当的把shuffle内存调大一点。</p>
+<p>问题变为如何高效的实现shuffle write和shuffle read </p>
+<h1 id="如何高效的实现shuffle-write和shuffle-read"><a href="#如何高效的实现shuffle-write和shuffle-read" class="headerlink" title="如何高效的实现shuffle write和shuffle read"></a>如何高效的实现shuffle write和shuffle read</h1><p>【ShuffleRead】reduce阶段</p>
+<p>shufflerdd计算过程， 需要先把mappartitionsrdd中的数据fetch过来，问题：</p>
+<ol>
+<li>什么时候fetch？parent stage中的一个shuffleMapTask执行完？还是等全部shuffleMapTask执行完？<ul>
+<li>为了迎合stage的概念（Spark job是按照stage线性执行的，只有当parent stage的task都执行完才能执行下一个stage），所以是parent stage的所有shuffleMapTask都执行完，才进行fetch。</li>
+</ul>
+</li>
+<li>边fetch边处理？还是一次性fetch完再处理？<ul>
+<li>边fetch边处理。</li>
+</ul>
+</li>
+<li>fetch来的数据存在哪里？<ul>
+<li>刚fetch来的FileSegment文件放在softBuffer缓冲区中，经过处理后的文件放在<code>内存+磁盘</code>中，放在<code>内存+磁盘</code>，主要需要考虑的问题是如何在两者中间取得平衡？</li>
+</ul>
+</li>
+<li>怎么获取要fetch的数据的存放位置？<ul>
+<li>一个shuffleMapStage形成后，会将该stage中最后一个rdd注册到MapOutputTrackerMaster中，通过MapOutputTrackerMaster.registerShuffle(shuffleid,rdd.partitions.size)方法。这个步骤很重要，因为shuffle过程中需要MapOutputTrackerMaster来执行shuffleMapTask将数据输出到什么位置。每个shuffleMapTask完成时都会将filesegment的存储位置汇报给MapOutputTrackerMaster。因此reducer在shuffle过程中读取数据的时候，要去driver里的MapOutputTrackerMaster询问shuffleMapTask数据输出的位置。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<p>【hashshuffle】以前的方式，spark-2.1.1 版本之前就不用了，看一下它的优缺点。<br>hashshuffle中，shuffle wirte实现比较简单，没有做排序等额外操作，仅需要重新partition数据然后写到本地，对hashshuffle来说，遇到的问题就是如何减少IO消耗。</p>
+<p>&#x2F;&#x2F; TODO（SLi）这里缺少 hashshuffle 的基本结构</p>
+<p>hashshuffle中，每条记录，通过partitioner.partition(record.getkey())来决定自己被分配到哪个缓冲区（bucket），及最后写到哪个block文件中（Filesegment）</p>
+<p>hashshuffle的这个操作带来的问题：</p>
+<p>shuffle write写文件的时候，内存中有两个东西，<br>    - 有一个缓冲区buffer，<br>    - 有一个操作本地磁盘文件的文件句柄。<br>也就是说，但是从shuffle write内存占用的角度，内存已经被两部分占用了。如果M*R数量很多，在shuffle过程中，这么多的内存消耗，很容易产生OOM，对GC来说也是很大的负担。hashshuffle的时候，如果reducer通过drive去mapper端读取数据时，这么多小文件需要打开对应个数的网络通道读取，打开这么多端口也不是一件轻松的事情。<br>这就导致一个非常常见的操作：reducer端fetch数据的时候，说文件找不到。其实不是真的找不到，而是GC导致程序不响应</p>
+<ol>
+<li>因为是shuffleMapTask都会包含R个缓冲区（R&#x3D;reducer的个数，即下一个阶段task的个数），所以如果有M个shuffleMapTask，R个reducer，那么就会产生M*R个小文件，因为通常任务里M和R都很大，就会导致磁盘上大量文件，同时可能产生低效IO消耗。（spark的stage是所有shuffleMapTask任务都处理完，再执行下一个stage，及shuffle read部分，在此之前所有小文件都会存下来）</li>
+<li>缓冲区占用内存太大，同样因为每个maptask都开R个缓冲区，M*R也会产生大量缓冲区占用内存（由于内存中需要保存大量文件操作句柄和临时信息，如果数据处理的规模比较庞大，内存可能OOM）</li>
+</ol>
+<p>优化：</p>
+<ol>
+<li>问题1比较好解决，spark consolidated hash-based shuffle里面实现的consolidation方法，<ul>
+<li>将原来每个maptask都写R个文件，改为一个core产生R个文件，这样同一个core中连续执行的maptask可以共同输出文件，写到一起，这样磁盘上产生的文件个数可以有原来M<em>R,减少为cores</em>R，会少很多。</li>
+</ul>
+</li>
+<li>问题2不好解决，因为写文件到磁盘一定要开缓冲区，而且缓冲区太小影响IO速度</li>
+</ol>
+<p>consolidated hashshuffle也有弱点：</p>
+<ul>
+<li>如果reducer端的并行任务或者数据分片过多的话，则core*redcuer 任务也会过大，产生很多小文件。</li>
+</ul>
+<p>hashshuffle的处理shuffle write的方式严重制约了spark的集群规模和处理数据量的级别</p>
+<hr>
+<p>【sorted-based shuffle】</p>
+<p>为什么最终舍弃hashshuffle，选择了sorted-based shuffle？</p>
+<blockquote>
+<p>即使是使用consolidation的方式，依然也会产生很多小文件，最终还是要减少Mapper端文件个数。</p>
+</blockquote>
+<p>好处：</p>
+<ul>
+<li>mapper端内存占用减少</li>
+<li>reducer端拉取数据的次数减少</li>
+<li>网络通道的句柄减少；</li>
+<li>整体上提升了spark处理数据量的级别</li>
+</ul>
+<p>sorted-based是如何减少mapper端文件个数的？</p>
+<blockquote>
+<p>sorted-based shuffle不会为每个reducer中的task产生一个单独的文件，而是每个shuffleMapTask写两个文件，一个是index和一个data文件。其中data存储的是当前task的shuffle输出的分类数据，而index文件则存储了data文件中的数据通过partitioner的分类信息。下一个阶段的stage中的task就是根据这个index文件获取自己所需要抓取的上一个stage中shuffleMapTask产生的数据。</p>
+</blockquote>
+<p>假设并行度是100，那么sorted-based shuffle mapper端产生的文件个数为 <code>100*2</code>，相比hashshuflle <code>100*100</code>的个数极大减少。</p>
+<p>sorted-based shuffle 主要在mapper阶段，与reducer端没有任何关系。在mapper阶段要进行排序。</p>
+<ul>
+<li>如何排序的？这里没太写明白。</li>
+</ul>
+<ol>
+<li>根据partitionid进行排序，</li>
+<li>根据本身数据的key进行排序。<ul>
+<li>溢写前对内存中已有的数据进行排序，排序后会分批将数据写入磁盘，默认1w条一个batch。写的过程是通过java的bufferOutputStream，先生成多个临时文件，然后再merge成一个最终文件，同时在merge的过程中会写一个index文件，标记下个stage每个task需要的数据的start offset和end offset。</li>
+</ul>
+</li>
+</ol>
+<p>在mapper极端进行排序的目的：</p>
+<ul>
+<li>让reducer进行抓取的时候变得更高效。<blockquote>
+<p>具体而言，reducer首先找driver去获取parent stage中的每个shuffleMapTask输出的位置信息，根据位置信息获取index文件，解析index文件，从解析的index文件中获取data文件中属于自己的那部分内容。</p>
+</blockquote>
+</li>
+</ul>
+<p>sorted-based shuffle的弱点：</p>
+<ul>
+<li>强制排序<ul>
+<li>它要基于记录本身排序，是sorted-based shuffle最致命的性能消耗。</li>
+<li>如果数据本身不需要排序的话，会导致多余的消耗</li>
+<li>如果需要在partition内进行排序的话，就需要进行mapper端和reducer端两次排序</li>
+</ul>
+</li>
+</ul>
+<p>bypass机制<br>当shuffle read task 的数量&lt;&#x3D; bypass参数的阈值，就自动启动<br>与sorted-based shuffle 不同点在于，第一写磁盘机制不同，第二不会进行排序</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/spark_shuffle%E6%9D%82%E8%AE%B0.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BigData/" rel="tag">BigData</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Shuffle/" rel="tag">Shuffle</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spark/" rel="tag">Spark</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/Java%E5%B9%B6%E5%8F%91%E6%9C%AA%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Java并发未解决问题汇总
+          
+        </div>
+      </a>
+    
+    
+      <a href="/%E7%8E%B0%E5%9C%BAHive%E7%94%A8%E8%BF%87%E7%9A%84%E8%AF%AD%E6%B3%95.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">现场Hive用过的语法</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>SpringData学习 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/SpringBoot/SpringData学习"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  SpringData学习
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/SpringData%E5%AD%A6%E4%B9%A0.html" class="article-date">
+  <time datetime="2021-11-29T09:22:09.000Z" itemprop="datePublished">2021-11-29</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringBoot/">SpringBoot</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">9.7k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">38 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>Spring Data 为数据访问提供熟悉且一致的基于 Spring 的编程模型，同时仍保留底层数据存储的特殊特征。</p>
+<p>包含许多基于特定数据库的子项目，类似于面向接口编程，Spring Data 提供了统一接口，然后各种关系型和非关系型数据库，MapReduce 框架自行提供实现。</p>
+<p>特性：（我关注的几个特性）</p>
+<ul>
+<li><p>Powerful repository and custom object-mapping abstractions</p>
+<blockquote>
+<p>强大的 repository 和自定义对象映射抽象</p>
+</blockquote>
+</li>
+<li><p>Dynamic query derivation from repository method names</p>
+<blockquote>
+<p>基于 repository 的方法名称派生出动态查询   <strong>掌握 repository 中查询方法名的命名规则非常重要</strong></p>
+</blockquote>
+</li>
+<li><p>Implementation domain base classes providing basic properties</p>
+<blockquote>
+<p>可以提供基本属性的实现 domain 基类</p>
+</blockquote>
+</li>
+<li><p>Possibility to integrate custom repository code</p>
+<blockquote>
+<p>可以集成自定义 repository 存储库代码</p>
+</blockquote>
+</li>
+<li><p>Easy Spring integration via JavaConfig and custom XML namespaces</p>
+<blockquote>
+<p>通过 JavaConfig 和自定义 XML 命名空间轻松集成 Spring</p>
+</blockquote>
+</li>
+</ul>
+<p>主要模块</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://github.com/spring-projects/spring-data-commons">Spring Data Commons</a> - 支撑每个 Spring Data 模块的核心 Spring 概念。</p>
+<blockquote>
+<p>Spring Data Commons 是 Spring Data 项目的一部分，该项目提供跨 Spring Data 项目的共享基础架构。它包含技术中立的存储库接口以及用于持久化 Java 类的元数据模型。</p>
+</blockquote>
+</li>
+<li><p>其他 Spring Data 模块分别对应各种不同的数据访问实现。</p>
+</li>
+</ul>
+<p><strong>注意：</strong>这些模块都是单独发布，所以会出现各种不同的版本号，使用时需要注意不同版本的兼容性。</p>
+<p>找到兼容版本的最简单方法是依赖我们随定义的兼容版本一起提供的 Spring Data Release Train BOM。（这个东西在哪里？）</p>
+<h1 id="Spring-Data-Commons"><a href="#Spring-Data-Commons" class="headerlink" title="Spring Data Commons"></a>Spring Data Commons</h1><p>我认为这部分对重要的两个内容就是</p>
+<ul>
+<li><p>创建对象映射，（这部分是将 Java 对象与底层数据库中的表映射到一起，为后面查询代码提供表信息）</p>
+</li>
+<li><p>创建 repository 的查询方法，（这部分是将查询方法名与底层数据库的查询语句基本规则进行映射，两者结合可以动态生成查询语句所需要的所有信息）</p>
+</li>
+</ul>
+<p>下面的内容上面两个点来展开。</p>
+<h2 id="3-Object-Mapping-Fundamentals"><a href="#3-Object-Mapping-Fundamentals" class="headerlink" title="3. Object Mapping Fundamentals"></a>3. Object Mapping Fundamentals</h2><p>对象映射基本原则&#x2F;基本知识</p>
+<p>本节涵盖 Spring Data 对象映射、对象创建、字段和属性访问、可变性和不变性的基础知识。</p>
+<blockquote>
+<p>This section covers the fundamentals of Spring Data object mapping, object creation, field and property access, mutability and immutability.</p>
+</blockquote>
+<p>因为不同数据库实现提供的<em>解析规则</em>会有些不同，所以实际使用时，需要查看 Spring Data 支持的这些数据存储实现文档中这部分对应的规则。例如，对象映射，例如索引、自定义列或字段名称等。</p>
+<p>Spring Data 对象映射的<strong>核心职责</strong>是创建域对象的实例并将存储原生（store-native）数据结构映射到这些实例上。这意味着我们需要两个基本步骤：</p>
+<ol>
+<li>使用公开的构造函数之一<strong>创建实例</strong>。</li>
+<li><strong>实例填充</strong>以具体化所有公开的属性。</li>
+</ol>
+<h3 id="3-1-Object-creation"><a href="#3-1-Object-creation" class="headerlink" title="3.1. Object creation"></a>3.1. Object creation</h3><p>对象创建</p>
+<p>Spring Data 会自动尝试检测（要用于具体化该类型对象的持久化）实体entity的构造函数。解析算法的工作原理如下：</p>
+<blockquote>
+<p>Spring Data automatically tries to detect a persistent entity’s constructor to be used to materialize objects of that type.</p>
+</blockquote>
+<ol>
+<li>如果只有单个构造函数，直接使用；</li>
+<li>如果有无参构造函数，直接使用无参构造函数，忽略其他构造函数；</li>
+<li>如果有多个构造函数，且存在 <code>@PersistenceConstructor</code> 注解，使用被注解标注的构造函数；</li>
+</ol>
+<p>关于值解析？</p>
+<p>值解析假定构造函数参数名称与实体的属性名称匹配，即解析将被执行，就像要填充属性一样，包括映射中的所有自定义（不同的数据存储列或字段名称等）。这还需要类文件中可用的参数名称信息或构造函数中存在的 @ConstructorProperties 注释。</p>
+<p>值解析可以通过使用 Spring Framework 的 @Value 值注释使用特定存储的 SpEL 表达式进行自定义。有关更多详细信息，请参阅有关存储特定映射的部分。</p>
+<p>这部分应该放在属性填充部分吧？</p>
+<p>为了避免反射的开销，Spring Data 的对象创建，默认使用运行时生成的工厂类，它会直接调用域类（domain classes）的构造函数。（这比反射提高了大约 10% 的性能）</p>
+<blockquote>
+<p>To avoid the overhead of reflection</p>
+</blockquote>
+<p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  Person(String firstname, String lastname) &#123; … &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Spring Data 将在运行时创建一个语义上等同于这个的工厂类：直接调用 Person 的构造函数创建对象实例。</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PersonObjectInstantiator</span> <span class="keyword">implements</span> <span class="title class_">ObjectInstantiator</span> &#123;</span><br><span class="line"></span><br><span class="line">  Object <span class="title function_">newInstance</span><span class="params">(Object... args)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Person</span>((String) args[<span class="number">0</span>], (String) args[<span class="number">1</span>]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是有资格进行此类优化的域类（domain class），需要满足以下几个条件：</p>
+<ul>
+<li>domain class 不能是 private 的；</li>
+<li>如果有内部类，该内部类必须是 static 的；</li>
+<li>它不能是 CGLib 代理类（proxy class）；</li>
+<li>Spring Data 使用的构造函数不能是 private 的</li>
+</ul>
+<p>如果不满足上面任一条件，Spring Data 就会改为使用反射进行对象创建。</p>
+<h3 id="3-2-Property-population"><a href="#3-2-Property-population" class="headerlink" title="3.2. Property population"></a>3.2. Property population</h3><p>属性填充</p>
+<p>当实例创建之后，Spring Data 会填充（这个类剩余的所有需要持久化的）属性。</p>
+<ul>
+<li>一旦创建了实体的实例，Spring Data 就会填充该类的所有剩余持久属性。除非实体的构造函数已经填充（即通过其构造函数参数填充），否则将首先填充标识符属性（用 <strong>@Id</strong> 注解标注的属性）以允许<a href="Spring%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8.md">循环对象引用</a>的解析。之后，所有尚未由构造函数填充的非瞬态属性（non-transient properties）都在实体实例上设置。</li>
+</ul>
+<p>属性填充使用下面的算法规则：</p>
+<ol>
+<li>如果属性是不可变的（immutable）（有 final 修饰），但公开（expose） 了 <code>with...</code> 方法（见下文），我们使用 <code>with...</code> 方法创建一个具有新属性值的新实体实例（a new entity instance）。</li>
+<li>如果定义了属性访问（即通过 getter 和 setter 访问），我们将调用 setter 方法。</li>
+<li>如果属性是可变的（mutable）（没有 final 修饰），我们直接设置字段。</li>
+<li>如果属性是不可变的，我们将使用构造函数在创建实例时填充。</li>
+<li>默认情况下，我们直接设置字段值。</li>
+</ol>
+<p>与在对象构造中的优化类似，我们也使用 Spring Data <strong>运行时生成的访问器类</strong>来填充实体实例中的属性。</p>
+<p>这使我们比反射提高了大约 25% 的性能。对于有资格进行此类优化的域类（domain class），它需要遵守一组约束：</p>
+<ul>
+<li><p>类型（types）不得位于默认值或 java 包下；–这里不太懂，从英文表述上，（感觉是属性的类型必须是项目的子目录下，不能在项目的根目录下，即不能在<code>src/main/java</code> 这个目录下，需要在其下的某个包内。）</p>
+<blockquote>
+<p>Types must not reside in the default or under the <code>java</code> package.</p>
+</blockquote>
+</li>
+<li><p>类型及其构造函数必须是 public 的；</p>
+</li>
+<li><p>作为内部类的类型必须是静态的（static）；</p>
+</li>
+<li><p>使用的 Java 运行时（Java Runtime）必须允许在原始 ClassLoader 中声明类。 Java 9 和更新版本施加了某些限制。</p>
+</li>
+</ul>
+<p>默认情况下，Spring Data 会尝试使用生成的属性访问器（property accessors），并在检测到超出限制时回退到基于反射的访问器。</p>
+<p>问题：如何查看 Spring Data 是否使用了 运行时生成的实例化器或者属性访问器？而不是反射？查一下</p>
+<p>问题：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">  <span class="keyword">private</span> String firstname;</span><br><span class="line"><span class="comment">// TODO(SLi): 这个注解的作用是什么？Type.FIELD 和 Type.PROPERTY 的区别是什么？</span></span><br><span class="line">  <span class="keyword">private</span> <span class="meta">@AccessType(Type.PROPERTY)</span> String lastname;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">setLastname</span><span class="params">(String lastname)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.lastname = lastname;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> MethodHandle firstname; </span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">&quot;firstname&quot;</span>.equals(name)) &#123;</span><br><span class="line">      firstname.invoke(person, (String) value); </span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">&quot;lastname&quot;</span>.equals(name)) &#123;</span><br><span class="line">      <span class="built_in">this</span>.person.setLastname((String) value);              </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>我的理解：</p>
+<ul>
+<li><p>Spring Data 默认使用 @AccessType(Type.FIELD) 字段访问类型，进行属性值的读写，这个时候，如果是 <code>private</code> 类型的，由于可见性规则，填充属性值时，需要在运行时生成的属性访问器中使用 <code>MethodHandles</code>与该字段进行交互；</p>
+</li>
+<li><p>使用 <code>@AccessType(Type.PROPERTY)</code> 注解后，则允许直接调用方法，而无需使用 <code>MethodHandles</code>。</p>
+</li>
+<li><p>但是不对啊，firstname如果也添加一个 setter 方法不是也可以直接使用了？在属性填充的算法规则中，如果属性定义了  setter 访问器，会直接使用 setter。</p>
+</li>
+</ul>
+<h3 id="3-3-General-recommendations"><a href="#3-3-General-recommendations" class="headerlink" title="3.3. General recommendations"></a>3.3. General recommendations</h3><p>官方一般建议</p>
+<ul>
+<li><strong>尽量坚持使用不可变对象</strong> — 不可变对象很容易创建，因为实现对象只需调用其构造函数即可。仅构造函数实现比属性填充快 30%。同时可以避免域对象（domain object）被 setter 方法影响。</li>
+<li><strong>提供一个全参数构造函数</strong> — 这允许对象映射以跳过属性填充的方式获得最佳性能。</li>
+<li><strong>使用工厂方法</strong>而不是重载构造函数，避免使用 <code>@PersistenceConstructor</code>注解 — 为了获得最佳性能需要一个全参数构造函数，我们通常希望公开更多应用程序用例特定的构造函数，这些构造函数省略自动生成的标识符等内容。使用静态工厂方法来公开全参构造函数的这些变体是一种既定的模式。<ul>
+<li>??? 这里不太明白，使用工厂方法，避免重载构造函数，避免使用<code>@PersistenceConstructor</code> 注解，到这里我明白，但是之后的内容我就不太理解，可能是翻译的不太对。</li>
+</ul>
+</li>
+<li>确保遵守允许使用生成的实例化器和属性访问器类的约束；</li>
+<li>对于要生成的标识符，仍然使用 final 字段与全参数持久性构造函数（首选）或 with… 方法结合使用；</li>
+<li>可以选择使用 Lombok 避免大量模板代码，Lombok’s <code>@AllArgsConstructor</code> 可以代替全参构造函数。（这部分可选，根据情况。）</li>
+</ul>
+<h2 id="4-Working-with-Spring-Data-Repositories"><a href="#4-Working-with-Spring-Data-Repositories" class="headerlink" title="4. Working with Spring Data Repositories"></a>4. Working with Spring Data Repositories</h2><p>使用 Spring Data 的 repository</p>
+<p>Spring Data repository 抽象的目标是，减少为各种持久性存储（实现数据访问层）所需的样板代码量。</p>
+<p>问题：</p>
+<ol>
+<li><p>Spring Data 的特性之一：基于 repository 的方法名称派生出动态查询，</p>
+<ol>
+<li><p>使用这条特性，需要哪些规则？怎样自定义&#x2F;派生才能生效？</p>
+<p>例如：下面这个例子，countByLastname这个方法名称的规则是什么？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">UserRepository</span> <span class="keyword">extends</span> <span class="title class_">CrudRepository</span>&lt;User, Long&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">long</span> <span class="title function_">countByLastname</span><span class="params">(String lastname)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>它的原理是怎样的？怎样实现的？</p>
+</li>
+</ol>
+</li>
+</ol>
+<p>我的理解：</p>
+<ol>
+<li><p>要达到简单使用框架的目的，需要：</p>
+<ul>
+<li>了解知道要用的模块&#x2F;部分的<strong>使用规则</strong>，然后按照规则一步步执行。例如，使用 repository 接口需要按照官方文档按照4个步骤依次实现并填充相关接口，剩下的交给框架就可以。再如，使用 Spark 时，知道依赖什么jar包，先创建什么，然后创建什么，方法怎样传入，怎样打包运行，剩下的就交给框架就好了。</li>
+<li>快速上手的过程是把 example 内容跑起来，然后抄一下改一改，接着就要把基本规则了解一下，深入时就需要更全面了解规则。</li>
+</ul>
+</li>
+<li><p>了解原理或者实现细节的目的 ：</p>
+<ul>
+<li>当现有框架提供的基本方法无法满足你的某个需求时，通过了解框架某部分的实现原理，可以知道它的工作流程，例如，它一共做了5步，你可以通过重写第三部的内容，让框架运行时加载你的实现方法，从而满足你的这个需求的。</li>
+<li>可以需要哪里看哪里，也可以全部都看一遍都掌握。</li>
+</ul>
+</li>
+<li><p>[Defining Repository Interfaces](# 4.3. Defining Repository Interfaces)</p>
+</li>
+<li><p>[Defining Query Methods](# 4.4. Defining Query Methods)</p>
+</li>
+<li><p>[Creating Repository Instances](# 4.5. Creating Repository Instances)</p>
+</li>
+<li><p>[Custom Implementations for Spring Data Repositories](# 4.6. Custom Implementations for Spring Data Repositories)</p>
+</li>
+</ol>
+<h3 id="4-1-Core-concepts"><a href="#4-1-Core-concepts" class="headerlink" title="4.1. Core concepts"></a>4.1. Core concepts</h3><p>核心概念</p>
+<p>underlying datastore 底层数据存储</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Repository</span>&lt;T, ID&gt;</span><br></pre></td></tr></table></figure>
+
+<p>关于核心接口 <code>Repository</code></p>
+<ol>
+<li><p>Spring Data repository 抽象的中心接口是 <code>Repository</code> 。它将要管理&#x2F;处理的域类（domain class）以及域类的 ID 类型作为类型参数。</p>
+</li>
+<li><p>Repository 接口的主要作用是标记，一是获取传入的 domain class 信息，二是用于判断满足 <code>instance of Repository</code> 条件的接口，用于创建 bean。</p>
+</li>
+<li><p>通常创建完映射的表对象后，会创建相应的 repository 接口用来执行查询语句。这些自定义的 domain repository 会继承 repository 或者其子接口。</p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">CrudRepository</span>&lt;T, ID&gt; <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;T, ID&gt;</span><br></pre></td></tr></table></figure>
+
+<p> <code>CrudRepository </code> 接口</p>
+<ul>
+<li>Repository 有几个子接口（具体可以在源码中查看），我们最常用的是 <code>CrudRepository </code> 接口。</li>
+<li>为正在管理的实体类提供了复杂的 <code>CRUD</code> 功能。</li>
+<li>其他特定存储模块都是继承并扩展了 <code>CrudRepository</code> 接口，并基于自己特定的底层持久化技术做相关实现然后对外提供相关接口方法。例如，JpaRepository 和 MongoRepository</li>
+<li><strong>分页访问</strong>，在 <code>CrudRepository</code> 之上，有一个 <code>PagingAndSortingRepository</code> 抽象，它添加了额外的方法来简化对实体的<strong>分页访问</strong>：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">PagingAndSortingRepository</span>&lt;T, ID&gt; <span class="keyword">extends</span> <span class="title class_">CrudRepository</span>&lt;T, ID&gt; &#123;</span><br><span class="line"></span><br><span class="line">  Iterable&lt;T&gt; <span class="title function_">findAll</span><span class="params">(Sort sort)</span>;</span><br><span class="line"></span><br><span class="line">  Page&lt;T&gt; <span class="title function_">findAll</span><span class="params">(Pageable pageable)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 每页20，查询 user 的第二页数据</span></span><br><span class="line">PagingAndSortingRepository&lt;User, Long&gt; repository = <span class="comment">// … get access to a bean</span></span><br><span class="line">Page&lt;User&gt; users = repository.findAll(PageRequest.of(<span class="number">1</span>, <span class="number">20</span>));</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="4-3-Defining-Repository-Interfaces"><a href="#4-3-Defining-Repository-Interfaces" class="headerlink" title="4.3. Defining Repository Interfaces"></a>4.3. Defining Repository Interfaces</h3><ul>
+<li><p>Defining a domain class-specific Repository Interfaces （定义一个特定的域类 repository 接口）</p>
+<ul>
+<li><p>要定义一个特定的domain class Repository 接口，首先是扩展 Repository 或其子接口，同时将要处理的域类（domain class） 和域类的 ID 字段的类型，当做参数传入。如以下示例所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">样例<span class="number">1</span>，</span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">PersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, Long&gt; &#123; … &#125;</span><br><span class="line"></span><br><span class="line">样例<span class="number">2</span>，我们实现了一个所有 domain 的公共基类 repository 接口，同时提供了 findById 和 save 功能，然后所有domain calss继承这个 base repository 接口即可。</span><br><span class="line"></span><br><span class="line"><span class="comment">// 注意，所有不需要运行时实例化的中间repository 标记 `@NoRepositoryBean` 注解即可。查看源码我们可知，CrudRepository 和 PagingAndSortingRepository 这两个中间 repository 也都有这个注解。</span></span><br><span class="line"><span class="meta">@NoRepositoryBean</span></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">MyBaseRepository</span>&lt;T, ID&gt; <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;T, ID&gt; &#123;</span><br><span class="line"></span><br><span class="line">  Optional&lt;T&gt; <span class="title function_">findById</span><span class="params">(ID id)</span>;</span><br><span class="line"></span><br><span class="line">  &lt;S <span class="keyword">extends</span> <span class="title class_">T</span>&gt; S <span class="title function_">save</span><span class="params">(S entity)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">UserRepository</span> <span class="keyword">extends</span> <span class="title class_">MyBaseRepository</span>&lt;User, Long&gt; &#123;</span><br><span class="line">  User <span class="title function_">findByEmailAddress</span><span class="params">(EmailAddress emailAddress)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>通常我们可以继承3种公共接口和各种特定存储实现的接口，</p>
+<ul>
+<li><code>Repository</code> , 最基础的接口，如果希望继承该接口但是又觉得功能不够，可以将 CrudRepository 或者 其他子接口中的部分方法 copy 到我们定义的 domain repository 接口中；</li>
+<li><code>CrudRepository</code> , 提供复杂的 CRUD 功能的 repository 接口；</li>
+<li><code>PagingAndSortingRepository</code> ，除了提供 CRUD 功能外，还提供了分页查询功能；</li>
+<li>以上是公共接口，同时还可以继承各种特定数据存储模块实现的独特接口，例如 JpaRepository，MongoRepository …</li>
+</ul>
+</li>
+<li><p><strong>当使用了多种数据存储模块时</strong>，如既有 JPA，也有MongoDB，此时需要严格区分 repository 定义与 Spring Data 模块的绑定。因为定义 repository 时需要指定 domain class ，所以：</p>
+<ol>
+<li>要么定义的 domain repository 是继承自特定模块实现的接口 ；</li>
+</ol>
+</li>
+</ul>
+<ol start="2">
+<li><p>要么是 domain class 使用了特定模块的注解做标注；（最好不要同一个 domain class 复用不同数据存储模块的注解，Spring Data 不容易区分它绑定到哪个模块的 repository 上。）</p>
+</li>
+<li><p>区分 repository 的最后一种方法是对存储库基础包进行范围界定。基本包决定了扫描 <code>repository interface definitions</code> (存储库接口定义）的起点。</p>
+<blockquote>
+<p>这点与 Spring Boot 配置普通 Bean 时一样，都是在配置类上用独特的注解进行标注，且通过 <code>basePackages</code> 进行基本包扫描范围的限制。</p>
+</blockquote>
+</li>
+</ol>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">  正确样例：</span><br><span class="line">  样例<span class="number">1</span>，继承自特定模块的repository</span><br><span class="line">  <span class="keyword">interface</span> <span class="title class_">MyRepository</span> <span class="keyword">extends</span> <span class="title class_">JpaRepository</span>&lt;User, Long&gt; &#123; &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@NoRepositoryBean</span></span><br><span class="line">  <span class="keyword">interface</span> <span class="title class_">MyBaseRepository</span>&lt;T, ID&gt; <span class="keyword">extends</span> <span class="title class_">JpaRepository</span>&lt;T, ID&gt; &#123; … &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">interface</span> <span class="title class_">UserRepository</span> <span class="keyword">extends</span> <span class="title class_">MyBaseRepository</span>&lt;User, Long&gt; &#123; … &#125;</span><br><span class="line">  </span><br><span class="line">  样例<span class="number">2</span>，定义的repository 接口使用了标注了特定模块的注解</span><br><span class="line">  <span class="comment">// 这里虽然定义的两个 repository 都继承了公共的 Repository，但是使用的 domain class 已经有明确归属。</span></span><br><span class="line">  <span class="keyword">interface</span> <span class="title class_">PersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, Long&gt; &#123; … &#125;</span><br><span class="line">  <span class="comment">// 这个注解是 JPA 的，所以使用了它定义的 PersonRepository 很显然属于 Spring Data JPA。</span></span><br><span class="line">  <span class="meta">@Entity</span></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">Person</span> &#123; … &#125;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">UserRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;User, Long&gt; &#123; … &#125;</span><br><span class="line">  <span class="comment">// 这个注解是 MongoDB的，所以 UserRepository 自然属于 Spring Data MongoDB。</span></span><br><span class="line"><span class="meta">@Document</span></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">User</span> &#123; … &#125;</span><br></pre></td></tr></table></figure>
+
+<p>  错误样例：</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">下面定义的两个 repository ，当使用单个Spring Data 模块时，没有问题。但是当使用多个 Spring Data 模块时，是无法正确分区他们与哪个模块绑定的。</span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">AmbiguousRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;User, Long&gt; &#123; … &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@NoRepositoryBean</span></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">MyBaseRepository</span>&lt;T, ID&gt; <span class="keyword">extends</span> <span class="title class_">CrudRepository</span>&lt;T, ID&gt; &#123; … &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">AmbiguousUserRepository</span> <span class="keyword">extends</span> <span class="title class_">MyBaseRepository</span>&lt;User, Long&gt; &#123; … &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">下面这个例子，Person 即使用了 JPA 的注解标注，又使用了 MongoDB 的注解标注，同时使用了公共接口，导致在多模块时也是无法区分绑定到哪个模块。</span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">JpaPersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, Long&gt; &#123; … &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">MongoDBPersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, Long&gt; &#123; … &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Document</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123; … &#125;</span><br></pre></td></tr></table></figure>
+
+<p>  通过定义扫描 repository 时的 basePackages 值，限定了扫描的范围，同时也达到了区分不同实现的目的。</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableJpaRepositories(basePackages = &quot;com.acme.repositories.jpa&quot;)</span></span><br><span class="line"><span class="meta">@EnableMongoRepositories(basePackages = &quot;com.acme.repositories.mongo&quot;)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Configuration</span> &#123; … &#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>中间</p>
+<ul>
+<li><p>Defining Query Methods （定义查询方法）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">PersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, Long&gt; &#123;</span><br><span class="line">  List&lt;Person&gt; <span class="title function_">findByLastname</span><span class="params">(String lastname)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>通过 <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-data/commons/docs/2.5.4/reference/html/#repositories.create-instances.java-config">JavaConfig</a> 或者 <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-data/commons/docs/2.5.4/reference/html/#repositories.create-instances">XML configuration</a> 配置 Spring 来为接口创建代理实例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里使用了 JPA 的样例</span></span><br><span class="line"><span class="meta">@EnableJpaRepositories</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Config</span> &#123; … &#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>Inject the repository instance and use it</p>
+</li>
+</ul>
+<p>@NoRepositoryBean </p>
+<ul>
+<li>所有不需要运行时实例化的中间repository 标记 <code>@NoRepositoryBean</code> 注解即可。查看源码我们可知，<code>CrudRepository</code> 和 <code>PagingAndSortingRepository </code>这两个中间 repository 也都有这个注解。这样 Spring Data 在运行时就不会将这些有标记的 repository 类注册为 Bean。</li>
+</ul>
+<h3 id="4-4-Defining-Query-Methods"><a href="#4-4-Defining-Query-Methods" class="headerlink" title="4.4. Defining Query Methods"></a>4.4. Defining Query Methods</h3><p>定义查询方法</p>
+<p>repository 代理有两种方法可以从方法名称派生特定存储的查询：</p>
+<ol>
+<li>通过直接从方法名称派生查询。</li>
+<li>通过使用手动定义的查询。</li>
+</ol>
+<p>创建查询必须有一个策略来决定创建什么实际查询。</p>
+<h4 id="4-4-1-Query-查找策略"><a href="#4-4-1-Query-查找策略" class="headerlink" title="4.4.1. Query 查找策略"></a>4.4.1. Query 查找策略</h4><p>Query Lookup Strategies</p>
+<p>声明查找策略的方式：</p>
+<ul>
+<li><p>使用 XML Configuration ， 可以配置命名空间的  <code>query-lookup-strategy</code> 属性；</p>
+</li>
+<li><p>使用 Java Configuration ，可以配置 <code>Enable$&#123;store&#125;Repositories</code> 注解中的 <code>queryLookupStrategy</code> 属性；</p>
+<blockquote>
+<p>例如，@EnableMongoRepositories</p>
+</blockquote>
+</li>
+</ul>
+<p>具体策略：（涉及方法创建的部分，查看下面 Query Creation 的内容）</p>
+<ul>
+<li><code>CREATE</code> ， 尝试从查询方法名称构造特定储存的查询。一般的方法是从方法名称中删除一组给定的前缀，然后解析方法的其余部分。</li>
+<li><code>USE_DECLARED_QUERY</code>  ， 尝试寻找已定义的查询，找不到就抛异常，这个需要查看具体存储在其文档中的可用项。</li>
+<li><code>CREATE_IF_NOT_FOUND</code>（<strong>默认值</strong>），结合了 <code>CREATE</code> 和 <code>USE_DECLARED_QUERY</code>。它首先查找声明的查询，如果没有找到声明的查询，它会创建一个自定义的基于方法名称的查询。这是默认的查找策略，因此，如果您没有明确配置任何内容，就会使用它。它允许按方法名称快速定义查询，还允许通过根据需要引入声明的查询来自定义这些查询。</li>
+</ul>
+<h4 id="4-4-2-Query-创建"><a href="#4-4-2-Query-创建" class="headerlink" title="4.4.2. Query 创建"></a>4.4.2. Query 创建</h4><p>Query Creation</p>
+<p>从方法名创建查询</p>
+<p>Spring Data 存储库基础结构中内置的查询构建器机制 对于构建 对 repository 实体有约束的查询非常有用。</p>
+<ul>
+<li>内置查询构建器机制，作用：构建查询</li>
+</ul>
+<p><strong>解析查询方法名称：</strong></p>
+<p>解析查询方法名称，分为主语和谓语。第一部分（<code>find...By</code>，<code>exists...By</code>）定义查询的主语，第二部分形成谓词。介绍从句（这里指主语）可以包含进一步的表达。 <code>find</code>（或其他引入关键字）和 <code>By</code> 之间的任何文本都被认为是描述性的，除非使用<em>结果限制关键字</em>之一，例如 <code>Distinct</code> 在要创建的查询上设置不同的标志或使用 <code>Top</code>&#x2F;<code>First</code> 来限制查询结果。</p>
+<blockquote>
+<p>The introducing clause (subject) can contain further expressions. Any text between find (or other introducing keywords) and By is considered to be descriptive。 这里的 introducing 怎么翻译比较合理？</p>
+</blockquote>
+<p><strong>了解查询方法支持的主语和条件谓语的关键字是重点</strong></p>
+<p>附录包含 查询方法主语关键字（<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-data/commons/docs/2.5.4/reference/html/#appendix.query.method.subject">query method subject keywords</a> ）和查询方法谓词关键字（<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-data/commons/docs/2.5.4/reference/html/#appendix.query.method.predicate">query method predicate keywords including sorting and letter-casing modifiers</a>）的完整列表，包括排序和字母大小写修饰符。但是，第一个 By 充当分隔符表明实际标准谓词的开始。在非常基础的层面上，您可以在实体属性上定义条件并将它们与 And 和 Or 连接起来。</p>
+<blockquote>
+<p>查询语句中的<strong>谓语</strong>，是指，条件（conditions）或条件表达式（将多个条件语句使用 AND 或 OR 连接一起）</p>
+</blockquote>
+<p>定义查询方法的常规注意事项：</p>
+<blockquote>
+<p>虽然解析方法的实际结果取决于您创建查询时所使用的持久化存储。但是也有一些常规注意事项。</p>
+</blockquote>
+<ul>
+<li>表达式通常是将属性（property）与操作符（operator）连接在一起。多个属性表达式可以使用 <code>AND</code> 和 <code>OR</code> 结合使用。一个属性表达式可以使用的操作符例如，<code>Between</code>, <code>LessThan</code>, <code>GreaterThan</code>, 和 <code>Like</code>，可以使用的操作符因数据存储而异，具体需要查看对应文档的对应部分。</li>
+<li>方法解析器支持设置 <code>IgnoreCase</code> 标志，为单个属性（例如 <code>findByLastnameIgnoreCase(…)</code>）或支持忽略大小写的类型的所有属性（通常是 <code>String</code> 实例，例如 <code>findByLastnameAndFirstnameAllIgnoreCase(…)</code>）。是否支持忽略大小写可能因数据存储而异，因此请参阅参考文档中的相关部分以了解数据存储特定的查询方法。</li>
+<li>您可以通过将 <code>OrderBy</code> 子句进行<strong>静态排序</strong>，并提供排序方向（<code>Asc</code> 或 <code>Desc</code>）。要创建支持动态排序的查询方法，请参阅“特殊参数处理”（“<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-data/commons/docs/2.5.4/reference/html/#repositories.special-parameters">Special parameter handling</a>”）.</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">PersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, Long&gt; &#123;</span><br><span class="line"></span><br><span class="line">  List&lt;Person&gt; <span class="title function_">findByEmailAddressAndLastname</span><span class="params">(EmailAddress emailAddress, String lastname)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Enables the distinct flag for the query</span></span><br><span class="line">  List&lt;Person&gt; <span class="title function_">findDistinctPeopleByLastnameOrFirstname</span><span class="params">(String lastname, String firstname)</span>;</span><br><span class="line">  List&lt;Person&gt; <span class="title function_">findPeopleDistinctByLastnameOrFirstname</span><span class="params">(String lastname, String firstname)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Enabling ignoring case for an individual property</span></span><br><span class="line">  List&lt;Person&gt; <span class="title function_">findByLastnameIgnoreCase</span><span class="params">(String lastname)</span>;</span><br><span class="line">  <span class="comment">// Enabling ignoring case for all suitable properties</span></span><br><span class="line">  List&lt;Person&gt; <span class="title function_">findByLastnameAndFirstnameAllIgnoreCase</span><span class="params">(String lastname, String firstname)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Enabling static ORDER BY for a query</span></span><br><span class="line">  List&lt;Person&gt; <span class="title function_">findByLastnameOrderByFirstnameAsc</span><span class="params">(String lastname)</span>;</span><br><span class="line">  List&lt;Person&gt; <span class="title function_">findByLastnameOrderByFirstnameDesc</span><span class="params">(String lastname)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="4-4-3-嵌套属性解析-x2F-处理方式"><a href="#4-4-3-嵌套属性解析-x2F-处理方式" class="headerlink" title="4.4.3. 嵌套属性解析&#x2F;处理方式"></a>4.4.3. 嵌套属性解析&#x2F;处理方式</h4><p>Property Expressions</p>
+<p>属性表达式只能引用被管理实体的直接属性，例如前面样例所示，通常在创建实例类时已经确定了。但是，当遇到含有嵌套属性时，需要额外注意（可能会产生解析歧义，参考样例1）。</p>
+<p>最佳实践是当实体类中包含嵌套类作为属性，且该属性用于创建查询方法时，使用<code>_</code> 手动定义遍历分割点，即将这个嵌套属性与该属性中涉及的子属性名分开。（参考样例2）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 样例希望处理Person类中有一个 Address 嵌套类作为属性，Address中有一个 ZipCode 属性字段。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 样例1：</span></span><br><span class="line"><span class="comment">// 这样写大多数情况可以，但是根据属性解析算法，当实体类中包含 addressZip 属性时，就会解析错误。</span></span><br><span class="line">List&lt;Person&gt; <span class="title function_">findByAddressZipCode</span><span class="params">(ZipCode zipCode)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 样例2：</span></span><br><span class="line"><span class="comment">// 最好的处理方式：</span></span><br><span class="line">List&lt;Person&gt; <span class="title function_">findByAddress_ZipCode</span><span class="params">(ZipCode zipCode)</span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>上面的例子中，是假设 Person 类有一个带有 <code>ZipCode</code> 的<code>Address</code> 属性。 在这种情况下，该方法会创建 <code>x.address.zipCode</code> 属性遍历。 解析算法首先将整个部分 (<code>AddressZipCode</code>) 解释为属性并检查具有该名称（未大写）的属性的域类。 如果算法成功，它将使用该属性。 如果不是，则算法将来自右侧的驼峰式部分的源拆分为头和尾，并尝试找到相应的属性 — 在我们的示例中为 <code>AddressZip</code> 和 <code>Code</code>。 如果算法找到具有该头部的属性，它会取尾部并继续从那里向下构建树，以刚才描述的方式将尾部拆分。 如果第一个拆分不匹配，则算法<strong>将拆分点向左移动</strong>（<code>Address</code>、<code>ZipCode</code>）并继续。</p>
+</blockquote>
+<p>因为 Spring Data 将<strong>下划线（_）</strong>视为<strong>保留字符</strong>，所以强烈建议遵循标准的 Java 命名约定（即，要使用驼峰式大小写，不要在属性名称中使用下划线）。</p>
+<p>问题：什么是 the managed entity，或 the managed domain class ？</p>
+<blockquote>
+<p>答：在定义 repository 接口时，当做参数传入其中的 实体类，就是被 repository 接口管理的 entity。</p>
+</blockquote>
+<h4 id="4-4-4-查询方法的动态分页和排序"><a href="#4-4-4-查询方法的动态分页和排序" class="headerlink" title="4.4.4. 查询方法的动态分页和排序"></a>4.4.4. 查询方法的动态<code>分页</code>和<code>排序</code></h4><p>Special parameter handling</p>
+<p><strong>Using</strong> <code>Pageable</code><strong>,</strong> <code>Slice</code><strong>, and</strong> <code>Sort</code> <strong>in query methods</strong></p>
+<p>动态进行<code>分页</code>和<code>排序</code>查询。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 分页</span></span><br><span class="line">Page&lt;User&gt; <span class="title function_">findByLastname</span><span class="params">(String lastname, Pageable pageable)</span>;</span><br><span class="line"></span><br><span class="line">Slice&lt;User&gt; <span class="title function_">findByLastname</span><span class="params">(String lastname, Pageable pageable)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 排序</span></span><br><span class="line">List&lt;User&gt; <span class="title function_">findByLastname</span><span class="params">(String lastname, Sort sort)</span>;</span><br><span class="line"></span><br><span class="line">List&lt;User&gt; <span class="title function_">findByLastname</span><span class="params">(String lastname, Pageable pageable)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>第一个方法允许我们将 <code>org.springframework.data.domain.Pageable</code> 实例传递给查询方法，可以将分页动态添加到静态定义的查询中。<code>Page</code> 知道可用元素和页面的总数。它通过基础结构触发计数查询（count query）来计算总数。由于这可能开销比较大（取决于所使用的存储），我们可以改为返回 <code>Slice</code>。 <code>Slice</code> 只知道下一个 <code>Slice</code> 是否可用（不触发计数查询的消耗），这在遍历更大的结果集时可能就足够了，例如第二个方法。</p>
+<p>排序也通过 <code>Pageable</code> 实例处理。如果只需要排序，请将 <code>org.springframework.data.domain.Sort</code> 参数添加到方法中。如您所见，返回一个 <code>List</code> 也是可能的。在这种情况下，不会创建构建实际 <code>Page</code> 实例所需的附加元数据（不会触发额外的计数查询（count query））。相反（这里应该是指除了排序还需要分页），它限制查询仅查找给定范围的实体。</p>
+<blockquote>
+<p>要了解整个查询获得了多少页，必须触发额外的计数查询。默认情况下，此查询来自实际触发的查询。</p>
+</blockquote>
+<h5 id="Paging-and-Sorting"><a href="#Paging-and-Sorting" class="headerlink" title="Paging and Sorting"></a>Paging and Sorting</h5><p>定义排序表达式更类型安全的方法是，先定义排序表达式的类型，然后使用方法引用来定义排序的属性。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义排序表达式</span></span><br><span class="line"><span class="type">Sort</span> <span class="variable">sort</span> <span class="operator">=</span> Sort.by(<span class="string">&quot;firstname&quot;</span>).ascending()</span><br><span class="line">  .and(Sort.by(<span class="string">&quot;lastname&quot;</span>).descending());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用类型安全 API 定义排序表达式</span></span><br><span class="line">TypedSort&lt;Person&gt; person = Sort.sort(Person.class);</span><br><span class="line"><span class="type">Sort</span> <span class="variable">sort</span> <span class="operator">=</span> person.by(Person::getFirstname).ascending()</span><br><span class="line">  .and(person.by(Person::getLastname).descending());</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>TypedSort.by(…) 通过（通常）使用 CGlib 来使用运行时代理，这可能会在使用 Graal VM Native 等工具时干扰本机图像编译。？？什么意思？有缺点？</p>
+</blockquote>
+<p>如果您的存储实现支持 <code>Querydsl</code>，您还可以使用生成的元模型类型来定义排序表达式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用 Querydsl API 定义排序表达式</span></span><br><span class="line"><span class="type">QSort</span> <span class="variable">sort</span> <span class="operator">=</span> QSort.by(QPerson.firstname.asc())</span><br><span class="line">  .and(QSort.by(QPerson.lastname.desc()));</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="4-4-5-Limiting-Query-Results"><a href="#4-4-5-Limiting-Query-Results" class="headerlink" title="4.4.5. Limiting Query Results"></a>4.4.5. Limiting Query Results</h4><ul>
+<li>Top  &#x2F; TopN，例如：Top5，默认 Top 表示1；</li>
+<li>First &#x2F; FirstN，例如：First5，默认 First 表示1；</li>
+</ul>
+<p>您可以通过使用 <code>first</code> 或 <code>top</code> 关键字来限制查询方法的结果，这两个关键字可以互换使用（作用相同）。您可以将可选数值附加到 top 或 first 以指定要返回的最大结果大小。如果忽略该数字，则假定结果大小为 1。以下示例显示了如何限制查询大小：</p>
+<p><strong>Limiting the result size of a query with</strong> <code>Top</code> <strong>and</strong> <code>First</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">User <span class="title function_">findFirstByOrderByLastnameAsc</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">User <span class="title function_">findTopByOrderByAgeDesc</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">Page&lt;User&gt; <span class="title function_">queryFirst10ByLastname</span><span class="params">(String lastname, Pageable pageable)</span>;</span><br><span class="line"></span><br><span class="line">Slice&lt;User&gt; <span class="title function_">findTop3ByLastname</span><span class="params">(String lastname, Pageable pageable)</span>;</span><br><span class="line"></span><br><span class="line">List&lt;User&gt; <span class="title function_">findFirst10ByLastname</span><span class="params">(String lastname, Sort sort)</span>;</span><br><span class="line"></span><br><span class="line">List&lt;User&gt; <span class="title function_">findTop10ByLastname</span><span class="params">(String lastname, Pageable pageable)</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="4-4-6-处理集合类返回值"><a href="#4-4-6-处理集合类返回值" class="headerlink" title="4.4.6. 处理集合类返回值"></a>4.4.6. 处理集合类返回值</h4><p>Repository Methods Returning Collections or Iterables</p>
+<blockquote>
+<p> 返回集合或可迭代对象的存储库方法</p>
+</blockquote>
+<p><strong>支持集合的返回值类型</strong></p>
+<ul>
+<li>Java Iterable</li>
+<li>List</li>
+<li>Set</li>
+<li>Steamable （Spring Data 支持的）</li>
+<li>Iterable 的自定义扩展（Spring Data 支持的）</li>
+<li>Vavr 提供的集合类型</li>
+</ul>
+<p>返回多个结果的查询方法可以使用标准的 <code>Java Iterable</code>、<code>List</code> 和 <code>Set</code>。除此之外，我们支持返回 Spring Data 的 <code>Streamable</code>，<code>Iterable 的自定义扩展</code>，以及 <code>Vavr 提供的集合类型</code>。请参阅解释所有可能的查询方法返回类型的附录。</p>
+<h5 id="Using-Streamable-as-Query-Method-Return-Type"><a href="#Using-Streamable-as-Query-Method-Return-Type" class="headerlink" title="Using Streamable as Query Method Return Type"></a>Using Streamable as Query Method Return Type</h5><p>在 Spring Data 中，可以使用 <code>Streamable</code> 作为 <code>Iterable</code> 或任何集合类型的代替方案。</p>
+<ul>
+<li>提供了访问非并行 Stream 的方法；</li>
+<li>可以直接在元素上调用 <code>filter()</code>,<code>map()</code>方法；</li>
+<li>支持将多个结果使用例如 and 方法连接到一起返回。如下面的样例1。</li>
+</ul>
+<p>使用Streamable合并查询方法结果</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 样例1：</span></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">PersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, Long&gt; &#123;</span><br><span class="line">  Streamable&lt;Person&gt; <span class="title function_">findByFirstnameContaining</span><span class="params">(String firstname)</span>;</span><br><span class="line">  Streamable&lt;Person&gt; <span class="title function_">findByLastnameContaining</span><span class="params">(String lastname)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Streamable&lt;Person&gt; result = repository.findByFirstnameContaining(<span class="string">&quot;av&quot;</span>)</span><br><span class="line">  .and(repository.findByLastnameContaining(<span class="string">&quot;ea&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="Returning-Custom-Streamable-Wrapper-Types"><a href="#Returning-Custom-Streamable-Wrapper-Types" class="headerlink" title="Returning Custom Streamable Wrapper Types"></a>Returning Custom Streamable Wrapper Types</h5><blockquote>
+<p>返回自定义流包装器类型</p>
+</blockquote>
+<p>TODO，这部分先跳过，用到时再看</p>
+<h4 id="4-4-7-Null-Handling-of-Repository-Methods"><a href="#4-4-7-Null-Handling-of-Repository-Methods" class="headerlink" title="4.4.7. Null Handling of Repository Methods"></a>4.4.7. Null Handling of Repository Methods</h4><p>存储库方法的空处理</p>
+<p><strong>两种方法处理 null</strong>：</p>
+<ol>
+<li>返回值使用包装类，保证不会返回null；</li>
+<li>使用与null 有关的注解标注，进行检查参数和结果；</li>
+</ol>
+<p>如果repository 方法返回单个实例，可以使用 java 8 的 <code>Optional</code> 来代替返回null 值，同时 Spring Data 支持使用下面几种包装器作为返回值：</p>
+<ul>
+<li><code>com.google.common.base.Optional</code></li>
+<li><code>scala.Option</code></li>
+<li><code>io.vavr.control.Option</code></li>
+</ul>
+<p>如果不使用包装器，那么可以直接返回 null 值来表示没有查询结果。</p>
+<p>返回集合、集合替代、包装器和流的 repository 方法保证永远不会返回 null 而是返回相应的空表示没有查询结果。</p>
+<h5 id="Nullability-Annotations"><a href="#Nullability-Annotations" class="headerlink" title="Nullability Annotations"></a>Nullability Annotations</h5><ul>
+<li><code>@NonNullApi</code>: 在包级别（package level）用于声明参数和返回值的默认行为是既不接受也不产生空值。</li>
+<li><code>@NonNull</code>：用在不能为空的参数或返回值处（设置了<code>@NonNullApi</code>的参数和返回值不需要再设置）。</li>
+<li><code>@Nullable</code>：用在可以为 null 的参数或返回值。</li>
+</ul>
+<p>Spring 注释使用 JSR 305 注释（一种休眠但广泛使用的 JSR）进行元注释。 JSR 305 元注释让工具供应商（如 IDEA、Eclipse 和 Kotlin）以通用方式提供空安全支持，而无需对 Spring 注释进行硬编码支持。要为查询方法启用可空性约束的运行时检查，您需要通过在 package-info.java 中使用 Spring 的 @NonNullApi 在包级别激活非可空性，如下例所示：</p>
+<p><strong>Declaring Non-nullability in</strong> <code>package-info.java</code></p>
+<blockquote>
+<p>在 package-info.java 中声明不可为空</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@org</span>.springframework.lang.NonNullApi</span><br><span class="line"><span class="keyword">package</span> com.acme;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>一旦非空默认设置到位，存储库查询方法调用将在运行时验证为可空性约束。如果查询结果违反了定义的约束，则抛出异常。当该方法将返回 null 但被声明为不可为 null 时会发生这种情况（默认情况下，在存储库所在的包上定义了注释）。如果您想再次选择可空结果，请有选择地对各个方法使用 @Nullable。使用本节开头提到的结果包装器类型继续按预期工作：空结果被转换为表示不存在的值。</p>
+<p><strong>Using different nullability constraints</strong></p>
+<p>使用不同的可空性约束</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.acme;      <span class="comment">// 参考上面的例子，已经定义了 non-null（非空） 行为                                                 </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.lang.Nullable;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">UserRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;User, Long&gt; &#123;</span><br><span class="line"></span><br><span class="line">  User <span class="title function_">getByEmailAddress</span><span class="params">(EmailAddress emailAddress)</span>;  <span class="comment">// 当查询未产生结果时抛出 EmptyResultDataAccessException。当传递给方法的 emailAddress 为 null 时，抛出 IllegalArgumentException。</span></span><br><span class="line"></span><br><span class="line">  <span class="meta">@Nullable</span></span><br><span class="line">  User <span class="title function_">findByEmailAddress</span><span class="params">(<span class="meta">@Nullable</span> EmailAddress emailAdress)</span>;   <span class="comment">// 当查询未产生结果时返回 null。还接受 null 作为 emailAddress 的值。       </span></span><br><span class="line"></span><br><span class="line">  Optional&lt;User&gt; <span class="title function_">findOptionalByEmailAddress</span><span class="params">(EmailAddress emailAddress)</span>;  <span class="comment">// 当查询未产生结果时返回 Optional.empty()。当传递给方法的 emailAddress 为 null 时，抛出 IllegalArgumentException。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="4-4-8-Streaming-Query-Results"><a href="#4-4-8-Streaming-Query-Results" class="headerlink" title="4.4.8. Streaming Query Results"></a>4.4.8. Streaming Query Results</h4><p>流式查询结果</p>
+<p>关于流，除了使用 Spring Data 支持的 Streamable 作为返回结果外，还可以使用 Java8 支持的 <code>Stream&lt;T&gt;</code> 作为返回结果。</p>
+<p>但是在实际调用时，因为 Stream 可能包装底层数据存储特定的资源，因此必须在<strong>使用后关闭</strong>。您可以使用 <code>close()</code> 方法或使用 Java 7 <code>try-with-resources</code> 块关闭 Stream，如以下示例所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> (Stream&lt;User&gt; stream = repository.findAllByCustomQueryAndStream()) &#123;</span><br><span class="line">  stream.forEach(…);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：并非所有 Spring Data 模块当前都支持 Stream<T> 作为返回类型。具体需要参考实现模块文档。</p>
+</blockquote>
+<h4 id="4-4-9-异步查询结果"><a href="#4-4-9-异步查询结果" class="headerlink" title="4.4.9. 异步查询结果"></a>4.4.9. 异步查询结果</h4><p>Asynchronous Query Results</p>
+<p>Spring 中关于异步方法执行的具体内容参考官方文档：<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-framework/docs/5.3.9/reference/html/integration.html#scheduling">Spring’s asynchronous method running capability</a>.</p>
+<p>使用 <code>@Async</code> 注解执行方法的异步查询。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用 java.util.concurrent.Future 作为返回值；</span></span><br><span class="line"><span class="meta">@Async</span></span><br><span class="line">Future&lt;User&gt; <span class="title function_">findByFirstname</span><span class="params">(String firstname)</span>;               </span><br><span class="line"></span><br><span class="line"><span class="comment">// Java 8 中的 java.util.concurrent.CompletableFuture 作为返回值；</span></span><br><span class="line"><span class="meta">@Async</span></span><br><span class="line">CompletableFuture&lt;User&gt; <span class="title function_">findOneByFirstname</span><span class="params">(String firstname)</span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用 org.springframework.util.concurrent.ListenableFuture 作为返回值；</span></span><br><span class="line"><span class="meta">@Async</span></span><br><span class="line">ListenableFuture&lt;User&gt; <span class="title function_">findOneByLastname</span><span class="params">(String lastname)</span>;    </span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Spring 的异步方法运行功能异步运行存储库查询。这意味着该方法<strong>在调用时立即返回</strong>，而实际查询发生在已提交给 Spring <code>TaskExecutor</code> 的任务中。异步查询不同于反应式查询，不应混合使用。有关反应式支持的更多详细信息，请参阅特定存储的文档。</p>
+</blockquote>
+<h3 id="4-5-Creating-Repository-Instances"><a href="#4-5-Creating-Repository-Instances" class="headerlink" title="4.5. Creating Repository Instances"></a>4.5. Creating Repository Instances</h3><p>如何为已定义的 repository 接口创建实例和 bean 定义？</p>
+<ul>
+<li>使用 XML 中的命名空间</li>
+<li>Java配置 （Java Configuration）（推荐）<ul>
+<li>通过在 Java 配置类上使用特定存储的 <code>@Enable$&#123;store&#125;Repositories</code> 注解来触发存储库基础结构。</li>
+</ul>
+</li>
+</ul>
+<p>Spring 容器（Spring container）基于 Java 的配置（ Java-based configuration）的详细内容参考官方文档， <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-framework/docs/5.3.9/reference/html/core.html#beans-java">JavaConfig in the Spring reference documentation</a>.</p>
+<h3 id="4-6-Custom-Implementations-for-Spring-Data-Repositories"><a href="#4-6-Custom-Implementations-for-Spring-Data-Repositories" class="headerlink" title="4.6. Custom Implementations for Spring Data Repositories"></a>4.6. Custom Implementations for Spring Data Repositories</h3><p>Spring Data Repositories 的自定义实现 ？</p>
+<p>暂时理解为当按照提供的规则无法创建需要的 查询方法时，可以利用自定义方式来处理。</p>
+<p>以下示例显示了一个使用默认后缀的存储库和一个为后缀设置自定义值的存储库：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">repositories</span> <span class="attr">base-package</span>=<span class="string">&quot;com.acme.repository&quot;</span> /&gt;</span>  // 默认是 Impl，尝试查找名为 com.acme.repository.CustomizedUserRepositoryImpl 的类</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">repositories</span> <span class="attr">base-package</span>=<span class="string">&quot;com.acme.repository&quot;</span> <span class="attr">repository-impl-postfix</span>=<span class="string">&quot;MyPostfix&quot;</span> /&gt;</span> // 尝试查找名为 com.acme.repository.CustomizedUserRepositoryMyPostfix 的类</span><br><span class="line"></span><br><span class="line">Java Configuration 配置类似</span><br><span class="line">@EnableElasticsearchRepositories(repositoryImplementationPostfix = &quot;xxx&quot;)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Resolution of Ambiguity</strong></p>
+<p>解决歧义</p>
+<p>如果在不同的包中找到多个能匹配类名的实现，Spring Data 使用 bean 名称来标识使用哪个。</p>
+<p>与普通的 Bean 相同，</p>
+<ol>
+<li>默认情况下，使用首字母小写的类名作 Bean 名称，默认匹配用<strong>接口名+Impl 后缀</strong> 来匹配 Bean 名称。</li>
+<li>可以使用注解来自定义 Bean 名称，例如，使用 <code>@Component(&quot;specialCustomImpl&quot;)</code> 来标注后，就会使用自定义的名称代替默认 Bean 名称。 –需要测试验证。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 第一个包中使用默认的</span></span><br><span class="line"><span class="keyword">package</span> com.acme.impl.one;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CustomizedUserRepositoryImpl</span> <span class="keyword">implements</span> <span class="title class_">CustomizedUserRepository</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Your custom implementation</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 第二个包中使用自定义的。</span></span><br><span class="line"><span class="keyword">package</span> com.acme.impl.two;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Component(&quot;specialCustomImpl&quot;)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CustomizedUserRepositoryImpl</span> <span class="keyword">implements</span> <span class="title class_">CustomizedUserRepository</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Your custom implementation</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Manual Wiring</strong></p>
+<p>手动接线</p>
+<h4 id="4-6-2-Customize-the-Base-Repository"><a href="#4-6-2-Customize-the-Base-Repository" class="headerlink" title="4.6.2. Customize the Base Repository"></a>4.6.2. Customize the Base Repository</h4><h3 id="4-7-Publishing-Events-from-Aggregate-Roots"><a href="#4-7-Publishing-Events-from-Aggregate-Roots" class="headerlink" title="4.7. Publishing Events from Aggregate Roots"></a>4.7. Publishing Events from Aggregate Roots</h3><p>从聚合根发布事件</p>
+<p>什么是 aggregate root ？？？</p>
+<p>Entities managed by repositories are aggregate roots. In a Domain-Driven Design application, these aggregate roots usually publish domain events.</p>
+<blockquote>
+<p>存储库管理的实体是聚合根。在域驱动设计应用程序中，这些聚合根通常发布域事件。</p>
+</blockquote>
+<p>每次调用 Spring Data 存储库 <code>save(…)</code>、<code>saveAll(…)</code>、<code>delete(…)</code> 或 <code>delete All(…)</code> 方法之一时都会调用这些方法。</p>
+<h2 id="5-Projections"><a href="#5-Projections" class="headerlink" title="5. Projections"></a>5. Projections</h2><p>类似 Select 语句中 选择指定字段输出</p>
+<p>基础处理中，我们在 repository 的查询方法中只返回整个实体类，高级处理时，我们有返回 repository 管理的实体类中部分属性的需求，就像 select 部分字段一样。</p>
+<p>此时，使用基于接口的投影。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 简单使用时返回被管理的实体 Person</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Id</span> UUID id;</span><br><span class="line">  String firstname, lastname;</span><br><span class="line">  Address address;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Address</span> &#123;</span><br><span class="line">    String zipCode, city, street;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">PersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, UUID&gt; &#123;</span><br><span class="line"></span><br><span class="line">  Collection&lt;Person&gt; <span class="title function_">findByLastname</span><span class="params">(String lastname)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>The aggregate root  多次出现这个概念，需要回去看一下表达的是什么。</p>
+<p><strong>default</strong> ，Java 8 中出现在 interface 中的新方法，表达什么意思呢？</p>
+<h3 id="5-1-Interface-based-Projections"><a href="#5-1-Interface-based-Projections" class="headerlink" title="5.1. Interface-based Projections"></a>5.1. Interface-based Projections</h3><p>当我们想要返回被管理实体中的指定字段时，最简单的方法是，重新定义一个新的接口（interface），然后将需要返回的属性字段的方法暴露出来。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义一个仅返回名称属性的接口，然后再 PersonRepository 中用于查询方法的返回值。</span></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">NamesOnly</span> &#123;</span><br><span class="line"></span><br><span class="line">  String <span class="title function_">getFirstname</span><span class="params">()</span>;</span><br><span class="line">  String <span class="title function_">getLastname</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">PersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, UUID&gt; &#123;</span><br><span class="line"></span><br><span class="line">  Collection&lt;NamesOnly&gt; <span class="title function_">findByLastname</span><span class="params">(String lastname)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果实体类有内部嵌套类属性，嵌套类也选择字段返回，那么与外部类也一样处理，例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 样例2：这里新接口 PersonSummary 仅返回 名字和地址 三个字段，且地址字段是嵌套类作为属性仅有 city 属性返回，那么嵌套类也要新建接口，如下：</span></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">PersonSummary</span> &#123;</span><br><span class="line"></span><br><span class="line">  String <span class="title function_">getFirstname</span><span class="params">()</span>;</span><br><span class="line">  String <span class="title function_">getLastname</span><span class="params">()</span>;</span><br><span class="line">  AddressSummary <span class="title function_">getAddress</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">interface</span> <span class="title class_">AddressSummary</span> &#123;</span><br><span class="line">    String <span class="title function_">getCity</span><span class="params">()</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>下面这部分内容等实际用到时再参考，<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-data/commons/docs/2.5.4/reference/html/#projections">Spring Data Commons - Reference Documentation</a></p>
+</blockquote>
+<h4 id="5-1-1-Closed-Projections"><a href="#5-1-1-Closed-Projections" class="headerlink" title="5.1.1. Closed Projections"></a>5.1.1. Closed Projections</h4><p>新建的接口中涉及的属性与实体属性完全一致时，我们称这种投影接口为 <code>closed projects</code>，否则为 <code>open projects</code>。</p>
+<h4 id="5-1-2-Open-Projections"><a href="#5-1-2-Open-Projections" class="headerlink" title="5.1.2. Open Projections"></a>5.1.2. Open Projections</h4><h4 id="5-1-3-Nullable-Wrappers"><a href="#5-1-3-Nullable-Wrappers" class="headerlink" title="5.1.3. Nullable Wrappers"></a>5.1.3. Nullable Wrappers</h4><h3 id="5-2-Class-based-Projections-DTOs"><a href="#5-2-Class-based-Projections-DTOs" class="headerlink" title="5.2. Class-based Projections (DTOs)"></a>5.2. Class-based Projections (DTOs)</h3><h3 id="5-3-Dynamic-Projections"><a href="#5-3-Dynamic-Projections" class="headerlink" title="5.3. Dynamic Projections"></a>5.3. Dynamic Projections</h3><p>将需要返回的类型当做查询方法的一个参数传入。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">样例<span class="number">1</span>：</span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">PersonRepository</span> <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;Person, UUID&gt; &#123;</span><br><span class="line"></span><br><span class="line">  &lt;T&gt; Collection&lt;T&gt; <span class="title function_">findByLastname</span><span class="params">(String lastname, Class&lt;T&gt; type)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">someMethod</span><span class="params">(PersonRepository people)</span> &#123;</span><br><span class="line"></span><br><span class="line">  Collection&lt;Person&gt; aggregates =</span><br><span class="line">    people.findByLastname(<span class="string">&quot;Matthews&quot;</span>, Person.class);</span><br><span class="line"></span><br><span class="line">  Collection&lt;NamesOnly&gt; aggregates =</span><br><span class="line">    people.findByLastname(<span class="string">&quot;Matthews&quot;</span>, NamesOnly.class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="6-Query-by-Example"><a href="#6-Query-by-Example" class="headerlink" title="6. Query by Example"></a>6. Query by Example</h2><p>JPA 和 MyBatis 中都有涉及 example，什么是 query by example？什么是动态查询</p>
+<h3 id="Appendix-C-Repository-query-keywords"><a href="#Appendix-C-Repository-query-keywords" class="headerlink" title="Appendix C: Repository query keywords"></a>Appendix C: Repository query keywords</h3><table>
+<thead>
+<tr>
+<th align="left">Keyword</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>find…By</code>, <code>read…By</code>, <code>get…By</code>, <code>query…By</code>, <code>search…By</code>, <code>stream…By</code></td>
+<td align="left">General query method returning typically the repository type, a <code>Collection</code> or <code>Streamable</code> subtype or a result wrapper such as <code>Page</code>, <code>GeoResults</code> or any other store-specific result wrapper. Can be used as <code>findBy…</code>, <code>findMyDomainTypeBy…</code> or in combination with additional keywords.</td>
+</tr>
+<tr>
+<td align="left"><code>exists…By</code></td>
+<td align="left">Exists projection, returning typically a <code>boolean</code> result.</td>
+</tr>
+<tr>
+<td align="left"><code>count…By</code></td>
+<td align="left">Count projection returning a numeric result.</td>
+</tr>
+<tr>
+<td align="left"><code>delete…By</code>, <code>remove…By</code></td>
+<td align="left">Delete query method returning either no result (<code>void</code>) or the delete count.</td>
+</tr>
+<tr>
+<td align="left"><code>…First&lt;number&gt;…</code>, <code>…Top&lt;number&gt;…</code></td>
+<td align="left">Limit the query results to the first <code>&lt;number&gt;</code> of results. This keyword can occur in any place of the subject between <code>find</code> (and the other keywords) and <code>by</code>.</td>
+</tr>
+<tr>
+<td align="left"><code>…Distinct…</code></td>
+<td align="left">Use a distinct query to return only unique results. Consult the store-specific documentation whether that feature is supported. This keyword can occur in any place of the subject between <code>find</code> (and the other keywords) and <code>by</code>.</td>
+</tr>
+</tbody></table>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/SpringData%E5%AD%A6%E4%B9%A0.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SpringBoot/" rel="tag">SpringBoot</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SpringData/" rel="tag">SpringData</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/SpringBoot%E5%AD%A6%E4%B9%A0.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            SpringBoot学习
+          
+        </div>
+      </a>
+    
+    
+      <a href="/SpringData-JPA%E5%AD%A6%E4%B9%A0.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">SpringData-JPA学习</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

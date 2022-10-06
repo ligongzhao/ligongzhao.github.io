@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>17Rust的面向对象编程特性 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/17Rust的面向对象编程特性"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  17Rust的面向对象编程特性
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/17Rust%E7%9A%84%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B%E7%89%B9%E6%80%A7.html" class="article-date">
+  <time datetime="2022-02-17T07:11:49.000Z" itemprop="datePublished">2022-02-17</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.9k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">6 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>面向对象编程（Object-Oriented Programming, OOP）是一种模式化编程方式。</p>
+<h1 id="面向对象语言的特性"><a href="#面向对象语言的特性" class="headerlink" title="面向对象语言的特性"></a>面向对象语言的特性</h1><p>面向对象编程语言共享的特性：</p>
+<p>对象、封装、继承</p>
+<h2 id="对象包含数据和行为"><a href="#对象包含数据和行为" class="headerlink" title="对象包含数据和行为"></a>对象包含数据和行为</h2><p>参考 Gang of Four 中对象的定义：</p>
+<ul>
+<li>面向对象的程序是由对象组成的。一个 <strong>对象</strong> 包含数据和操作这些数据的过程。这些过程通常被称为 <strong>方法</strong> 或 <strong>操作</strong>。</li>
+<li>Rust 中的 结构体和枚举满足</li>
+</ul>
+<p><strong>封装</strong>（<em>encapsulation</em>）的思想：对象的实现细节不能被使用对象的代码获取到。所以唯一与对象交互的方式是通过对象提供的公有 API；使用对象的代码无法深入到对象内部并直接改变数据或者行为。封装使得改变和重构对象的内部时无需改变使用对象的代码。</p>
+<ul>
+<li>Rust 中不同部分使用<code>pub</code> 与否可以封装其实现细节。</li>
+</ul>
+<p>Rust 中没有继承，</p>
+<p>Rust 使用 trait 对象来实现<strong>多态</strong>。</p>
+<h1 id="为使用不同类型的值而设计的-trait-对象"><a href="#为使用不同类型的值而设计的-trait-对象" class="headerlink" title="为使用不同类型的值而设计的 trait 对象"></a>为使用不同类型的值而设计的 trait 对象</h1><p>图形用户接口（Graphical User Interface， GUI）</p>
+<h2 id="定义通用行为的-trait"><a href="#定义通用行为的-trait" class="headerlink" title="定义通用行为的 trait"></a>定义通用行为的 trait</h2><p><strong>trait 对象</strong>（trait object）指向一个实现了指定 trait 的类型的实例，以及一个用于在运行时查找给类型的 trait 方法的表。</p>
+<p>如何创建？</p>
+<p>通过指定某种指针来创建 trait 对象，</p>
+<ul>
+<li>例如，<code>&amp;</code>引用，或 <code>Box&lt;T&gt;</code> 智能指针，还有<code>dyn</code> 关键字，以及指定相关的 trait。<ul>
+<li>第十九章 <a target="_blank" rel="noopener" href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch19-04-advanced-types.html#dynamically-sized-types-and-the-sized-trait">““动态大小类型和 <code>Sized</code> trait”</a> 部分会介绍 trait 对象必须使用指针的原因</li>
+</ul>
+</li>
+</ul>
+<p>trait 对象</p>
+<p><code>Box&lt;dyn TRAIT类型&gt;</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">trait</span> <span class="title class_">Draw</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">draw</span>(&amp;<span class="keyword">self</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Screen</span> &#123;</span><br><span class="line">    <span class="comment">// 这里便是一个 trait 对象</span></span><br><span class="line">    <span class="keyword">pub</span> components: <span class="type">Vec</span>&lt;<span class="type">Box</span>&lt;<span class="keyword">dyn</span> Draw&gt;&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以使用 trait对象代替泛型或具体类型。</p>
+<ul>
+<li>任何使用 trait 对象的位置，Rust 的类型系统会在编译时确保任何在此上下文中使用的值会实现其 trait 对象中指定的 trait。如此便<strong>无需在编译时</strong>就知晓所有可能的类型。</li>
+</ul>
+<p>trait 对象的具体作用是：</p>
+<ul>
+<li>允许对通用<strong>行为</strong>进行抽象；</li>
+<li>与一般意义上的对象不同，trait对象不允许添加数据；只是行为的抽象。</li>
+</ul>
+<p>使用 trait 对象的优势：</p>
+<ul>
+<li>无需在运行时检查一个值是否实现了特定方法或担心在调用时因为值没有实现方式而产生错误。<ul>
+<li>Rust 编译器会检查值是否实现了 trait对象所需要的trait。</li>
+</ul>
+</li>
+</ul>
+<h3 id="trait-对象-与-泛型-trait-bound-的不同"><a href="#trait-对象-与-泛型-trait-bound-的不同" class="headerlink" title="trait 对象 与 泛型+trait bound 的不同"></a>trait 对象 与 泛型+trait bound 的不同</h3><p>泛型+trait bound 的组合，适用于只需要同质（相同类型）的集合，一次实例只能是一种类型，在编译时采用具体类型，进行<strong>单态化</strong>。</p>
+<ul>
+<li>没有运行时性能开销</li>
+</ul>
+<p>trait 对象，则可以包含多种实现了指定 trait 的类型，是一种<strong>多态化</strong>的手段。</p>
+<ul>
+<li>有运行时性能开销</li>
+</ul>
+<h2 id="trait-对象执行动态分发"><a href="#trait-对象执行动态分发" class="headerlink" title="trait 对象执行动态分发"></a>trait 对象执行动态分发</h2><p>Rust 实现泛型时，使用了单态化，即在编译时将使用了泛型类型参数的地方替换为了具体类型，</p>
+<ul>
+<li>单态化所产生的代码进行<strong>静态分发</strong>（static dispatch）。</li>
+</ul>
+<p><strong>静态分发</strong>（static dispatch），发生于编译器在<strong>编译时就知晓</strong>调用了什么方法的时候。</p>
+<p><strong>动态分发</strong>（dynamic dispatch），编译器在编译时无法知晓调用了什么方法，而是在<strong>运行时确定</strong>调用了什么方法的代码。</p>
+<p>使用 trait 对象时，Rust 必须使用动态分发。</p>
+<ul>
+<li>编译器无法知晓所有可能用于 trait 对象代码的类型，所以也就不知道应该调用哪个类型的哪个方法实现。</li>
+<li>同时动态分发也会阻止编译器有选择的内联方法代码，这会相应的禁用一些优化。</li>
+<li>优点就是编写代码更加灵活。</li>
+<li>所以需要在灵活性与性能上做权衡。</li>
+</ul>
+<h2 id="trait-对象要求对象安全"><a href="#trait-对象要求对象安全" class="headerlink" title="trait 对象要求对象安全"></a>trait 对象要求对象安全</h2><p>只有 <strong>对象安全</strong>（<em>object safe</em>）的 trait 才可以组成 trait 对象。</p>
+<p>如果一个 trait 中<strong>所有的方法</strong>有如下属性时，则该 trait 是对象安全的：</p>
+<ul>
+<li>返回值类型不为 <code>Self</code>；<ul>
+<li>注意，<code>&amp;self</code> 和 <code>&amp;mut self</code> 是可以的，只有 <code>Self</code> 是不可以的。</li>
+</ul>
+</li>
+<li>方法没有任何泛型类型参数（generic type parameter）；</li>
+</ul>
+<p><code>Self</code> 关键字是我们要实现的 trait 或方法的<strong>类型别名</strong>。</p>
+<blockquote>
+<p>对象安全对于 trait object 是必须的，因为一旦有了 trait 对象，就不再知晓实现该 trait 的具体类型是什么了。</p>
+<p>如果 trait 方法返回具体的 <code>Self</code> 类型，但是 trait 对象忘记了其真正的类型，那么方法不可能使用已经忘却的原始具体类型。</p>
+<p>同理对于泛型类型参数来说，当使用 trait 时其会放入具体的类型参数：此具体类型变成了实现该 trait 的类型的一部分。当使用 trait 对象时其具体类型被抹去了，故无从得知放入泛型参数类型的类型是什么。</p>
+</blockquote>
+<p>下面这个标准库中的 <code>Clone</code> trait 不是对象安全的，因为其 <code>clone</code>方法的方法返回值是 <code>Self</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">trait</span> <span class="title class_">Clone</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">clone</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>String</code> 实现了 <code>Clone</code> trait，当在 <code>String</code> 实例上调用 <code>clone</code> 方法时会得到一个 <code>String</code> 实例。类似的，当调用 <code>Vec&lt;T&gt;</code> 实例的 <code>clone</code> 方法会得到一个 <code>Vec&lt;T&gt;</code> 实例。</p>
+<p><code>clone</code> 的签名需要知道什么类型会代替 <code>Self</code>，因为这是它的返回值。</p>
+<h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 下面的 trait 因为 foo 的返回值为 Self，所以 Trait 无法创建 trait对象</span></span><br><span class="line"><span class="keyword">trait</span> <span class="title class_">Trait</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">foo</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span>;</span><br><span class="line">    <span class="comment">// more functions</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>当 trait 中只有一些方法不是对象安全的，可以通过给该方法添加 <code>where Self: Sized</code> 约束。将其标记为对 trait object（trait 对象）不可用的形式，让该 trait 依然可以生产 trait object。</p>
+<p>同时被标记的方法依然除了不能在 trait object 中使用，依然可以在该 trait 的其他 impl 实现中使用。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">trait</span> <span class="title class_">Trait</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">foo</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> <span class="keyword">where</span> <span class="keyword">Self</span>: <span class="built_in">Sized</span>;</span><br><span class="line">    <span class="comment">// more functions</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>foo()不能再被trait对象调用了，但是现在可以创建一个trait对象，并且可以调用任何对象安全的方法。</p>
+<h1 id="面向对象设计模式的实现"><a href="#面向对象设计模式的实现" class="headerlink" title="面向对象设计模式的实现"></a>面向对象设计模式的实现</h1><p><strong>状态模式</strong>（state pattern）是一个面向对象的设计模式。</p>
+<ul>
+<li>该模式的关键在于一个值有某些内部状态，体现为一系列的<strong>状态对象</strong>，同时值的行为随着其内部状态而改变。</li>
+<li>状态对象，是共享功能的（有相同的功能&#x2F;方法）<ul>
+<li>在 Rust 中通过结构体（struct）和 trait 来实现，其他语言比如Java 可能通过对象和继承（或面向接口编程）来实现。</li>
+</ul>
+</li>
+<li>每个状态对象对其自己的行为负责，并在应该转换为另一个状态时负责管理。</li>
+<li>保存状态对象的值不知道状态的不同行为，也不知道何时在状态之间转换。<ul>
+<li>这里或许表示为，保存状态对象的值不关心，或无感知状态的不同行为和状态间转换。</li>
+</ul>
+</li>
+<li>当程序业务需求改变时，只需要更新某个状态对象内的代码来更改它的规则或者添加更多的状态对象即可。</li>
+</ul>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/17Rust%E7%9A%84%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B%E7%89%B9%E6%80%A7.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/08%E5%B8%B8%E8%A7%81%E9%9B%86%E5%90%88.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            08常见集合
+          
+        </div>
+      </a>
+    
+    
+      <a href="/15%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">15智能指针</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

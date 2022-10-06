@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Rust hello world |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/Rust hello world"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Rust hello world
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/Rust%20hello%20world.html" class="article-date">
+  <time datetime="2021-12-06T00:55:21.000Z" itemprop="datePublished">2021-12-06</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.6k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">6 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="Rust-编程入门"><a href="#Rust-编程入门" class="headerlink" title="Rust 编程入门"></a>Rust 编程入门</h1><h2 id="本地文档"><a href="#本地文档" class="headerlink" title="本地文档"></a>本地文档</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rustup doc</span><br></pre></td></tr></table></figure>
+
+<p>更新到最新版本</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rustup update</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Rust-程序解剖"><a href="#Rust-程序解剖" class="headerlink" title="Rust 程序解剖"></a>Rust 程序解剖</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>()&#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Hello World&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义函数：fn main(){}</p>
+<ul>
+<li>没有参数，没有返回值</li>
+</ul>
+<p><code>main</code> 函数是每个 Rust 可执行程序最先运行的代码；</p>
+<p>打印文本： println!(“Hello World”);</p>
+<ul>
+<li>Rust 的缩进是 4 个空格，而不是 tab</li>
+<li><code>println!</code> 是一个 Rust macro（宏）<ul>
+<li>如果是函数的话，没有 <code>!</code></li>
+</ul>
+</li>
+<li>代码以 <code>;</code> 结尾</li>
+</ul>
+<h2 id="Rustc-编译与运行"><a href="#Rustc-编译与运行" class="headerlink" title="Rustc 编译与运行"></a>Rustc 编译与运行</h2><ul>
+<li><p>运行 Rust 程序前必须先编译，命令： <code>rustc 源文件名</code></p>
+<ul>
+<li>rustc 中的 c &#x3D;&gt; compiler 编译器，的意思；</li>
+<li>rustc main.rs</li>
+</ul>
+</li>
+<li><p>编译成功后，会生成一个二进制文件</p>
+<ul>
+<li><p>Windows 下为 <code>源文件名.exe</code>；Linux&#x2F;Mac 下为 <code>源文件名</code></p>
+</li>
+<li><p>windows 上还会生成一个 <code>.pdb</code>文件，里面包含调试信息</p>
+</li>
+</ul>
+</li>
+<li><p>Rust 是 <code>ahead-of-time</code> 即预先编译的语言</p>
+<ul>
+<li>可以先编译程序，然后把可执行文件交给别人运行（无需安装 Rust）</li>
+</ul>
+</li>
+<li><p>rustc 只适合简单的 Rust 程序，项目使用 cargo 编译工具来编译</p>
+<ul>
+<li>这里类似 javac 与 java 的关系，单个文件使用 javac 来编译，项目使用 maven&#x2F;gradle&#x2F;ant 等编译工具</li>
+</ul>
+</li>
+</ul>
+<h2 id="Cargo"><a href="#Cargo" class="headerlink" title="Cargo"></a>Cargo</h2><ul>
+<li>cargo 是 Rust 的构建工具（构建系统和包管理工具）<ul>
+<li>构建代码，下载依赖库，构建这些库。。。</li>
+<li>类似 java 的 maven</li>
+</ul>
+</li>
+<li>安装 Rust 的时候会安装 cargo<ul>
+<li><code>cargo --version</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="使用-cargo-创建项目"><a href="#使用-cargo-创建项目" class="headerlink" title="使用 cargo 创建项目"></a>使用 cargo 创建项目</h2><ul>
+<li>创建项目： <code>cargo new &lt;项目名&gt;</code><ul>
+<li>cargo new hello_cargo</li>
+<li>会创建一个新的目录（项目名目录）<ul>
+<li>Cargo.toml</li>
+<li>src 目录<ul>
+<li>main.rs</li>
+</ul>
+</li>
+<li>初始化了一个新的 Git 仓库， .gitignore<ul>
+<li>可以使用其他的 vcs 或者不适用 vcs：cargo new 的时候使用 –vcs 这个flag</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Cargo.toml</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[package]</span><br><span class="line">name = &quot;hello-cargo&quot;</span><br><span class="line">version = &quot;0.1.0&quot;</span><br><span class="line">edition = &quot;2021&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html</span></span><br><span class="line"></span><br><span class="line">[dependencies]</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>TOML (Tom’s Obvious, Minimal Language) 格式，是 Cargo 配置文件的格式<ul>
+<li>类似与 YAML 和 JSON</li>
+</ul>
+</li>
+<li>[package] ，是一个区域标题（section），表示下方内容是用来配置包（package）的，cargo 编译程序需要的配置<ul>
+<li>name，项目名</li>
+<li>version，项目版本</li>
+<li>edition，使用的 Rust 版本</li>
+<li>…，其他内容会根据系统自动提取，例如，authors 作者</li>
+</ul>
+</li>
+<li>[dependencies]，它会列出项目的依赖项</li>
+<li>还可以增加其他片段&#x2F;区域(section)</li>
+</ul>
+<h4 id="Cargo-lock-文件确保构建是可重现的"><a href="#Cargo-lock-文件确保构建是可重现的" class="headerlink" title="Cargo.lock 文件确保构建是可重现的"></a>Cargo.lock 文件确保构建是可重现的</h4><p>Cargo 通过 Cargo.lock 文件来确保任何人在任何时候重新构建代码，都会生成相同的结果。</p>
+<p>Cargo 只会使用你指定的依赖版本，除非重新修改配置文件中的依赖版本。</p>
+<p>在第一次构建项目时，Cargo 计算出所有符合要求的依赖版本，并写入 Cargo.lock 文件。当之后构建项目时，Cargo 会发现 Cargo.lock 已存在并使用其中指定的版本，而不是再次计算所有的版本。</p>
+<h5 id="更新-crate-到一个新版本"><a href="#更新-crate-到一个新版本" class="headerlink" title="更新 crate 到一个新版本"></a>更新 crate 到一个新版本</h5><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cargo update</span><br></pre></td></tr></table></figure>
+
+<p>这个命令会忽略 <code>Cargo.lock</code> 文件，并计算出所有符合 Cargo.toml 声明的最新版本。如果成功了，Cargo 会把这些版本写入 Cargo.lock 文件。</p>
+<h2 id="构建并运行-Cargo-项目"><a href="#构建并运行-Cargo-项目" class="headerlink" title="构建并运行 Cargo 项目"></a>构建并运行 Cargo 项目</h2><p>Cargo 的命令是操作系统无关的，不管使用什么操作系统，命令一样。</p>
+<ul>
+<li><code>cargo build</code> ，<strong>编译并生成</strong>可执行文件。<ul>
+<li>首次运行时，会在项目根目录创建一个 <strong><code>Cargo.lock</code><strong>文件，记录项目以来的实际版本（</strong>永远不需要碰该文件</strong>，让 Cargo 处理就行）。</li>
+<li>在项目根目录下生成 <code>target/debug</code>&#x2F;项目可执行文件，可以直接运行</li>
+</ul>
+</li>
+<li><code>cargo check</code> ，可以<strong>快速检查</strong>代码，确保其可以编译，但不产生可执行文件。<ul>
+<li>适用于编写代码时定期运行 <code>cargo check</code> ，确保它们可以编译，加速开发。</li>
+</ul>
+</li>
+<li><code>cargo run</code> ，通过一条命令，<strong>编译并运行</strong>生成的可执行文件。<ul>
+<li>相当于 <code>cargo build</code> + 运行文件</li>
+</ul>
+</li>
+<li><code>cargo build --release</code> ，发布构建<ul>
+<li>可以优化编译项目。<ul>
+<li>有些优化可以让 Rust 代码运行的更快。不过启用这些优化也需要消耗更长的编译时间。所以会有两种不同的编译方式</li>
+<li>一种用来快速重新构建；</li>
+<li>一种是为用户构建最终程序，不会经常重新构建，并且希望程序运行越快越好。</li>
+</ul>
+</li>
+<li>会在<code>target/release</code> 目录下生成可执行文件。</li>
+</ul>
+</li>
+</ul>
+<h1 id="2-猜数小游戏"><a href="#2-猜数小游戏" class="headerlink" title="2. 猜数小游戏"></a>2. 猜数小游戏</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 导入非 prelude 模块中的内容，需要使用 use 关键字来导入</span></span><br><span class="line"><span class="keyword">use</span> std::io;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;  <span class="comment">// fn 用来声明函数</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Guess the number!&quot;</span>);  </span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Please input your guess.&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">guess</span> = <span class="type">String</span>::<span class="title function_ invoke__">new</span>();</span><br><span class="line">    io::<span class="title function_ invoke__">stdin</span>().<span class="title function_ invoke__">read_line</span>(&amp;<span class="keyword">mut</span> guess).<span class="title function_ invoke__">expect</span>(<span class="string">&quot;Failed to read line&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;You guessed: &#123;&#125;&quot;</span>, guess);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取用户输入并打印结果作为输出，需要使用 <code>io</code>库，<code>io</code>库来自标准库（也被称为<code>std</code>）：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::io;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>prelude</code> 是 Rust 的预导入模块，有少量类型可以直接使用。如果需要的类型不在 <code>prelude</code> 中，就必须使用 <code>use</code> 语句显示的将其引入作用域中。</li>
+<li><code>std::io</code> 库是 Rust 的标准库之一。</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>fn</code> 语法用来声明一个函数</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">guess</span> = <span class="type">String</span>::<span class="title function_ invoke__">new</span>();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>let</code> 语句用来创建变量(variable)。</p>
+</li>
+<li><p>默认 Rust 的变量是不可变的。（这个会在后面讨论，变量与可变性）。需要在变量名前使用 <code>mut</code> 关键字使其成为可变边变量：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">apples</span> = <span class="number">5</span>; <span class="comment">// immutable</span></span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">bananas</span> = <span class="number">5</span>; <span class="comment">// mutable</span></span><br></pre></td></tr></table></figure>
+</li>
+<li></li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">遇到的问题</span><br><span class="line">use std::io;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    println!(&quot;Guess the number!&quot;);</span><br><span class="line">    println!(&quot;Please input your guess.&quot;);</span><br><span class="line">    let mut guess = String::new();</span><br><span class="line">    let mut apples = 5;  // line 8,9 两行，为什么 apples 重新赋值后，编译运行时，第8行还会有warning 告警？后面学习时看看能不能解答这个疑惑？</span><br><span class="line">    apples = 6;</span><br><span class="line">    println!(&quot;&#123;&#125;&quot;,apples);</span><br><span class="line">    io::stdin().read_line(&amp;mut guess).expect(&quot;Failed to read line&quot;);</span><br><span class="line"></span><br><span class="line">    println!(&quot;You guessed: &#123;&#125;&quot;, guess);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 运行告警如下：</span><br><span class="line">PS C:\Tableware\codes\rust\guessing_game&gt; cargo run</span><br><span class="line">   Compiling guessing_game v0.1.0 (C:\Tableware\codes\rust\guessing_game)</span><br><span class="line">warning: value assigned to `apples` is never read</span><br><span class="line"><span class="meta prompt_"> --&gt; </span><span class="language-bash">src\main.rs:7:13</span></span><br><span class="line">  |</span><br><span class="line">7 |     let mut apples = 5;</span><br><span class="line">  |             ^^^^^^</span><br><span class="line">  |</span><br><span class="line">  = note: `#[warn(unused_assignments)]` on by default</span><br><span class="line">  = help: maybe it is overwritten before being read?</span><br><span class="line"></span><br><span class="line">warning: `guessing_game` (bin &quot;guessing_game&quot;) generated 1 warning</span><br><span class="line">    Finished dev [unoptimized + debuginfo] target(s) in 0.68s</span><br><span class="line">     Running `target\debug\guessing_game.exe`</span><br><span class="line">Guess the number!</span><br><span class="line">Please input your guess.</span><br><span class="line">6</span><br><span class="line">12</span><br><span class="line">You guessed: 12</span><br></pre></td></tr></table></figure>
+
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/Rust%20hello%20world.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/05%E7%BB%93%E6%9E%84%E4%BD%93.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            05结构体
+          
+        </div>
+      </a>
+    
+    
+      <a href="/%E7%AC%94%E8%AE%B0%E6%9C%ACwin10%E7%B3%BB%E7%BB%9F%E7%A6%81%E7%94%A8%E8%87%AA%E5%B8%A6%E9%94%AE%E7%9B%98.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">笔记本win10系统禁用自带键盘</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

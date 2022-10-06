@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>SQL笔记 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/数据库/Oracle/SQL笔记"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  SQL笔记
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/SQL%E7%AC%94%E8%AE%B0.html" class="article-date">
+  <time datetime="2021-11-29T09:22:09.000Z" itemprop="datePublished">2021-11-29</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a> / <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/Oracle/">Oracle</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">3.2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">13 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="SQL（结构化查询语言）"><a href="#SQL（结构化查询语言）" class="headerlink" title="SQL（结构化查询语言）"></a>SQL（结构化查询语言）</h1><hr>
+<p>SQL(结构化查询语言) 是用于访问和处理数据库的计算机语言</p>
+<blockquote>
+<p>结构化的查询语句<br>方便我们访问数据库</p>
+</blockquote>
+<p>SQL</p>
+<ul>
+<li>面向数据库执行查询</li>
+<li>从数据库中取回数据</li>
+<li>在数据库中插入记录</li>
+<li>更新数据库中数据</li>
+<li>从数据库中删除记录</li>
+<li>创建新数据库</li>
+<li>在数据库中创建新表</li>
+<li>在数据库中创建存储过程</li>
+<li>在数据库中创建视图</li>
+<li>设置表、存储过程和视图的权限</li>
+</ul>
+<p>SQL是一种ANSI定制的标准<br>大部分SQL数据库程序会以相似的支持关键字，同时也有自己的扩展</p>
+<blockquote>
+<p>SQL对大小写不敏感</p>
+</blockquote>
+<h2 id="SQL语句后的分号"><a href="#SQL语句后的分号" class="headerlink" title="SQL语句后的分号"></a>SQL语句后的分号</h2><p>分号的作用是在数据库系统中分隔每条SQL语句的标准方法，</p>
+<h2 id="SQL-DML-和-DDL"><a href="#SQL-DML-和-DDL" class="headerlink" title="SQL DML 和 DDL"></a>SQL DML 和 DDL</h2><p>SQL分两部分：</p>
+<blockquote>
+<p>DML（数据操作语言）<br>DDL（数据定义语言）</p>
+</blockquote>
+<ul>
+<li><p>DML 操作表中数据</p>
+<ul>
+<li>select 从数据库表中获取数据</li>
+<li>update 更新数据库表中数据</li>
+<li>delete 从数据库表中删除数据</li>
+<li>insert into 向数据库表中插入数据</li>
+</ul>
+</li>
+<li><p>DDL操作数据库相关的数据库，表，索引等非数据部分</p>
+<ul>
+<li>create database -创建新数据库</li>
+<li>alter database -修改数据库</li>
+<li>create table -创建新表</li>
+<li>alter table -修改表</li>
+<li>drop table -删除表</li>
+<li>create index -创建索引</li>
+<li>drop index -删除索引</li>
+</ul>
+</li>
+</ul>
+<p>SQL where字句注意事项：</p>
+<blockquote>
+<p>条件值周围使用的是’单引号’</p>
+</blockquote>
+<blockquote>
+<p>如果是数值，不需要使用引号</p>
+</blockquote>
+<blockquote>
+<p>在where中，如果需要更复杂的表达式，需要用”()”来括起来</p>
+</blockquote>
+<pre><code>SELECT * FROM Persons WHERE (FirstName=&#39;Thomas&#39; OR FirstName=&#39;William&#39;)
+AND LastName=&#39;Carter&#39;
+</code></pre>
+<blockquote>
+<p>ORDER BY 语句用于根据指定的列对结果集进行<code>排序</code>。</p>
+</blockquote>
+<blockquote>
+<p>ORDER BY 语句<code>默认按照升序</code>对记录进行排序。</p>
+</blockquote>
+<blockquote>
+<p>如果希望按照降序对记录进行排序，可以使用 <code>DESC</code> 关键字。(升序ASC，降序DESC)</p>
+</blockquote>
+<pre><code>1.以升序显示Company列内容：
+SELECT Company, OrderNumber FROM Orders ORDER BY Company 
+
+2.以升序显示Company列内容，以升序显示OrderNumber列内容:
+SELECT Company, OrderNumber FROM Orders ORDER BY Company, OrderNumber
+注：当有多个列需要排序时，会先按照前面列的要求排序，当前面列有相同值时，再对相同值按照后面列顺序进行排序，（遇到null也是这样）
+
+3.按照降序显示Company内容，按照升序显示OrderNumber内容：
+SELECT Company, OrderNumber FROM Orders ORDER BY Company DESC, OrderNumber ASC
+</code></pre>
+<p>INSERT INTO语句<br>用于向表中插入新值，</p>
+<p>语法：</p>
+<pre><code>向表中插入值：（必须按照表中已有列顺序插入，）
+INSERT INTO 表名称 VALUES (值1, 值2,....)	
+    例:INSERT INTO Persons VALUES (&#39;Gates&#39;, &#39;Bill&#39;, &#39;Xuanwumen 10&#39;, &#39;Beijing&#39;)
+
+向表中指定列插入值：
+INSERT INTO table_name (列1, 列2,...) VALUES (值1, 值2,....)
+    例：INSERT INTO Persons (LastName, Address) VALUES (&#39;Wilson&#39;, &#39;Champs-Elysees&#39;)
+</code></pre>
+<p>UPDATE语句</p>
+<p>用于修改表中行内容</p>
+<p>语法：</p>
+<pre><code>UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
+
+UPDATE Person SET Address = &#39;Zhongshan 23&#39;, City = &#39;Nanjing&#39; WHERE LastName = &#39;Wilson&#39;
+</code></pre>
+<p>DELETE语句</p>
+<p>用于删除表中的行</p>
+<p>语法：</p>
+<pre><code>DELETE FROM 表名称 WHERE 列名称 = 值
+
+
+删除LastName为‘Wilson’的行
+DELETE FROM Person WHERE LastName = &#39;Wilson&#39;
+
+不删除表的情况下，删除表中所有内容
+DELETE FROM table_name 
+或者
+DELETE * FROM table_name 
+</code></pre>
+<p>返回前N条数据</p>
+<pre><code>MySQL语法：
+SELECT column_name(s) FROM table_name LIMIT number
+
+Oracle：
+SELECT column_name(s) FROM table_name WHERE ROWNUM &lt;= number
+</code></pre>
+<p>LIKE 操作符用于在 WHERE 子句中搜索列中的指定模式。</p>
+<p>“Persons” 表中选取居住在以 “N” 开始的城市里的人：</p>
+<pre><code>SELECT * FROM Persons WHERE City LIKE &#39;N%&#39;
+</code></pre>
+<p>通过使用 NOT 关键字，从 “Persons” 表中选取居住在不包含 “lon” 的城市里的人：</p>
+<pre><code>SELECT * FROM Persons WHERE City NOT LIKE &#39;%lon%&#39;
+注：&quot;%&quot; 可用于定义通配符（模式中缺少的字母）。
+</code></pre>
+<p>SQL通配符</p>
+<p>SQL 通配符必须与 LIKE 运算符一起使用</p>
+<p>IN 操作符</p>
+<p>IN 操作符允许我们在 WHERE 子句中规定多个值</p>
+<pre><code>选取姓氏为 Adams 和 Carter 的人：
+SELECT * FROM Persons WHERE LastName IN (&#39;Adams&#39;,&#39;Carter&#39;)
+</code></pre>
+<p>BETWEEN 操作符在 WHERE 子句中使用，作用是选取介于两个值之间的数据范围。</p>
+<p>BETWEEN … AND 会选取介于两个值之间的数据范围。这些值可以是数值、文本或者日期。</p>
+<p>NOT BETWEEN … AND</p>
+<h2 id="Alias（别名）"><a href="#Alias（别名）" class="headerlink" title="Alias（别名）"></a>Alias（别名）</h2><p><code>AS</code>为关键字</p>
+<pre><code>表名的别名：
+SELECT column_name(s) FROM table_name AS alias_name
+列名的别名：
+SELECT column_name AS alias_name FROM table_name
+</code></pre>
+<p>例子：<br>假设我们有两个表分别是：”Persons” 和 “Product_Orders”。我们分别为它们指定别名 “p” 和 “po”。<br>现在，我们希望列出 “John Adams” 的所有定单。【将多个表中的数据组成一个新的结果表】</p>
+<pre><code>SELECT po.OrderID, p.LastName, p.FirstName
+FROM Persons AS p, Product_Orders AS po
+WHERE p.LastName=&#39;Adams&#39; AND p.FirstName=&#39;John&#39;
+</code></pre>
+<p>不使用别名的 SELECT 语句：</p>
+<pre><code>SELECT Product_Orders.OrderID, Persons.LastName, Persons.FirstName
+FROM Persons, Product_Orders
+WHERE Persons.LastName=&#39;Adams&#39; AND Persons.FirstName=&#39;John&#39;
+</code></pre>
+<p>所以，使用别名可以是SQL语句更易于阅读和书写</p>
+<h2 id="主键"><a href="#主键" class="headerlink" title="主键"></a>主键</h2><p>主键（Primary Key）是一个列，在这个列中的每一行的值都是<code>唯一</code>的。在表中，每个主键的值都是唯一的。这样做的目的是在<code>不重复</code>每个表中的所有数据的情况下，把表间的数据交叉捆绑在一起。</p>
+<pre><code>从两个表Persons，和Orders表中，获取主键一样的几列数据：（结果组成一个结果集）
+SELECT Persons.LastName, Persons.FirstName, Orders.OrderNo FROM Persons,Orders WHERE Persons.Id_P = Orders.Id_P 
+</code></pre>
+<p>也可以使用Join来</p>
+<pre><code>SELECT Persons.LastName, Persons.FirstName, Orders.OrderNo
+FROM Persons 
+INNER JOIN Orders 
+ON Persons.Id_P = Orders.Id_P
+</code></pre>
+<p>下面列出了您可以使用的 JOIN 类型，以及它们之间的差异。</p>
+<pre><code>JOIN: 如果表中有至少一个匹配，则返回行  （INNER JOIN 与 JOIN 是相同的）
+LEFT JOIN: 即使右表中没有匹配，也从左表返回所有的行
+RIGHT JOIN: 即使左表中没有匹配，也从右表返回所有的行
+FULL JOIN: 只要其中一个表中存在匹配，就返回行
+</code></pre>
+<p>例：</p>
+<pre><code>SELECT Persons.LastName, Persons.FirstName, Orders.OrderNo
+FROM Persons
+INNER JOIN Orders
+ON Persons.Id_P=Orders.Id_P
+ORDER BY Persons.LastName
+</code></pre>
+<h2 id="SQL-UNION-操作符"><a href="#SQL-UNION-操作符" class="headerlink" title="SQL UNION 操作符"></a>SQL UNION 操作符</h2><p>UNION 操作符用于<code>合并</code>两个或多个 SELECT 语句的结果集</p>
+<p>语法：</p>
+<pre><code>SELECT column_name(s) FROM table_name1
+UNION
+SELECT column_name(s) FROM table_name2
+</code></pre>
+<p><strong>注：UNION 内部的 SELECT 语句必须拥有相同数量的列。列也必须拥有相似的数据类型。同时，每条SELECT语句中的列的顺序必须相同。</strong></p>
+<p><strong>注释：默认地，UNION 操作符选取所有不同的值。如果允许重复的值，请使用 UNION ALL。</strong></p>
+<h2 id="SELECT…INTO…"><a href="#SELECT…INTO…" class="headerlink" title="SELECT…INTO…"></a>SELECT…INTO…</h2><p>SELECT INTO 语句从一个表中选取数据，然后把数据插入另一个表中。</p>
+<blockquote>
+<p>常用于创建表的备份复件或者用于对记录进行存档。</p>
+</blockquote>
+<p>语法：<br>    将指定列插入新表（也可以是 * 所有的列）</p>
+<pre><code>SELECT column_name(s)
+INTO new_table_name [IN externaldatabase] 
+FROM old_tablename
+</code></pre>
+<p>例：</p>
+<pre><code>SELECT LastName,FirstName
+INTO Persons_backup
+FROM Persons
+</code></pre>
+<p>例：从多个表中选取数据（例子中用的是inner join）</p>
+<pre><code>SELECT Persons.LastName,Orders.OrderNo
+INTO Persons_Order_Backup
+FROM Persons
+INNER JOIN Orders
+ON Persons.Id_P=Orders.Id_P
+</code></pre>
+<h2 id="CREATE-DATABASE-语句"><a href="#CREATE-DATABASE-语句" class="headerlink" title="CREATE DATABASE 语句"></a>CREATE DATABASE 语句</h2><p>语法：</p>
+<pre><code>CREATE DATABASE database_name
+</code></pre>
+<h2 id="CREATE-TABLE"><a href="#CREATE-TABLE" class="headerlink" title="CREATE TABLE"></a>CREATE TABLE</h2><p>语法：</p>
+<pre><code>CREATE TABLE 表名称
+(
+列名称1 数据类型,
+列名称2 数据类型,
+列名称3 数据类型,
+....
+)
+</code></pre>
+<p>例：</p>
+<pre><code>CREATE TABLE Persons
+(
+Id_P int,
+LastName varchar(255),
+FirstName varchar(255),
+Address varchar(255),
+City varchar(255)
+)
+</code></pre>
+<p>可使用 INSERT INTO 语句向空表写入数据。</p>
+<h2 id="Constraints"><a href="#Constraints" class="headerlink" title="Constraints"></a>Constraints</h2><p>约束用于限制加入表的数据的类型</p>
+<p><strong>可以在创建表时规定约束（通过 CREATE TABLE 语句），或者在表创建之后也可以（通过 ALTER TABLE 语句）</strong></p>
+<p>主要有下面几种约束：</p>
+<pre><code>- NOT NULL  # NOT NULL约束强制列不接受NULL值,这意味着，如果不向字段添加值，就无法插入新记录或者更新记录。
+- UNIQUE    # UNIQUE 和 PRIMARY KEY 约束均为列或列集合提供了唯一性的保证。
+- PRIMARY KEY 每张表只有一个主键约束，且主键不能为null值
+**注**：每个表可以有多个 UNIQUE 约束，但是每个表只能有一个 PRIMARY KEY 约束
+- FOREIGN KEY
+- CHECK
+- DEFAULT
+</code></pre>
+<p>NOT NULL例子 :</p>
+<pre><code>CREATE TABLE Persons
+(
+Id_P int NOT NULL,  # Id_P 列值不能为空
+LastName varchar(255) NOT NULL,  # LastName列值不能为空
+FirstName varchar(255),
+Address varchar(255),
+City varchar(255)
+)
+</code></pre>
+<p>UNIQUE约束 on create table</p>
+<pre><code>Oracle语法:
+CREATE TABLE Persons
+(
+Id_P int NOT NULL UNIQUE,
+LastName varchar(255) NOT NULL,
+FirstName varchar(255),
+Address varchar(255),
+City varchar(255)
+)
+</code></pre>
+<p><em>为unique命名的好处？为什么为unique命名？</em></p>
+<p>如果需要命名 UNIQUE 约束，以及为多个列定义 UNIQUE 约束，请使用下面的SQL语法：</p>
+<pre><code>CREATE TABLE Persons
+(
+Id_P int NOT NULL,
+LastName varchar(255) NOT NULL,
+FirstName varchar(255),
+Address varchar(255),
+City varchar(255),
+CONSTRAINT uc_PersonID UNIQUE (Id_P,LastName)
+)
+</code></pre>
+<p>对Id_P,和LastName做unique约束，并将unique约束命名为uc_PersonID，</p>
+<h2 id="在Alter-table时的unique"><a href="#在Alter-table时的unique" class="headerlink" title="在Alter table时的unique"></a>在Alter table时的unique</h2><p>当表已被创建时，如需在 “Id_P” 列创建 UNIQUE 约束：</p>
+<pre><code>ALTER TABLE Persons ADD UNIQUE (Id_P)
+</code></pre>
+<p>如需命名 UNIQUE 约束，并定义多个列的 UNIQUE 约束：</p>
+<pre><code>ALTER TABLE Persons ADD CONSTRAINT uc_PersonID UNIQUE (Id_P,LastName)
+</code></pre>
+<h2 id="撤销-UNIQUE-约束"><a href="#撤销-UNIQUE-约束" class="headerlink" title="撤销 UNIQUE 约束"></a>撤销 UNIQUE 约束</h2><p>Oracle：</p>
+<pre><code>ALTER TABLE Persons
+DROP CONSTRAINT uc_PersonID
+</code></pre>
+<p>撤销掉一列(没有命名)的unique怎么操作？</p>
+<h2 id="Primary-Key"><a href="#Primary-Key" class="headerlink" title="Primary Key"></a>Primary Key</h2><pre><code>CREATE TABLE Persons
+(
+Id_P int NOT NULL PRIMARY KEY,
+LastName varchar(255) NOT NULL,
+FirstName varchar(255),
+Address varchar(255),
+City varchar(255)
+)
+</code></pre>
+<h2 id="FOREIGN-KEY"><a href="#FOREIGN-KEY" class="headerlink" title="FOREIGN KEY"></a>FOREIGN KEY</h2><p>一个表中的 FOREIGN KEY 指向另一个表中的 PRIMARY KEY。</p>
+<p>FOREIGN KEY 约束用于预防破坏表之间连接的动作，也能防止非法数据插入外键列，因为它必须是它指向的那个表中的值之一。</p>
+<h2 id="CHECK约束"><a href="#CHECK约束" class="headerlink" title="CHECK约束"></a>CHECK约束</h2><p>创建多个check约束时：</p>
+<pre><code>CREATE TABLE Persons
+(
+Id_P int NOT NULL,
+LastName varchar(255) NOT NULL,
+FirstName varchar(255),
+Address varchar(255),
+City varchar(255),
+CONSTRAINT chk_Person CHECK (Id_P&gt;0 AND City=&#39;Sandnes&#39;)
+)
+</code></pre>
+<h2 id="DEFAULT约束"><a href="#DEFAULT约束" class="headerlink" title="DEFAULT约束"></a>DEFAULT约束</h2><p>DEFAULT 约束用于向列中插入默认值</p>
+<p>如果没有规定其他的值，那么会将默认值添加到所有的新记录</p>
+<p>Oracle：</p>
+<pre><code>CREATE TABLE Persons
+(
+Id_P int NOT NULL,
+LastName varchar(255) NOT NULL,
+FirstName varchar(255),
+Address varchar(255),
+City varchar(255) DEFAULT &#39;Sandnes&#39;
+)
+</code></pre>
+<p>删除DEFAULT约束：</p>
+<pre><code>ALTER TABLE Persons
+ALTER COLUMN City DROP DEFAULT
+</code></pre>
+<h2 id="CREATE-INDEX"><a href="#CREATE-INDEX" class="headerlink" title="CREATE INDEX"></a>CREATE INDEX</h2><p>在表中创建索引，以便更加快速高效地查询数据（用户无法看到索引）</p>
+<p><strong>注释</strong>：更新一个包含索引的表需要比更新一个没有索引的表更多的时间，这是由于索引本身也需要更新。因此，理想的做法是仅仅在常常被搜索的列（以及表）上面创建索引。</p>
+<p>CREATE INDEX 语法</p>
+<pre><code>在表上创建一个简单的索引。允许使用重复的值:
+CREATE INDEX index_name
+ON table_name (column_name)  # &quot;column_name&quot; 为需要索引的列
+</code></pre>
+<p>CREATE UNIQUE INDEX 语法</p>
+<pre><code>在表上创建一个唯一的索引。唯一的索引意味着该列不能拥有相同的索引值
+CREATE UNIQUE INDEX index_name
+ON table_name (column_name)
+</code></pre>
+<p>1.创建一个简单的索引，名为 “PersonIndex”，在 Person 表的 LastName 列</p>
+<pre><code>create index PersonIndex on Person (LastName)
+</code></pre>
+<p>2.创建以降序索引某列的值，（使用DESC）</p>
+<pre><code>create index PearsonIndex on Person (LastName DESC)
+</code></pre>
+<p>3.若创建索引不止一列，在括号中列出所需列的名称，用逗号隔开：</p>
+<pre><code>create index PersonIndex on Person (LastName, FirstName)
+</code></pre>
+<h2 id="DROP-删除索引，表及数据库"><a href="#DROP-删除索引，表及数据库" class="headerlink" title="DROP (删除索引，表及数据库)"></a>DROP (删除索引，表及数据库)</h2><p>Oracle:</p>
+<pre><code># 删除索引：	
+drop index index_name
+# 删除表	
+drop table table_name (会删除表的结构，属性以及索引)
+# 删除数据库
+drop database database_name
+</code></pre>
+<p>仅清空表中数据，不删除表：</p>
+<pre><code>truncate table table_name # 和hbase使用方法一样
+</code></pre>
+<h2 id="ALTER"><a href="#ALTER" class="headerlink" title="ALTER"></a>ALTER</h2><p>ALTER TABLE 语句用于在已有的表中添加、修改或删除列</p>
+<pre><code>alter table table_name add column_name data_type
+</code></pre>
+<p>删除表中的列：</p>
+<pre><code>alter table table_name drop column column_name
+# 并不是所有的数据库系统都支持在数据库中删除列的方式
+</code></pre>
+<p>改变表中列的数据类型：</p>
+<pre><code>alter table table_name alter column column_name data_type
+</code></pre>
+<h2 id="auto-increment字段"><a href="#auto-increment字段" class="headerlink" title="auto increment字段"></a>auto increment字段</h2><p>auto-increment 会在新记录插入表中时生成一个唯一数字</p>
+<p>Oracle：</p>
+<pre><code># oracle通过sequence创建auto-increment字段（该对象生成数字序列）
+create sequence seq_person
+minvalue 1
+start with 1
+increment by 1
+cache 10
+</code></pre>
+<p>上面内容，创建名为seq_person的序列对象，以1起始并以1递增，通过缓存10个值以提高性能</p>
+<p>在Persons表中插入新记录，必须使用nextval函数（该函数从定义的seq_person序列中获取下一个值）：</p>
+<pre><code>insert into Persons (P_Id,FirstName,LastName) Values (seq_person.nextval, &#39;Lars&#39;, &#39;Monsen&#39;)
+</code></pre>
+<p>上面的SQL语句，会在“Persons”表中插入一条新记录。‘P_Id’的值来自seq_person序列的下一个数字</p>
+<h2 id="VIEW-视图"><a href="#VIEW-视图" class="headerlink" title="VIEW(视图)"></a>VIEW(视图)</h2><p>视图是一个结果集，视图的字段时一个或多个表的字段组成的</p>
+<p>SQL CREATE VIEW语法：</p>
+<pre><code>create view view_name as
+select column_name(s) from table_name where [condition]
+</code></pre>
+<p><strong>注</strong>：视图总显示最近的数据</p>
+<pre><code>create view [Current Product List] as select ProductID,ProductName from Products where Discontinued=No
+</code></pre>
+<p>更新视图：</p>
+<pre><code>create / replace view view_name as 
+select column_name(s) from table_name
+where condition
+</code></pre>
+<p>例：</p>
+<p>我们向“Current Product List”视图中添加“Category”列，语句：</p>
+<pre><code>create view [Current Product List] as select
+ProductID,ProductName,Category from Products
+where Disconinued=No
+</code></pre>
+<p>删除视图：</p>
+<pre><code>drop view view_name
+</code></pre>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/SQL%E7%AC%94%E8%AE%B0.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Oracle/" rel="tag">Oracle</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/Oracle%E4%BD%BF%E7%94%A8%E8%BF%87%E7%A8%8B%E9%81%87%E5%88%B0%E9%97%AE%E9%A2%98%E8%AE%B0%E5%BD%95.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Oracle使用过程遇到问题记录
+          
+        </div>
+      </a>
+    
+    
+      <a href="/%E5%AE%89%E8%A3%85Oracle%E6%97%B6%E4%B8%80%E4%BA%9B%E9%85%8D%E7%BD%AE%E5%8F%82%E6%95%B0.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">安装Oracle时一些配置参数</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

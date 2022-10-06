@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>学习Rust遇到过的问题 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/学习Rust遇到过的问题"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  学习Rust遇到过的问题
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/%E5%AD%A6%E4%B9%A0Rust%E9%81%87%E5%88%B0%E8%BF%87%E7%9A%84%E9%97%AE%E9%A2%98.html" class="article-date">
+  <time datetime="2022-05-19T03:18:03.000Z" itemprop="datePublished">2022-05-19</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">3.2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">14 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>Windows 上新安装 Rust 遇到过的问题</p>
+<h2 id="1-首次-cargo-run-运行时缺少-linker-文件"><a href="#1-首次-cargo-run-运行时缺少-linker-文件" class="headerlink" title="1. 首次 cargo run 运行时缺少 linker 文件"></a>1. 首次 cargo run 运行时缺少 linker 文件</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">error: linker `link.exe` not found</span><br><span class="line">note: The system cannot find the file specified. (os error 2)</span><br><span class="line">note: the msvc targets depend on the msvc linker but `link.exe` was not found</span><br><span class="line">note: please ensure that VS 2013, VS 2015 or VS 2017 was installed with the Visual C++ option</span><br><span class="line">error: aborting due to previous error</span><br></pre></td></tr></table></figure>
+
+<p><strong>解决方法：</strong></p>
+<ol>
+<li><p>通常登录 Rust 官网地址，选择安装时，会有相关提示，同时会给出一个下载 Build Tools 的地址，跳转后下载 Build Tools 文件即Visual Studio Installer，然后安装，注意，在安装界面选择 <code>C++</code>的那个组件即可，其他的组件不用安装，选择组件后，右侧会显示需要安装的模块，确保勾选了 <code>VS xxx C++ build tools</code>等与 C++ 有关的模块即可。安装后重启。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/55603111/unable-to-compile-rust-hello-world-on-windows-linker-link-exe-not-found">更多内容参考</a> ，StackOverflow 上第二个答案网上说也是可以的，没有尝试过。</p>
+</li>
+</ol>
+<h1 id="vscode-使用注意事项"><a href="#vscode-使用注意事项" class="headerlink" title="vscode 使用注意事项"></a>vscode 使用注意事项</h1><p>使用vscode + rust-analyzer 写rust 时，项目名不要命名为 rust 的关键字，否则会报错：</p>
+<ul>
+<li>自动补全功能不能使用，且会报错，</li>
+<li>例如，cargo new lifetime 那么该项目中就会报错</li>
+<li>rust-analyzer 插件在vscode中的 <strong>快速修复</strong> 快捷键不能使用，<ul>
+<li>解决：是因为与输入法的中英文标点切换的快捷键冲突了，关掉搜狗、微软输入法设置中的快捷键即可。</li>
+</ul>
+</li>
+</ul>
+<h1 id="20211207"><a href="#20211207" class="headerlink" title="20211207"></a>20211207</h1><ol>
+<li><p>一个结点就能够引用其父结点，但不拥有其父结点。</p>
+<ul>
+<li>代码里不是传的引用吗？怎么就拥有了？</li>
+</ul>
+</li>
+<li><p>大部分情况下，所有权是非常明确的，可以准确的知道哪个变量拥有某个值。</p>
+</li>
+<li><p>rust 有么有什么好用的编辑器？</p>
+<ul>
+<li>vscode 默认使用代码提示功能有些弱，是否需要添加什么插件？</li>
+</ul>
+</li>
+<li><p>match 表达式赋值？Rust 是怎样处理的？</p>
+</li>
+<li><p>看下面这段代码</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::fs::File;</span><br><span class="line"><span class="keyword">use</span> std::io::ErrorKind;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">f</span> = File::<span class="title function_ invoke__">open</span>(<span class="string">&quot;hello.txt&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">f</span> = <span class="keyword">match</span> f &#123;</span><br><span class="line">        <span class="title function_ invoke__">Ok</span>(file) =&gt; file,</span><br><span class="line">        <span class="title function_ invoke__">Err</span>(error) =&gt; <span class="keyword">match</span> error.<span class="title function_ invoke__">kind</span>() &#123;</span><br><span class="line">            ErrorKind::NotFound =&gt; <span class="keyword">match</span> File::<span class="title function_ invoke__">create</span>(<span class="string">&quot;hello.txt&quot;</span>) &#123;</span><br><span class="line">                <span class="title function_ invoke__">Ok</span>(fc) =&gt; fc,</span><br><span class="line">                <span class="title function_ invoke__">Err</span>(e) =&gt; <span class="built_in">panic!</span>(<span class="string">&quot;Problem creating the file: &#123;:?&#125;&quot;</span>, e),</span><br><span class="line">            &#125;,</span><br><span class="line">            other_error =&gt; <span class="built_in">panic!</span>(<span class="string">&quot;Problem opening the file: &#123;:?&#125;&quot;</span>, other_error),</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">上面代码中 `other_error` 这个内部变量的作用与 `_` 一样吗？是可以代指余下所有的错误类型吗？</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在 Rust 中，如果定义一个枚举，任何值只能是一个枚举的成员，且枚举的成员从根本上将仍是枚举，所以使用枚举中任何成员时，都应该看做是相同的类型。</p>
+<ul>
+<li>例如：IP地址要么是IPv4，要么是IPv6，只能是其中之一，且IPv4和IPv6都是IP地址，所以任何类型的IP地址都是看做相同的类型；</li>
+<li>举例2：Result&lt;T,E&gt;，无论是 Ok(T) ，还是 Err(E)，它们本质上都是一种结果。所以在使用时，Ok 和 Err 是相同类型，即 Result。</li>
+</ul>
+</li>
+</ol>
+<h1 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h1><p><a target="_blank" rel="noopener" href="https://kaisery.github.io/trpl-zh-cn/ch10-00-generics.html">泛型、trait 与生命周期</a> 章节的例子</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">largest</span>(list: &amp;[<span class="type">i32</span>]) <span class="punctuation">-&gt;</span> <span class="type">i32</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">largest</span> = list[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 视频中说，这里相当于发生了解构，或者说是模式匹配？</span></span><br><span class="line">    <span class="keyword">for</span> &amp;item <span class="keyword">in</span> list &#123;   <span class="comment">// list 是切片，一种引用，item 为什么也是 &amp;i32? 为什么 &amp;item 之后，item 就变成 i32类型了？ 如果解引用不应该使用 *item 为什么报错？</span></span><br><span class="line">        <span class="keyword">if</span> item &gt; largest &#123;</span><br><span class="line">            largest = item;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    largest</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>大于运算符（&gt;）被定义在标准库中 trait <code>std::cmp::PartialOrd</code> 的一个默认方法。</p>
+<ul>
+<li><code>PartialOrd</code> 位于 <code>prelude</code> 中，不需要手动将其引入作用域。</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">[Error - 下午<span class="number">10</span>:<span class="number">06</span>:<span class="number">30</span>] Request textDocument/completion failed.</span><br><span class="line">  Message: server panicked: called `<span class="type">Option</span>::<span class="title function_ invoke__">unwrap</span>()` on a `<span class="literal">None</span>` value</span><br><span class="line">  Code: -<span class="number">32603</span> </span><br><span class="line">Panic context:</span><br><span class="line">&gt; </span><br><span class="line">version: <span class="number">0</span>add6e95e <span class="number">2021</span>-<span class="number">12</span>-<span class="number">20</span> stable</span><br><span class="line">request: textDocument/completion CompletionParams &#123;</span><br><span class="line">    text_document_position: TextDocumentPositionParams &#123;</span><br><span class="line">        text_document: TextDocumentIdentifier &#123;</span><br><span class="line">            uri: Url &#123;</span><br><span class="line">                scheme: <span class="string">&quot;file&quot;</span>,</span><br><span class="line">                cannot_be_a_base: <span class="literal">false</span>,</span><br><span class="line">                username: <span class="string">&quot;&quot;</span>,</span><br><span class="line">                password: <span class="literal">None</span>,</span><br><span class="line">                host: <span class="literal">None</span>,</span><br><span class="line">                port: <span class="literal">None</span>,</span><br><span class="line">                path: <span class="string">&quot;/c%3A/Tableware/codes/rust/minigrep/src/main.rs&quot;</span>,</span><br><span class="line">                query: <span class="literal">None</span>,</span><br><span class="line">                fragment: <span class="literal">None</span>,</span><br><span class="line">            &#125;,</span><br><span class="line">        &#125;,</span><br><span class="line">        position: Position &#123;</span><br><span class="line">            line: <span class="number">3</span>,</span><br><span class="line">            character: <span class="number">43</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    work_done_progress_params: WorkDoneProgressParams &#123;</span><br><span class="line">        work_done_token: <span class="literal">None</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    partial_result_params: PartialResultParams &#123;</span><br><span class="line">        partial_result_token: <span class="literal">None</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    context: <span class="title function_ invoke__">Some</span>(</span><br><span class="line">        CompletionContext &#123;</span><br><span class="line">            trigger_kind: Invoked,</span><br><span class="line">            trigger_character: <span class="literal">None</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    ),</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">thread &#x27;&lt;unnamed&gt;&#x27; panicked at <span class="symbol">&#x27;called</span> `<span class="type">Option</span>::<span class="title function_ invoke__">unwrap</span>()` on a `<span class="literal">None</span>` value&#x27;, C:\Users\runneradmin\.cargo\registry\src\github.com-<span class="number">1</span>ecc6299db9ec823\chalk-solve-<span class="number">0.75</span>.<span class="number">0</span>\src\clauses\builtin_traits\fn_family.rs:<span class="number">91</span>:<span class="number">55</span></span><br><span class="line">stack backtrace:</span><br><span class="line">note: <span class="literal">Some</span> details are omitted, run with `RUST_BACKTRACE=full` <span class="keyword">for</span> <span class="title class_">a</span> verbose backtrace.</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2</span>、下载安装racer（用于Rust代码自动补全）：</span><br><span class="line"></span><br><span class="line">cargo install racer</span><br><span class="line"></span><br><span class="line">如果不成功，先将rustup更新成nightly版本，再进行下载：</span><br><span class="line"></span><br><span class="line">rustup install nightly</span><br><span class="line"></span><br><span class="line">cargo +nightly install racer</span><br></pre></td></tr></table></figure>
+
+
+
+<p>为什么 &amp;String 类型可以传递给 &amp;str 类型？Rust 内部做了转换？前面章节中好像有讲。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Cargo has produced no matching compilation artifacts.</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="20211229"><a href="#20211229" class="headerlink" title="20211229"></a>20211229</h1><p>看到19章时，关注一下 </p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">trait</span> 内联类型的内容</span><br><span class="line">写法<span class="number">1</span>，<span class="keyword">Self</span>::Item</span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">Iterator</span> <span class="keyword">for</span> <span class="title class_">Counter</span> &#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Item</span> = <span class="type">u32</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">next</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;<span class="keyword">Self</span>::Item&gt; &#123;</span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">写法<span class="number">2</span>，&amp;T</span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">MyBox</span>&lt;T&gt;&#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;T &#123;</span><br><span class="line">        &amp;<span class="keyword">self</span>.<span class="number">0</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>通过联系多理解一下，引用在函数和方法中的使用</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">hello</span>(name: &amp;<span class="type">str</span>) &#123;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="对于Rust-的模块路径使用还不太熟"><a href="#对于Rust-的模块路径使用还不太熟" class="headerlink" title="对于Rust 的模块路径使用还不太熟"></a>对于Rust 的模块路径使用还不太熟</h1><p>use xxx(package名)::Post(pub 的struct名)</p>
+<p>为什么能直接只用 use crate::Post?</p>
+<p>或者 use crate::xxx(package名)::Post(pub 的 struct 名)？？？</p>
+<p>lib.rs 文件中的顶级项，在其他文件中引用是不是路径都是 use xxx(package名)::bbb 的形式？</p>
+<p>所以也就是为什么 Rust 的 crate 中只能有一个lib.rs 的原因（只能给一个为命名的文件启动添加名字？）？</p>
+<ul>
+<li><p>在同一个文件内部使用定义在文件内部的struct、enum、trait 时，使用 <code>use crate::xxx::xxx</code>的形式；</p>
+</li>
+<li><p>在跨文件中使用其他文件中定义的 struct、enum、trait时，使用<code>use pakcage名::xxx::xxx</code> 的形式；</p>
+</li>
+<li><p>当文件名本身为<code>mod.rs</code>时，此时若用到该文件中的定义项时，package的名称即为该mod的名称，</p>
+<ul>
+<li><p>例如</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">|-linked-list</span><br><span class="line">|--main.rs</span><br><span class="line">|--lib.rs</span><br><span class="line">|--<span class="keyword">mod</span>.rs</span><br><span class="line"></span><br><span class="line">那么此时如果需要在lib.rs中使用<span class="keyword">mod</span>.rs中定义的<span class="keyword">enum</span> <span class="title class_">List</span>,</span><br><span class="line">则为</span><br><span class="line"><span class="keyword">use</span> linked-list::List::Cons;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h1 id="何时使用if-let模式匹配？"><a href="#何时使用if-let模式匹配？" class="headerlink" title="何时使用if let模式匹配？"></a>何时使用if let模式匹配？</h1><p>什么场景下使用？为什么不直接使用简单的赋值语句？有什么好处？</p>
+<p>或者说当只关心一个值得时候，使用 if let 模式匹配比使用if有哪些好处吗？</p>
+<ul>
+<li>更像 Rust 风格？</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">request_review</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> <span class="variable">Some</span>(s) = <span class="keyword">self</span>.state.<span class="title function_ invoke__">take</span>() &#123;</span><br><span class="line">        <span class="keyword">self</span>.state = <span class="title function_ invoke__">Some</span>(s.<span class="title function_ invoke__">request_review</span>())</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>例如，上面代码为什么不是</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">self</span>.state = <span class="keyword">self</span>.state.<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">request_review</span>() ?或者严谨写添加一个<span class="keyword">if</span> 判断</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="创建类型别名，使用-type-新类型-原类型-还是使用-as？"><a href="#创建类型别名，使用-type-新类型-原类型-还是使用-as？" class="headerlink" title="创建类型别名，使用 type 新类型=原类型;  还是使用 as？"></a>创建类型别名，使用 <code>type 新类型=原类型;</code>  还是使用 <code>as</code>？</h1><ul>
+<li>使用 type语法</li>
+</ul>
+<h1 id="下列代码为什么可以？"><a href="#下列代码为什么可以？" class="headerlink" title="下列代码为什么可以？"></a>下列代码为什么可以？</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 方法调用</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">stream</span> = stream.<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">        thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="title function_ invoke__">handle_connection</span>(stream);</span><br><span class="line">        &#125;);</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment">// 方法声明</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">handle_connection</span>(<span class="keyword">mut</span> stream: TcpStream) &#123;</span><br><span class="line">   </span><br></pre></td></tr></table></figure>
+
+<p>方法不是声明mut的参数吗？为什么调用时传递不可变也可以？</p>
+<h1 id="amp-和-ref，解构和解引用"><a href="#amp-和-ref，解构和解引用" class="headerlink" title="&amp; 和 ref，解构和解引用"></a>&amp; 和 ref，解构和解引用</h1><ol>
+<li>&amp; 和 ref 的区别，分别在什么场景中使用；</li>
+<li>解构和解引用分别在什么场景中使用；</li>
+</ol>
+<h2 id="amp-和-ref"><a href="#amp-和-ref" class="headerlink" title="&amp; 和 ref"></a>&amp; 和 ref</h2><p>涉及到 <code>ref</code> 的内容，我们通常是在 <code>match</code> 表达式中使用。</p>
+<p>默认情况下，<code>match</code> 表达式会消耗匹配中的值，即匹配到的值的所有权会发生转移；</p>
+<p>这种情况下，后面就不能再次使用这些值。因为被匹配的值的所有权已经发生<code>move</code>；</p>
+<blockquote>
+<p>如果匹配的类型实现了 Copy trait，则不会发生move，而是 copy。不会出现上面的问题。</p>
+</blockquote>
+<p>当后面需要使用该值的情况下，可能发生的遇到的问题，</p>
+<ul>
+<li>怎么解决？</li>
+<li>使用<code>ref</code>；</li>
+</ul>
+<p><code>ref</code> 使用在模式匹配中，可以使其变为借用（borrow）而不是<code>move</code>；</p>
+<p><code>ref</code> 使用在 <code>match</code> 中，并不会影响值是否被匹配，只会影响匹配的方式；</p>
+<p>样例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">// 默认情况下的情况</span><br><span class="line">let maybe_name = Some(String::from(&quot;Alice&quot;));</span><br><span class="line">// The variable &#x27;maybe_name&#x27; is consumed here ...</span><br><span class="line">match maybe_name &#123;</span><br><span class="line">    Some(n) =&gt; println!(&quot;Hello, &#123;&#125;&quot;, n),</span><br><span class="line">    _ =&gt; println!(&quot;Hello, world&quot;),</span><br><span class="line">&#125;</span><br><span class="line">// ... and is now unavailable.</span><br><span class="line">println!(&quot;Hello again, &#123;&#125;&quot;, maybe_name.unwrap_or(&quot;world&quot;.into()));</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 使用了 `ref` 关键字的效果</span><br><span class="line">let maybe_name = Some(String::from(&quot;Alice&quot;));</span><br><span class="line">// Using `ref`, the value is borrowed, not moved ...</span><br><span class="line">match maybe_name &#123;</span><br><span class="line">    Some(ref n) =&gt; println!(&quot;Hello, &#123;&#125;&quot;, n),</span><br><span class="line">    _ =&gt; println!(&quot;Hello, world&quot;),</span><br><span class="line">&#125;</span><br><span class="line">// ... so it&#x27;s available here!</span><br><span class="line">println!(&quot;Hello again, &#123;&#125;&quot;, maybe_name.unwrap_or(&quot;world&quot;.into()));</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="amp-vs-ref"><a href="#amp-vs-ref" class="headerlink" title="&amp; vs ref"></a><code>&amp;</code> vs <code>ref</code></h3><ul>
+<li><code>ref</code> ，表示我们仅引用该值，</li>
+<li><code>&amp;</code>，表示我们期望使用一个对象的引用，<ul>
+<li><code>&amp;Foo</code> 与 <code>Foo</code> 是不一样的。</li>
+</ul>
+</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/stable/std/keyword.ref.html">ref - Rust (rust-lang.org)</a></p>
+<p>关键字 ref 与 主类型 reference 的区别</p>
+<h1 id="二进制有符号整数的表示"><a href="#二进制有符号整数的表示" class="headerlink" title="二进制有符号整数的表示"></a>二进制有符号整数的表示</h1><p>-1 ？</p>
+<p>最小值如何表示为二进制？</p>
+<h1 id="Iter-与-FnMut-的问题"><a href="#Iter-与-FnMut-的问题" class="headerlink" title="Iter 与 FnMut 的问题"></a>Iter 与 FnMut 的问题</h1><p><code>Iter&lt;i32&gt;</code> 为什么可以调用 <code>Iterator::any&lt;F&gt;(&amp;mut self, f: F)</code></p>
+<p>any 的第一个参数不是 <code>&amp;mut self</code> 吗？不是需要可变借用才能调用吗？</p>
+<p>例如：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">vec1</span> = <span class="built_in">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">// `iter()` for vecs yields `&amp;i32`. Destructure to `i32`.</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;2 in vec1: &#123;&#125;&quot;</span>, vec1.<span class="title function_ invoke__">iter</span>()     .<span class="title function_ invoke__">any</span>(|&amp;x| x == <span class="number">2</span>));</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="trait-的可见性？"><a href="#trait-的可见性？" class="headerlink" title="trait 的可见性？"></a>trait 的可见性？</h1><p>trait 是否与 enum 一样，只需要对整体进行 pub设置，所有方法都是可见的pub？</p>
+<h1 id="基础数据类型的类型转换？"><a href="#基础数据类型的类型转换？" class="headerlink" title="基础数据类型的类型转换？"></a>基础数据类型的类型转换？</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">to_centimeters</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> Centimeters &#123;</span><br><span class="line">    <span class="keyword">let</span> &amp;<span class="title function_ invoke__">Inches</span>(inches) = <span class="keyword">self</span>;</span><br><span class="line"></span><br><span class="line">    <span class="title function_ invoke__">Centimeters</span>(inches <span class="keyword">as</span> <span class="type">f64</span> * <span class="number">2.54</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上所示，先通过解构获得 inches变量，然后i32 * f64 ，这里进行了类型转换 f64 * f64</p>
+<p>所以在Rust 中，基础类型的类型转换也是需要我们自己做的是吗？</p>
+<h1 id="collect-指定类型的写法"><a href="#collect-指定类型的写法" class="headerlink" title="collect 指定类型的写法"></a>collect 指定类型的写法</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">assert_eq!</span>(doubles.collect::&lt;<span class="type">Vec</span>&lt;<span class="type">i32</span>&gt;&gt;(), <span class="built_in">vec!</span>[<span class="number">4</span>, <span class="number">6</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>如上，指定了<code>Vec&lt;i32&gt;</code>类型，这种写法的语法规则在哪里？或者查一下collect 的官方文档说明。</p>
+<p>答：这是 turbofish 写法，因为 collect() 方法是泛型方法，使用时支持转换为多种类型，使用时，要么在定义时显示声明变量类型，要么使用 turbofish 语法，显示表示collect() 返回的类型。</p>
+<h1 id="Error-之间的区别"><a href="#Error-之间的区别" class="headerlink" title="Error 之间的区别"></a>Error 之间的区别</h1><p>mismatched types<br>expected struct <code>Box&lt;dyn std::error::Error&gt;</code><br>   found struct <code>std::io::Error</code><br>for more on the distinction between the stack and the heap, read <a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/ch15-01-box.html">https://doc.rust-lang.org/book/ch15-01-box.html</a>, <a target="_blank" rel="noopener" href="https://doc.rust-lang.org/rust-by-example/std/box.html">https://doc.rust-lang.org/rust-by-example/std/box.html</a>, and <a target="_blank" rel="noopener" href="https://doc.rust-lang.org/std/boxed/index.html">https://doc.rust-lang.org/std/boxed/index.html</a></p>
+<p>看一下错误中提到的内容文档</p>
+<p>写 Rust CLI程序需要考虑的问题</p>
+<ol>
+<li><p>如何处理error？</p>
+<ul>
+<li><p>是返回给调用者 result Result？还是触发 panic ？</p>
+<ul>
+<li><p>return Error，使用 match 模式匹配？使用 <code>?</code> 符号？</p>
+<ul>
+<li><p>Error 是 Result 的一个枚举分支；</p>
+</li>
+<li><p>如果使用 <code>?</code> 记得添加正常返回值Ok(xxx) 部分的内容；</p>
+</li>
+<li><p>使用默认返回的 Error 信息？还是自定义错误信息？当默认返回的错误信息无法囊括程序可能遇到的错误时，建议自定义struct，</p>
+<ul>
+<li><p>可以使用 <code>map_err()</code> 映射函数</p>
+</li>
+<li><p>建议使用 <code>anyhow</code> 第三方库。</p>
+<ul>
+<li>可以自定义错误信息，同时保留原始错误</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>panic，使用 match 模式匹配？还是 <code>unwrap()</code> ? 或是 <code>expect()</code> 指定以 panic 内容？</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>如何运行工作空间子项目CLI的程序？</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cargo run -p grrs -- <span class="number">123</span> test.txt</span><br></pre></td></tr></table></figure>
+
+<p>解释：<code>-p</code> 表示工作空间中的模块，<code>--</code> 后面的为 grrs 程序支持的命令行参数</p>
+<h1 id="执行样例报错"><a href="#执行样例报错" class="headerlink" title="执行样例报错"></a>执行样例报错</h1><p>执行 [CLI样例](<a target="_blank" rel="noopener" href="https://rust-cli.github.io/book/tutorial/testing.html">Testing - Command Line Applications in Rust (rust-cli.github.io)</a>)</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> assert_fs::prelude::*;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">find_content_in_file</span>() <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;(), <span class="type">Box</span>&lt;<span class="keyword">dyn</span> std::error::Error&gt;&gt; &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">file</span> = assert_fs::NamedTempFile::<span class="title function_ invoke__">new</span>(<span class="string">&quot;sample.txt&quot;</span>)?;</span><br><span class="line">    file.<span class="title function_ invoke__">write_str</span>(<span class="string">&quot;A test\nActual content\nMore content\nAnother test&quot;</span>)?;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">cmd</span> = Command::<span class="title function_ invoke__">cargo_bin</span>(<span class="string">&quot;grrs&quot;</span>)?;</span><br><span class="line">    cmd.<span class="title function_ invoke__">arg</span>(<span class="string">&quot;test&quot;</span>).<span class="title function_ invoke__">arg</span>(file.<span class="title function_ invoke__">path</span>());</span><br><span class="line">    <span class="comment">// 从这里开始引发错误，为什么？</span></span><br><span class="line">    cmd.<span class="title function_ invoke__">assert</span>()</span><br><span class="line">        .<span class="title function_ invoke__">success</span>().<span class="title function_ invoke__">stdout</span>(predicate::<span class="type">str</span>::<span class="title function_ invoke__">contains</span>(<span class="string">&quot;test\nAnother test&quot;</span>));</span><br><span class="line"></span><br><span class="line">    <span class="title function_ invoke__">Ok</span>(())</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>报错结果如下：查一下为什么会出现test.txt ？</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">running 1 test</span><br><span class="line">thread &#x27;find_content_in_file&#x27; panicked at &#x27;Unexpected failure.</span><br><span class="line">code-1</span><br><span class="line">stderr=```&quot;Error: could not read file `test.txt`\n\nCaused by:\n    系统找不到指定的文件。 (os error 2)\n&quot;```</span><br><span class="line">command=`&quot;C:\\Codes\\rust-study-codes\\target\\debug\\grrs.exe&quot; &quot;test&quot; &quot;C:\\Users\\spoon\\AppData\\Local\\Temp\\.tmpKNow85\\sample.txt&quot;`</span><br><span class="line">code=1</span><br><span class="line">stdout=&quot;&quot;</span><br><span class="line">stderr=&quot;Error: could not read file `test.txt`\n\nCaused by:\n    系统找不到指定的文件。 (os error 2)\n&quot;</span><br><span class="line">&#x27;, /rustc/db9d1b20bba1968c1ec1fc49616d4742c1725b4b\library\core\src\ops\function.rs:227:5</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="所有权与-Copy，Clone"><a href="#所有权与-Copy，Clone" class="headerlink" title="所有权与 Copy，Clone"></a>所有权与 Copy，Clone</h1><p>变量的所有权总是遵循相同的模式：</p>
+<ul>
+<li><p>将值赋值给另一个变量时移动它。</p>
+<ul>
+<li><p>如果值的类型实现了<code>clone</code>这个函数，可以通过复制该值给新变量。此时在堆上是有两个值。</p>
+<blockquote>
+<p>也就是使用时，如果方法需要的是获取所有权，而传参是引用时，可以通过调用 clone() 复制该值，然后传递。</p>
+</blockquote>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">pre_block</span>: &amp;Block = xxx;</span><br><span class="line">Block::<span class="title function_ invoke__">new</span>(<span class="string">&quot;&quot;</span>, pre_block.<span class="title function_ invoke__">clone</span>());</span><br><span class="line"><span class="comment">// Block::new() 的定义如下</span></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(data: &amp;<span class="type">str</span>, pre_block: Block)</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>当持有堆中数据值的变量离开作用域时，其值将通过<code>drop</code> 被清理掉，除非数据所有权移动给了另一个变量所有。</p>
+</li>
+<li><p>实现了<code>Copy</code> trait 的数据类型，赋值后所有权并不会移动。</p>
+<ul>
+<li>例如，常用的标量类型，分配到栈中。</li>
+</ul>
+</li>
+</ul>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/%E5%AD%A6%E4%B9%A0Rust%E9%81%87%E5%88%B0%E8%BF%87%E7%9A%84%E9%97%AE%E9%A2%98.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/%E4%BB%A5%E5%A4%AA%E5%9D%8ADapp%E5%BC%80%E5%8F%91%E5%AD%A6%E4%B9%A0.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            以太坊Dapp开发学习
+          
+        </div>
+      </a>
+    
+    
+      <a href="/04%E8%AE%A4%E8%AF%86%E6%89%80%E6%9C%89%E6%9D%83.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">04认识所有权</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

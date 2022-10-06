@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>在CentOS7上安装ELK单节点 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/运维/ELK/在CentOS7上安装ELK单节点"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  在CentOS7上安装ELK单节点
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/%E5%9C%A8CentOS7%E4%B8%8A%E5%AE%89%E8%A3%85ELK%E5%8D%95%E8%8A%82%E7%82%B9.html" class="article-date">
+  <time datetime="2022-10-01T13:44:14.000Z" itemprop="datePublished">2022-10-01</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%BF%90%E7%BB%B4/">运维</a> / <a class="article-category-link" href="/categories/%E8%BF%90%E7%BB%B4/ELK/">ELK</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">3.4k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">16 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="1-ELK-简介"><a href="#1-ELK-简介" class="headerlink" title="1. ELK 简介"></a>1. ELK 简介</h1><p>ELK 是  Elasticsearch、Logstash 和 Kibana 三种软件产品的首字母缩写。这三者都是开源软件，通常配合使用，而且又先后归于 Elastic.co 公司名下，所以被简称为 ELK Stack。已经成为目前最流行的集中式日志解决方案。</p>
+<ul>
+<li>Elasticsearch：分布式搜索和分析引擎，具有高可伸缩、高可靠和易管理等特点。基于 Apache Lucene 构建，能对大容量的数据进行接近实时的存储、搜索和分析操作。通常被用作某些应用的基础搜索引擎，使其具有复杂的搜索功能；</li>
+<li>Logstash：数据收集引擎。它支持动态的从各种数据源搜集数据，并对数据进行过滤、分析、丰富、统一格式等操作，然后存储到用户指定的位置；</li>
+<li>Kibana：数据分析和可视化平台。通常与 Elasticsearch 配合使用，对其中数据进行搜索、分析和以统计图表的方式展示；</li>
+<li>Filebeat：ELK 协议栈的新成员，一个轻量级开源日志文件数据搜集器，基于 Logstash-Forwarder  源代码开发，是对它的替代。在需要采集日志数据的 server 上安装 Filebeat，并指定日志目录或日志文件后，Filebeat  就能读取数据，迅速发送到 Logstash 进行解析，亦或直接发送到 Elasticsearch 进行集中式存储和分析。</li>
+</ul>
+<p><strong>常用架构</strong></p>
+<p>在需要收集数据的服务器上部署 Logstash，然后 Logstash 将解析好的数据发送到 Elasticsearch 中存储，最后在 Kibana 中查询、分析。</p>
+<p><code>数据源 -&gt; Logstash -&gt; Elasticsearch -&gt; Kibana</code></p>
+<ul>
+<li>缺点：Logstash 比较消耗 CPU 和内存资源，在计算资源不丰富的机器上会导致服务器性能下降，影响原本的服务。</li>
+</ul>
+<p><code>Beats -&gt; Logstash -&gt; Elasticsearch -&gt; Kibana</code></p>
+<p>引入 Beats 作为日志收集器。Beats 将数据发送到 Logstash，经 Logstash 解析、过滤后发送到 Elasticsearch 存储，并最后在 Kibana 中分析、查询。</p>
+<p>这种架构方式解决了 Logstash 在各个服务器节点上占用系统资源高的问题。相比 Logstash，Beats 所占系统的 CPU 和内存几乎可以忽略不计。另外，Beats 和 Logstash 之间支持 SSL&#x2F;TLS 加密传输，客户端和服务器双向认证，保证了通信安全。</p>
+<p>这种架构适合各服务器性能比较敏感的场景，或对数据安全性要求较高的场景。</p>
+<p>目前 Beats 包括4种：</p>
+<ul>
+<li>Packetbeat （搜集网络流量数据）；</li>
+<li>Topbeat （搜集系统、进程和文件系统级别的 CPU 和内存使用情况等数据）；</li>
+<li>Filebeat （搜集文件数据）；</li>
+<li>Winlogbeat （搜集 Windows 实践日志数据）；</li>
+</ul>
+<p>更多架构使用场景，参考官方文档。</p>
+<h1 id="2-基于-Filebeat-架构的安装配置"><a href="#2-基于-Filebeat-架构的安装配置" class="headerlink" title="2. 基于 Filebeat 架构的安装配置"></a>2. 基于 Filebeat 架构的安装配置</h1><p>测试环境，使用 <code>Filebeat -&gt; Logstash -&gt; Elasticsearch -&gt; Kibana</code> 的架构方式来安装，采用单机部署，所有软件部署在一台机器上。</p>
+<p>安装环境及版本：</p>
+<ul>
+<li>服务器信息：<ul>
+<li>CentOS 7.6</li>
+<li>4C-8G</li>
+</ul>
+</li>
+<li>安装包版本：<ul>
+<li>elasticsearch-8.4.1-linux-x86_64.tar.gz</li>
+<li>kibana-8.4.1-linux-x86_64.tar.gz</li>
+<li>logstash-8.4.1-linux-x86_64.tar.gz</li>
+<li>filebeat-8.4.1-linux-x86_64.tar.gz</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>注意：安装 ELK （Elastic Stack）时，涉及的所有<strong>版本需要相同</strong>，如上所示，4个软件版本都是 8.4.1 。</p>
+<p>​           安装顺序按照上面软件包列出的顺序，从上到下依次安装；</p>
+<p>具体参考 <a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elastic-stack/current/installing-elastic-stack.html">官方安装 Elastic Stack 章节</a>。</p>
+</blockquote>
+<p>本次安装采用官网压缩包的方式。</p>
+<h2 id="2-1-安装-JDK（已经安装过，可以跳过）"><a href="#2-1-安装-JDK（已经安装过，可以跳过）" class="headerlink" title="2.1. 安装 JDK（已经安装过，可以跳过）"></a>2.1. 安装 JDK（已经安装过，可以跳过）</h2><p>安装 openJDK 即可。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install java-1.8.0-openjdk.x86_64</span><br></pre></td></tr></table></figure>
+
+<p>查看 java 安装情况</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -version</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[es@elk1-2 opt]$ java -version</span><br><span class="line">openjdk version &quot;1.8.0_181&quot;</span><br><span class="line">OpenJDK Runtime Environment (build 1.8.0_181-b13)</span><br><span class="line">OpenJDK 64-Bit Server VM (build 25.181-b13, mixed mode)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-2-安装配置-Elasticsearch"><a href="#2-2-安装配置-Elasticsearch" class="headerlink" title="2.2. 安装配置 Elasticsearch"></a>2.2. 安装配置 Elasticsearch</h2><p>Elasticsearch 中包含了内置的 OpenJDK，可以不用单独安装 JDK。</p>
+<h3 id="下载-tar-gz-安装包，并解压安装"><a href="#下载-tar-gz-安装包，并解压安装" class="headerlink" title="下载 .tar.gz 安装包，并解压安装"></a>下载 <code>.tar.gz</code> 安装包，并解压安装</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf elasticsearch-8.4.1-linux-x86_64.tar.gz -C /opt</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="设置-data-的目录"><a href="#设置-data-的目录" class="headerlink" title="设置 data 的目录"></a>设置 data 的目录</h3><p>创建额外的 Elasticsearch 数据存储目录。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /opt/data/esdata</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="创建有目录的用户，并修改目录权限"><a href="#创建有目录的用户，并修改目录权限" class="headerlink" title="创建有目录的用户，并修改目录权限"></a>创建有目录的用户，并修改目录权限</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">useradd es -U -m</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>-U 创建一个与用户名相同的用户组，</p>
+<p>-m 创建用户的家目录，</p>
+</blockquote>
+<p>修改 Elasticsearch 安装目录和数据存储目录权限</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chown -R es:es /opt/elasticsearch-8.4.1</span><br><span class="line">chown -R es:es /opt/data/esdata</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="修改-Elasticsearch-配置文件"><a href="#修改-Elasticsearch-配置文件" class="headerlink" title="修改 Elasticsearch 配置文件"></a>修改 Elasticsearch 配置文件</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /opt/elasticsearch-8.4.1/config/elasticsearch.yml</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">cluster.name:</span> <span class="string">test-es</span>             <span class="comment">#配置一个名称</span></span><br><span class="line"><span class="attr">node.name:</span> <span class="string">es-server</span>              <span class="comment">#本节点elasticsearch名称</span></span><br><span class="line"><span class="attr">network.host:</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span>             <span class="comment">#允许访问</span></span><br><span class="line"><span class="attr">path.data:</span> <span class="string">/opt/data/esdata</span>       <span class="comment">#数据存放目录运行elasticsearch</span></span><br><span class="line"><span class="attr">ingest.geoip.downloader.enabled:</span> <span class="literal">false</span> <span class="comment">#这里为了解决后面提示的报错。</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="启动-Elasticsearch"><a href="#启动-Elasticsearch" class="headerlink" title="启动 Elasticsearch"></a>启动 Elasticsearch</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">需要在普通用户下执行启动命令，在 ELK 中 Elasticsearch 需要先于 Logstash 启动</span></span><br><span class="line">su - es</span><br><span class="line">/opt/elasticsearch-8.4.1/bin/elasticsearch -d</span><br></pre></td></tr></table></figure>
+
+
+
+<p>验证服务启动状态</p>
+<p>查看端口</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -ntlp |grep 9200</span><br></pre></td></tr></table></figure>
+
+<p>查看页面请求</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl localhost:9200</span><br></pre></td></tr></table></figure>
+
+<p>正确请求结果如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;name&quot; : &quot;es-server&quot;,</span><br><span class="line">  &quot;cluster_name&quot; : &quot;test-es&quot;,</span><br><span class="line">  &quot;cluster_uuid&quot; : &quot;aeWJbSOSRNeYEjqg3Nj3ow&quot;,</span><br><span class="line">  &quot;version&quot; : &#123;</span><br><span class="line">    &quot;number&quot; : &quot;8.4.1&quot;,</span><br><span class="line">    &quot;build_flavor&quot; : &quot;default&quot;,</span><br><span class="line">    &quot;build_type&quot; : &quot;tar&quot;,</span><br><span class="line">    &quot;build_hash&quot; : &quot;2bd229c8e56650b42e40992322a76e7914258f0c&quot;,</span><br><span class="line">    &quot;build_date&quot; : &quot;2022-08-26T12:11:43.232597118Z&quot;,</span><br><span class="line">    &quot;build_snapshot&quot; : false,</span><br><span class="line">    &quot;lucene_version&quot; : &quot;9.3.0&quot;,</span><br><span class="line">    &quot;minimum_wire_compatibility_version&quot; : &quot;7.17.0&quot;,</span><br><span class="line">    &quot;minimum_index_compatibility_version&quot; : &quot;7.0.0&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;tagline&quot; : &quot;You Know, for Search&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-3-安装配置-Kibana"><a href="#2-3-安装配置-Kibana" class="headerlink" title="2.3. 安装配置 Kibana"></a>2.3. 安装配置 Kibana</h2><h3 id="下载-tar-gz-安装包，并解压安装-1"><a href="#下载-tar-gz-安装包，并解压安装-1" class="headerlink" title="下载 .tar.gz 安装包，并解压安装"></a>下载 <code>.tar.gz</code> 安装包，并解压安装</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf kibana-8.4.1-linux-x86_64.tar.gz -C /opt</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="修改-Kibana-配置文件"><a href="#修改-Kibana-配置文件" class="headerlink" title="修改 Kibana 配置文件"></a>修改 Kibana 配置文件</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /opt/kibana-8.4.1/config/kibana.yml</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">这里云主机需要填写本地私有地址，不能填写 FIP，否则启动时会报错。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果需要远程机器访问，需要填写 non-loopback address</span> </span><br><span class="line">server.host: 10.100.5.6</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">elasticsearch的地址，如果elasticsearch与kibana安装在不同服务器上，需要手动指定地址</span></span><br><span class="line">server.name: &quot;es-kibana&quot;</span><br><span class="line">elasticsearch.hosts: [&quot;http://localhost:9200&quot;]</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">开启下面配置，日志写入指定日志文件</span></span><br><span class="line">logging.appenders.default:</span><br><span class="line">  type: file</span><br><span class="line">  fileName: /opt/kibana-8.4.1/logs/kibana.log</span><br><span class="line">  layout:</span><br><span class="line">    type: json</span><br></pre></td></tr></table></figure>
+
+<h3 id="启动-Kibana"><a href="#启动-Kibana" class="headerlink" title="启动 Kibana"></a>启动 Kibana</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/opt/kibana-8.4.1/bin/kibana &amp;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-4-安装配置-Logstash"><a href="#2-4-安装配置-Logstash" class="headerlink" title="2.4. 安装配置 Logstash"></a>2.4. 安装配置 Logstash</h2><h3 id="下载-tar-gz-安装包，并解压安装-2"><a href="#下载-tar-gz-安装包，并解压安装-2" class="headerlink" title="下载 .tar.gz 安装包，并解压安装"></a>下载 <code>.tar.gz</code> 安装包，并解压安装</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf logstash-8.4.1-linux-x86_64.tar.gz -C /opt</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="测试-Logstash-能否正常运行"><a href="#测试-Logstash-能否正常运行" class="headerlink" title="测试 Logstash 能否正常运行"></a>测试 Logstash 能否正常运行</h3><p>不修改配置前可以利用下面内容测试 Logstash 能否正常运行。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">logstash-8.4.1/bin/logstash -e &#x27;input &#123;stdin &#123;&#125;&#125; output &#123;stdout&#123;&#125;&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[2022-10-02T16:58:32,007][INFO ][logstash.javapipeline    ][main] Pipeline started &#123;&quot;pipeline.id&quot;=&gt;&quot;main&quot;&#125;</span><br><span class="line">The stdin plugin is now waiting for input:</span><br><span class="line">[2022-10-02T16:58:32,060][INFO ][logstash.agent           ] Pipelines running &#123;:count=&gt;1, :running_pipelines=&gt;[:main], :non_running_pipelines=&gt;[]&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>出现上面打印信息后，即可以随意输入内容，回车后，就会有内容输出。例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">hello world.</span><br><span class="line">&#123;</span><br><span class="line">      &quot;@version&quot; =&gt; &quot;1&quot;,</span><br><span class="line">       &quot;message&quot; =&gt; &quot;hello world.&quot;,</span><br><span class="line">          &quot;host&quot; =&gt; &#123;</span><br><span class="line">        &quot;hostname&quot; =&gt; &quot;elk1-2&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;@timestamp&quot; =&gt; 2022-10-02T09:02:34.381131080Z,</span><br><span class="line">         &quot;event&quot; =&gt; &#123;</span><br><span class="line">        &quot;original&quot; =&gt; &quot;hello world.&quot;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>另一种返回结果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">logstash-8.4.1/bin/logstash -e &#x27;input&#123;stdin&#123;&#125;&#125;output&#123;stdout&#123;codec =&gt; rubydebug&#125;&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[2022-10-02T17:09:07,932][INFO ][logstash.javapipeline    ][main] Pipeline started &#123;&quot;pipeline.id&quot;=&gt;&quot;main&quot;&#125;</span><br><span class="line">The stdin plugin is now waiting for input:</span><br><span class="line">[2022-10-02T17:09:07,966][INFO ][logstash.agent           ] Pipelines running &#123;:count=&gt;1, :running_pipelines=&gt;[:main], :non_running_pipelines=&gt;[]&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>输入 hello world 返回结果如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">hello world</span><br><span class="line">&#123;</span><br><span class="line">      &quot;@version&quot; =&gt; &quot;1&quot;,</span><br><span class="line">       &quot;message&quot; =&gt; &quot;hello world&quot;,</span><br><span class="line">         &quot;event&quot; =&gt; &#123;</span><br><span class="line">        &quot;original&quot; =&gt; &quot;hello world&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">          &quot;host&quot; =&gt; &#123;</span><br><span class="line">        &quot;hostname&quot; =&gt; &quot;elk1-2&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;@timestamp&quot; =&gt; 2022-10-02T09:09:37.414736483Z</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="修改-Logstash-配置文件"><a href="#修改-Logstash-配置文件" class="headerlink" title="修改 Logstash 配置文件"></a>修改 Logstash 配置文件</h3><p>创建存放自定义输入输出的配置目录</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /opt/logstash-8.4.1/conf.d/*.conf</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#logstash动态加载的配置文件，所有自定义的输入、输出和过滤配置都放置在这个目录中并以.conf结尾</span></span><br><span class="line"><span class="attr">path.config:</span> <span class="string">/opt/logstash-8.4.1/conf.d/*.conf</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="创建对接-filebeat-的配置文件并测试"><a href="#创建对接-filebeat-的配置文件并测试" class="headerlink" title="创建对接 filebeat 的配置文件并测试"></a>创建对接 filebeat 的配置文件并测试</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">input &#123;</span><br><span class="line">  beats &#123;</span><br><span class="line">    port =&gt; 5044</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">output &#123;</span><br><span class="line">  elasticsearch &#123;</span><br><span class="line">    hosts =&gt; [&quot;http://0.0.0.0:9200&quot;]</span><br><span class="line">    index =&gt; &quot;%&#123;[@metadata][beat]&#125;-%&#123;+YYYY.MM.dd&#125;&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>用以下命令，测试配置文件是否异常</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /opt/logstash-8.4.1</span><br><span class="line">bin/logstash -f /opt/logstash-8.4.1/conf.d/filebeat.conf --config.test_and_exit</span><br></pre></td></tr></table></figure>
+
+<p>输出如下表示配置文件正常：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[2022-10-03T19:51:05,381][INFO ][logstash.javapipeline    ] Pipeline `main` is configured with `pipeline.ecs_compatibility: v8` setting. All plugins in this pipeline will default to `ecs_compatibility =&gt; v8` unless explicitly configured otherwise.</span><br><span class="line">Configuration OK</span><br><span class="line">[2022-10-03T19:51:05,382][INFO ][logstash.runner          ] Using config.test_and_exit mode. Config Validation Result: OK. Exiting Logstash</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>注意：logstash -f &lt;文件&gt; 这里文件不能使用相对路径，最好如上命令，使用绝对路径。否则输出日志中报错如下：</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[2022-10-03T19:50:02,895][INFO ][logstash.config.source.local.configpathloader] No config files found in path &#123;:path=&gt;&quot;/opt/logstash-8.4.1/logstash-8.4.1/conf.d/filebeat.conf&quot;&#125;</span><br><span class="line">[2022-10-03T19:50:02,900][ERROR][logstash.config.sourceloader] No configuration found in the configured sources.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="使用创建的-filebeat-文件启动-Logstash"><a href="#使用创建的-filebeat-文件启动-Logstash" class="headerlink" title="使用创建的 filebeat 文件启动 Logstash"></a>使用创建的 filebeat 文件启动 Logstash</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/opt/logstash-8.4.1/bin/logstash -f /opt/logstash-8.4.1/conf.d/filebeat.conf &amp;</span><br></pre></td></tr></table></figure>
+
+<p>启动后，检查 5044 端口是否启动</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -nltp |grep 5044</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-5-在应用服务器上安装-filebeat-并与-Logstash-通信"><a href="#2-5-在应用服务器上安装-filebeat-并与-Logstash-通信" class="headerlink" title="2.5.  在应用服务器上安装 filebeat 并与 Logstash 通信"></a>2.5.  在应用服务器上安装 filebeat 并与 Logstash 通信</h2><h3 id="下载-tar-gz-安装包，并解压安装-3"><a href="#下载-tar-gz-安装包，并解压安装-3" class="headerlink" title="下载 .tar.gz 安装包，并解压安装"></a>下载 <code>.tar.gz</code> 安装包，并解压安装</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf filebeat-8.4.1-linux-x86_64.tar.gz -C /opt/</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="修改-filebeat-配置"><a href="#修改-filebeat-配置" class="headerlink" title="修改 filebeat 配置"></a>修改 filebeat 配置</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ============================== Filebeat inputs ======</span></span><br><span class="line"><span class="attr">filebeat.inputs:</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># filestream is an input for collecting log messages from files.</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">type:</span> <span class="string">filestream</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># Unique ID among all inputs, an ID is required.</span></span><br><span class="line">  <span class="attr">id:</span> <span class="string">my-filestream-id-003</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># Change to true to enable this input configuration.</span></span><br><span class="line">  <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># Paths that should be crawled and fetched. Glob based paths.</span></span><br><span class="line">  <span class="attr">paths:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">/var/log/*.log</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ======================= Elasticsearch template setting =======================</span></span><br><span class="line"></span><br><span class="line"><span class="attr">setup.template.settings:</span></span><br><span class="line">  <span class="attr">index.number_of_shards:</span> <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># =================================== Kibana ===================================</span></span><br><span class="line"><span class="comment"># This requires a Kibana endpoint configuration.</span></span><br><span class="line"><span class="attr">setup.kibana:</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># Kibana Host</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">&quot;10.12.1.84:5601&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ------------------------------ Logstash Output -------------------------------</span></span><br><span class="line"><span class="attr">output.logstash:</span></span><br><span class="line">  <span class="comment"># The Logstash hosts</span></span><br><span class="line">  <span class="attr">hosts:</span> [<span class="string">&quot;10.12.1.84:5044&quot;</span>]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>修改以上几个部分的内容，Output 部分因为我们是使用 filebeat -&gt; Logstash 的形式，所以 Elasticsearch Output 部分的注释不打开。</p>
+<blockquote>
+<p>上面配置文件内容，详细信息参考 <a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/beats/filebeat/current/configuring-howto-filebeat.html">Filebeat 官方文档的配置文件说明部分</a></p>
+<p>其中，Inputs , Output  部分与数据搜集和输出有关。</p>
+</blockquote>
+<h3 id="启动-filebeat"><a href="#启动-filebeat" class="headerlink" title="启动 filebeat"></a>启动 filebeat</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /opt/filebeat-8.4.1-linux-x86_64</span><br><span class="line">./filebeat -e -c /opt/filebeat-8.4.1-linux-x86_64/filebeat.yml &gt; logs/filebeat-2022100102.log 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<p>当日志出现如下与 Logstash 建立连接的日志内容时，表示 filebeat 搜集的内容可以发送到 Logstash 上了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">filebeat 启动成功的日志，有与logstash的连接日志</span></span><br><span class="line"></span><br><span class="line">&#123;&quot;log.level&quot;:&quot;info&quot;,&quot;@timestamp&quot;:&quot;2022-10-01T21:20:27.899+0800&quot;,&quot;log.logger&quot;:&quot;publisher_pipeline_output&quot;,&quot;log.origin&quot;:&#123;&quot;file.name&quot;:&quot;pipeline/client_worker.go&quot;,&quot;file.line&quot;:139&#125;,&quot;message&quot;:&quot;Connecting to backoff(async(tcp://10.12.1.84:5044))&quot;,&quot;service.name&quot;:&quot;filebeat&quot;,&quot;ecs.version&quot;:&quot;1.6.0&quot;&#125;</span><br><span class="line">&#123;&quot;log.level&quot;:&quot;info&quot;,&quot;@timestamp&quot;:&quot;2022-10-01T21:20:27.900+0800&quot;,&quot;log.logger&quot;:&quot;publisher_pipeline_output&quot;,&quot;log.origin&quot;:&#123;&quot;file.name&quot;:&quot;pipeline/client_worker.go&quot;,&quot;file.line&quot;:147&#125;,&quot;message&quot;:&quot;Connection to backoff(async(tcp://10.12.1.84:5044)) established&quot;,&quot;service.name&quot;:&quot;filebeat&quot;,&quot;ecs.version&quot;:&quot;1.6.0&quot;&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>没有上面建立连接的信息，则 filebeat 无法将内容发到 Logstash 中。</p>
+<h1 id="3-配置-Kibana-可视化"><a href="#3-配置-Kibana-可视化" class="headerlink" title="3. 配置 Kibana 可视化"></a>3. 配置 Kibana 可视化</h1><p>登录 Kibana UI，例如，<code>http://10.12.1.84:5601</code></p>
+<p>创建一个 <code>Data View</code></p>
+<p>添加索引</p>
+<p>然后在 <code>Discover</code> 页面中查看通过 Filebeat 搜集经 Logstash 发送到 Elasticsearch 中的数据。</p>
+<p>（这里需要截图，后面搞定图片存放再补充。）</p>
+<h2 id="安装参考链接"><a href="#安装参考链接" class="headerlink" title="安装参考链接"></a>安装参考链接</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://www.codeleading.com/article/7222941493/">Centos7.6 Install ELK 离线安装</a></li>
+<li></li>
+</ul>
+<h1 id="4-部署中解决或未解决的问题"><a href="#4-部署中解决或未解决的问题" class="headerlink" title="4. 部署中解决或未解决的问题"></a>4. 部署中解决或未解决的问题</h1><h3 id="1-配置-Elasticsearch-并启动服务后，测试服务状态时，请求失败"><a href="#1-配置-Elasticsearch-并启动服务后，测试服务状态时，请求失败" class="headerlink" title="1. 配置 Elasticsearch 并启动服务后，测试服务状态时，请求失败"></a>1. 配置 Elasticsearch 并启动服务后，测试服务状态时，请求失败</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[es@elk1-2 elasticsearch-8.4.1]$ curl localhost:9200</span><br><span class="line">curl: (52) Empty reply from server</span><br></pre></td></tr></table></figure>
+
+<p>查看日志，内容如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[2022-09-30T12:41:36,122][WARN ][o.e.x.s.t.n.SecurityNetty4HttpServerTransport] [es-server] received plaintext http traffic on an https channel, closing connection Netty4HttpChannel&#123;localAddress=/[0:0:0:0:0:0:0:1]:9200, remoteAddress=/[0:0:0:0:0:0:0:1]:34442&#125;</span><br><span class="line">[2022-09-30T12:49:25,975][WARN ][o.e.x.s.t.n.SecurityNetty4HttpServerTransport] [es-server] received plaintext http traffic on an https channel, closing connection Netty4HttpChannel&#123;localAddress=/127.0.0.1:9200, remoteAddress=/127.0.0.1:47816&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>原因：</strong></p>
+<p>Elasticsearch 启动时默认配置并启用了一些安全特性。</p>
+<p>从下面配置可知，自动配置以下安全配置：</p>
+<ul>
+<li>Authentication and authorization are enabled, and a password is generated for the <code>elastic</code> built-in superuser.</li>
+<li>Certificates and keys for TLS are generated for the transport and HTTP layer, and TLS is enabled and configured with these keys and certificates.</li>
+<li>An enrollment token is generated for Kibana, which is valid for 30 minutes.</li>
+</ul>
+<p><strong>解决方法：</strong></p>
+<p>1.继续使用 http 访问</p>
+<p>修改 elasticsearch.yml 配置文件，把安全认证开关从原先的 true 改为 false，实现免密登录。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">xpack.security.enabled:</span> <span class="literal">false</span></span><br><span class="line"><span class="comment"># Enable encryption for HTTP API client connections, such as Kibana, Logstash, and Agents</span></span><br><span class="line"><span class="attr">xpack.security.http.ssl:</span></span><br><span class="line">  <span class="comment">#enabled: true</span></span><br><span class="line">  <span class="attr">enabled:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">keystore.path:</span> <span class="string">certs/http.p12</span></span><br></pre></td></tr></table></figure>
+
+<p>保存并重启，重新访问就正常了。</p>
+<p>2.利用本地证书，使用 https 请求</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl --cacert /opt/elasticsearch-8.4.1/config/certs/http_ca.crt -u elastic https://localhost:9200</span><br><span class="line">Enter host password for user &#x27;elastic&#x27;:</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>输入elastic 密码</p>
+<p>该密码在服务初始启动时会打印在日志中，如果没有该密码，可以通过下面的命令重设密码：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/opt/elasticsearch-8.4.1/bin/elasticsearch-reset-password -u elastic</span><br></pre></td></tr></table></figure>
+
+<p>该命令会自动生成一个随机密码。</p>
+<p>参考如下链接</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/8.4/targz.html#targz-running">Run Elasticsearch from the command line</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/8.4/targz.html#_check_that_elasticsearch_is_running">Check that Elasticsearch is running</a></li>
+</ul>
+<h3 id="2-java-net-UnknownHostException-geoip-elastic-co"><a href="#2-java-net-UnknownHostException-geoip-elastic-co" class="headerlink" title="2. java.net.UnknownHostException: geoip.elastic.co"></a>2. java.net.UnknownHostException: geoip.elastic.co</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[2022-10-03T19:28:31,010][ERROR][o.e.i.g.GeoIpDownloader  ] [es-server] exception during geoip databases update</span><br><span class="line">java.net.UnknownHostException: geoip.elastic.co</span><br><span class="line">        at sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:564) ~[?:?]</span><br><span class="line">        at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[?:?]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>解决方法：</strong></p>
+<p>修改 elasticsearch.yml  配置文件，添加如下配置：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">ingest.geoip.downloader.enabled:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>参考如下链接<a target="_blank" rel="noopener" href="https://discuss.elastic.co/t/how-to-disable-geoip-usage-in-7-14-0/281076">How to disable geoip usage in 7.14.0</a></p>
+<h3 id="3-为什么-filebeat-执行后导入一批数据后就断开了？如何执行执行？"><a href="#3-为什么-filebeat-执行后导入一批数据后就断开了？如何执行执行？" class="headerlink" title="3. 为什么 filebeat 执行后导入一批数据后就断开了？如何执行执行？"></a>3. 为什么 filebeat 执行后导入一批数据后就断开了？如何执行执行？</h3><h3 id="4-如何配置-MySQL-数据导入？"><a href="#4-如何配置-MySQL-数据导入？" class="headerlink" title="4. 如何配置 MySQL 数据导入？"></a>4. 如何配置 MySQL 数据导入？</h3> 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/%E5%9C%A8CentOS7%E4%B8%8A%E5%AE%89%E8%A3%85ELK%E5%8D%95%E8%8A%82%E7%82%B9.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ELK/" rel="tag">ELK</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90/" rel="tag">日志分析</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/Logstash%E5%8F%91%E9%80%81MySQL%E6%95%B0%E6%8D%AE%E5%88%B0Elasticsearch.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Logstash发送MySQL数据到Elasticsearch
+          
+        </div>
+      </a>
+    
+    
+      <a href="/%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">常用命令</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>现场Hive用过的语法 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/BigData/Hive/现场Hive用过的语法"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  现场Hive用过的语法
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/%E7%8E%B0%E5%9C%BAHive%E7%94%A8%E8%BF%87%E7%9A%84%E8%AF%AD%E6%B3%95.html" class="article-date">
+  <time datetime="2022-10-04T09:24:22.000Z" itemprop="datePublished">2022-10-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/BigData/">BigData</a> / <a class="article-category-link" href="/categories/BigData/Hive/">Hive</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">12 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="部分现场Hive用过的语法"><a href="#部分现场Hive用过的语法" class="headerlink" title="部分现场Hive用过的语法"></a>部分现场Hive用过的语法</h2><p>1.<br>   <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into table simba.t_res_phy_attribute_3d partition(action_time=&#x27;202006&#x27;, import_time=&#x27;2020060315&#x27;) select uuid,code_type,code,attribute_type,attribute,code_area,attribute_area,capture_time,longitude,latitude,location_type,location,location_area,action,origin_data,origin_data_uuid,start_time,end_time,count from simba.simba_phy_attribute where action_time=&#x27;202006&#x27; and import_time&gt;=2020060100 and import_time&lt;2020060400 and origin_data not in (&#x27;lt_jizhu&#x27;,&#x27;yd_jizhu&#x27;,&#x27;dx_jizhu&#x27;);</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li><p>生成uuid</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">reflect(&quot;java.util.UUID&quot;,&quot;randomUUID&quot;)</span><br><span class="line"></span><br><span class="line">The <span class="keyword">function</span> GenericUDFReflect(class,<span class="keyword">method</span>[,arg1[,arg2]...])</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>时间格式正则表达式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">   ^[1-9]\d&#123;3&#125;-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\s+(20|21|2|23|[0-1]\d):[0-5]\d:[0-5]\d$</span><br><span class="line">regexp_extract(&#x27;2020-06-12 12:37:37&#x27;,&#x27;^[1-9]\d&#123;3&#125;-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\s+(20|21|2|23|[0-1]\d):[0-5]\d:[0-5]\d$&#x27;,0)</span><br><span class="line"></span><br><span class="line">   regexp_extract(offereffdate,&#x27;^[1-9]\\d&#123;3&#125;-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\\s+(20|21|22|23|[0-1]\\d):[0-5]\\d:[0-5]\\d$&#x27;,0),$s)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>如果没有结果，返回空字符串 ‘’</li>
+<li>注意是空字符串，而不是’ ‘，同样也不是NULL， 判断是需要使用 x!&#x3D;’’ ,或者 x!&#x3D;’’ or x is not null</li>
+</ul>
+</li>
+<li><p>删除指定表指定分区</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> simba.simba_phy_attribute_temp <span class="keyword">drop</span> if <span class="keyword">exists</span> <span class="keyword">partition</span> (action_time<span class="operator">=</span><span class="number">2001</span><span class="number">-0</span>) PURGE;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>convert a string to timestamp</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">from_utc_timestamp(date_format(<span class="string">&#x27;2020-05-12 19:57:12&#x27;</span>,<span class="string">&#x27;yyyy-MM-dd HH:mm:ss&#x27;</span>),<span class="string">&#x27;UTC&#x27;</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>hive表重命名</p>
+ <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> <span class="operator">&lt;</span>table_name<span class="operator">&gt;</span> rename <span class="keyword">to</span> <span class="operator">&lt;</span>new_table_name<span class="operator">&gt;</span>;</span><br></pre></td></tr></table></figure>
+<p> 样例：</p>
+ <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> titan_mass.t_20200613114054_rxwi rename <span class="keyword">to</span> simba.t_res_jizhudengji;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>从 Hive 中导出数据到本地</p>
+<ol>
+<li><p>将需要导出的表，另存为文本格式的表数据<br>可以是 csv 格式，语法如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> 另存一张新表 <span class="type">row</span> format serde <span class="string">&#x27;org.apache.hadoop.hive.serde2.OpenCSVSerde&#x27;</span> <span class="keyword">with</span> SERDEPROPERTIES (<span class="string">&#x27;escapeChar&#x27;</span><span class="operator">=</span><span class="string">&#x27;\&quot;&#x27;</span>, <span class="string">&#x27;quoteChar&#x27;</span><span class="operator">=</span><span class="string">&#x27;\&quot;&#x27;</span>,<span class="string">&#x27;separatorChar&#x27;</span><span class="operator">=</span><span class="string">&#x27;,&#x27;</span>) stored <span class="keyword">as</span> textfile <span class="keyword">as</span> <span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> 需要导出的表 ;</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> titan_mass.special_app_result01 <span class="type">row</span> format serde <span class="string">&#x27;org.apache.hadoop.hive.serde2.OpenCSVSerde&#x27;</span> <span class="keyword">with</span> SERDEPROPERTIES (<span class="string">&#x27;escapeChar&#x27;</span><span class="operator">=</span><span class="string">&#x27;\&quot;&#x27;</span>, <span class="string">&#x27;quoteChar&#x27;</span><span class="operator">=</span><span class="string">&#x27;\&quot;&#x27;</span>,<span class="string">&#x27;separatorChar&#x27;</span><span class="operator">=</span><span class="string">&#x27;,&#x27;</span>) stored <span class="keyword">as</span> textfile <span class="keyword">as</span> <span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> titan_mass.aaaaa;</span><br></pre></td></tr></table></figure>
+<p>也可以是普通 textfile 格式，如下 <code>\t</code> 分割字段，<code>\n</code> 换行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> titan_temp.express_yunda <span class="type">row</span> format delimited fields terminated <span class="keyword">by</span> <span class="string">&#x27;\t&#x27;</span> lines terminated <span class="keyword">by</span> <span class="string">&#x27;\n&#x27;</span> stored <span class="keyword">as</span> textfile <span class="keyword">as</span> <span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> simba.express<span class="operator">-</span>yunda<span class="operator">-</span>waybill;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>确认需要导出数据的csv表在hdfs上的路径<br>例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">desc formatted special_app_result01;</span><br><span class="line">hdfs://ambari01/apps/hive/warehouse/titan_mass.db/special_app_result01</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在装由hadoop客户端的机器上，执行下面语句，将csv格式的数据导出到本地</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hadoop fs -get hdfs://ambari01/apps/hive/warehouse/titan_mass.db/special_app_result01 /opt/install</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可以将文件导出到windows中，用导入工具处理，也可以先在windows下配置导入工具的模型，然后将导入工具和模型放到数据所在机器，然后linux执行</p>
+</li>
+</ol>
+</li>
+<li><p>取top1<br>hive中分组取top1</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> titan_temp.jizhudengji_etl <span class="type">row</span> format delimited fields terminated <span class="keyword">by</span> <span class="string">&#x27;\t&#x27;</span> lines terminated <span class="keyword">by</span> <span class="string">&#x27;\n&#x27;</span> stored <span class="keyword">as</span> textfile <span class="keyword">as</span> <span class="keyword">select</span> customername,certtypeid,idcard,cardaddr,originphone,address,status,offerexpdate,offereffdate <span class="keyword">from</span> (<span class="keyword">select</span> customername,certtypeid,idcard,cardaddr,originphone,address,status,offerexpdate,offereffdate,<span class="built_in">row_number</span>() <span class="keyword">over</span>(<span class="keyword">partition</span> <span class="keyword">by</span> originphone <span class="keyword">order</span> <span class="keyword">by</span> offereffdate <span class="keyword">desc</span>) <span class="keyword">as</span> row_number <span class="keyword">from</span> simba.tj_jizhudengji) t <span class="keyword">where</span> row_number<span class="operator">=</span><span class="number">1</span>;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="恢复drop和truncate-hive表或分区"><a href="#恢复drop和truncate-hive表或分区" class="headerlink" title="恢复drop和truncate hive表或分区"></a>恢复drop和truncate hive表或分区</h2><h3 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h3><ol>
+<li>切换到 hive 用户<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su - hive</span><br></pre></td></tr></table></figure></li>
+<li>查看 hdfs 上 <code>.Trash</code>目录下被误删除的表或者分区<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hdfs dfs -ls /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email</span><br></pre></td></tr></table></figure></li>
+<li>通过 hdfs 的 mv 或者 cp 命令将 <code>.Trash </code>目录下的数据恢复到原来表路径下<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hdfs dfs -cp /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email/* /apps/hive/warehouse/titan_temp.db/t_email</span><br></pre></td></tr></table></figure></li>
+<li>恢复 meta 信息<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">msck repair table titan_temp.t_email;</span><br></pre></td></tr></table></figure></li>
+<li>恢复统计信息<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">--这里需要查看hive官方文档的StatsDev章节的existing tables -analyze，对两个分区全部分区内容做analyze</span><br><span class="line">analyze table titan_temp.t_email partition(action_time,import_time) compute statistics;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="truncate-，drop-表数据恢复过程"><a href="#truncate-，drop-表数据恢复过程" class="headerlink" title="truncate ，drop 表数据恢复过程"></a>truncate ，drop 表数据恢复过程</h3><h4 id="1-创建表，插入测试数据"><a href="#1-创建表，插入测试数据" class="headerlink" title="1. 创建表，插入测试数据"></a>1. 创建表，插入测试数据</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--创建表，插入测试数据</span></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> t_test_recover <span class="type">row</span> format delimited fields terminated <span class="keyword">by</span> <span class="string">&#x27;\t&#x27;</span> stored <span class="keyword">as</span> orc tblproperties (<span class="string">&#x27;orc.compress&#x27;</span><span class="operator">=</span><span class="string">&#x27;SNAPPY&#x27;</span>) <span class="keyword">as</span> <span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> relate_attribute_stat_temp limit <span class="number">10000</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> if <span class="keyword">not</span> <span class="keyword">exists</span> titan_temp.t_email</span><br><span class="line">(</span><br><span class="line">    cor_id                       string           comment <span class="string">&#x27;话单唯一标识&#x27;</span>,</span><br><span class="line">    location_code                <span class="type">decimal</span>(<span class="number">6</span>)       comment <span class="string">&#x27;数据来源地&#x27;</span></span><br><span class="line"></span><br><span class="line">)                                                       </span><br><span class="line">comment <span class="string">&#x27;t_email&#x27;</span></span><br><span class="line">partitioned <span class="keyword">by</span> (                                           </span><br><span class="line">                 action_time  string comment <span class="string">&#x27;cap_time&#x27;</span>,</span><br><span class="line">                 import_time  string comment <span class="string">&#x27;import_time&#x27;</span></span><br><span class="line">               )</span><br><span class="line"><span class="type">row</span> format delimited                                       </span><br><span class="line">fields terminated <span class="keyword">by</span> <span class="string">&#x27;\t&#x27;</span>                                  </span><br><span class="line">stored <span class="keyword">as</span> orc tblproperties (<span class="string">&#x27;orc.compression&#x27;</span><span class="operator">=</span><span class="string">&#x27;snappy&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> titan_temp.t_email <span class="keyword">SET</span> SERDEPROPERTIES (<span class="string">&#x27;escape.delim&#x27;</span> <span class="operator">=</span> <span class="string">&#x27;\\&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> titan_temp.t_email <span class="keyword">partition</span>(action_time<span class="operator">=</span><span class="string">&#x27;202006&#x27;</span>,import_time<span class="operator">=</span><span class="string">&#x27;20200629&#x27;</span>) <span class="keyword">select</span> cdrid,location_code <span class="keyword">from</span> simba.data_email <span class="keyword">where</span> import_time<span class="operator">=</span><span class="string">&#x27;2020062912&#x27;</span> limit <span class="number">200</span>;</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> titan_temp.t_email <span class="keyword">partition</span>(action_time<span class="operator">=</span><span class="string">&#x27;202007&#x27;</span>,import_time<span class="operator">=</span><span class="string">&#x27;20200729&#x27;</span>) <span class="keyword">select</span> cdrid,location_code <span class="keyword">from</span> simba.data_email <span class="keyword">where</span> import_time<span class="operator">=</span><span class="string">&#x27;2020072912&#x27;</span> limit <span class="number">200</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">--查看测试表中数据量</span></span><br><span class="line"><span class="number">0</span>: jdbc:hive2:<span class="operator">/</span><span class="operator">/</span><span class="number">192.168</span><span class="number">.10</span><span class="number">.27</span>:<span class="number">2181</span>,<span class="number">192.168</span><span class="number">.10</span><span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">count</span>(<span class="number">1</span>) <span class="keyword">from</span> titan_temp.t_email;</span><br><span class="line"><span class="operator">+</span><span class="comment">------+--+</span></span><br><span class="line"><span class="operator">|</span> _c0  <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">------+--+</span></span><br><span class="line"><span class="operator">|</span> <span class="number">400</span>  <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">------+--+</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-truncate-的恢复过程"><a href="#2-truncate-的恢复过程" class="headerlink" title="2. truncate 的恢复过程"></a>2. truncate 的恢复过程</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">--将表数据清空，truncate</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; truncate table titan_temp.t_email;</span><br><span class="line">No rows affected (0.349 seconds)</span><br><span class="line"></span><br><span class="line">--切换到hive用户</span><br><span class="line">-- 查看hdfs目录下的Trash目录下被清空的数据</span><br><span class="line">-bash-4.1$ hdfs dfs -ls /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email</span><br><span class="line">Found 2 items</span><br><span class="line">drwx------   - hive hdfs          0 2020-07-31 11:09 /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email/action_time=202006</span><br><span class="line">drwx------   - hive hdfs          0 2020-07-31 11:09 /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email/action_time=202007</span><br><span class="line"></span><br><span class="line">--恢复hdfs目录下的数据</span><br><span class="line">-bash-4.1$ hdfs dfs -cp /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email/* /apps/hive/warehouse/titan_temp.db/t_email</span><br><span class="line"></span><br><span class="line">-bash-4.1$ hdfs dfs -ls /apps/hive/warehouse/titan_temp.db/t_email</span><br><span class="line">Found 2 items</span><br><span class="line">drwxrwxrwx   - hive hdfs          0 2020-07-31 11:09 /apps/hive/warehouse/titan_temp.db/t_email/action_time=202006</span><br><span class="line">drwxrwxrwx   - hive hdfs          0 2020-07-31 11:09 /apps/hive/warehouse/titan_temp.db/t_email/action_time=202007</span><br><span class="line"></span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; select * from titan_temp.t_email limit 1;</span><br><span class="line">+---------------------------------------+------------------------+----------------------+----------------------+--+</span><br><span class="line">|            t_email.cor_id             | t_email.location_code  | t_email.action_time  | t_email.import_time  |</span><br><span class="line">+---------------------------------------+------------------------+----------------------+----------------------+--+</span><br><span class="line">| e3b30b3d-35fc-400b-ae53-fce3ddfd9d6c  | 120000                 | 202006               | 20200629             |</span><br><span class="line">+---------------------------------------+------------------------+----------------------+----------------------+--+</span><br><span class="line">10 rows selected (0.119 seconds)</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; select count(1) from titan_temp.t_email;</span><br><span class="line">+------+--+</span><br><span class="line">| _c0  |</span><br><span class="line">+------+--+</span><br><span class="line">| 0    |</span><br><span class="line">+------+--+</span><br><span class="line"></span><br><span class="line">--修复meta信息</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; msck repair table titan_temp.t_email;</span><br><span class="line">--统计数据量</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; analyze table titan_temp.t_email compute statistics;</span><br><span class="line">Error: Error while compiling statement: FAILED: SemanticException [Error 10115]: Table is partitioned and partition specification is needed (state=42000,code=10115)</span><br><span class="line"></span><br><span class="line">--这里需要查看hive官方文档的StatsDev章节的existing tables -analyze，对两个分区全部分区内容做analyze</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; analyze table titan_temp.t_email partition(action_time,import_time) compute statistics;</span><br><span class="line">No rows affected (0.485 seconds)</span><br><span class="line"></span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; select count(1) from titan_temp.t_email;</span><br><span class="line">+------+--+</span><br><span class="line">| _c0  |</span><br><span class="line">+------+--+</span><br><span class="line">| 400  |</span><br><span class="line">+------+--+</span><br><span class="line">1 row selected (0.085 seconds)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-drop-的恢复过程"><a href="#3-drop-的恢复过程" class="headerlink" title="3. drop 的恢复过程"></a>3. drop 的恢复过程</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">--DROP TABLE</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; drop table titan_temp.t_email;</span><br><span class="line">No rows affected (0.315 seconds)</span><br><span class="line"></span><br><span class="line">-bash-4.1$ hdfs dfs -ls /apps/hive/warehouse/titan_temp.db/t_email</span><br><span class="line">ls: `/apps/hive/warehouse/titan_temp.db/t_email&#x27;: No such file or directory</span><br><span class="line">-bash-4.1$</span><br><span class="line"></span><br><span class="line">--重新建表，然后查看新表信息</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; select count(1) from titan_temp.t_email;</span><br><span class="line">+------+--+</span><br><span class="line">| _c0  |</span><br><span class="line">+------+--+</span><br><span class="line">| 0    |</span><br><span class="line">+------+--+</span><br><span class="line">1 row selected (0.45 seconds)</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; show partitions titan_temp.t_email;</span><br><span class="line">+------------+--+</span><br><span class="line">| partition  |</span><br><span class="line">+------------+--+</span><br><span class="line">+------------+--+</span><br><span class="line">No rows selected (0.208 seconds)</span><br><span class="line"></span><br><span class="line">--从Trash中恢复数据</span><br><span class="line">-bash-4.1$ hdfs dfs -cp /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email /apps/hive/warehouse/titan_temp.db/</span><br><span class="line"></span><br><span class="line">-bash-4.1$ hdfs dfs -ls /apps/hive/warehouse/titan_temp.db/t_email</span><br><span class="line">Found 2 items</span><br><span class="line">drwxr-xr-x   - hive hdfs          0 2020-07-31 14:30 /apps/hive/warehouse/titan_temp.db/t_email/action_time=202006</span><br><span class="line">drwxr-xr-x   - hive hdfs          0 2020-07-31 14:30 /apps/hive/warehouse/titan_temp.db/t_email/action_time=202007</span><br><span class="line"></span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; select count(1) from titan_temp.t_email;</span><br><span class="line">Error: Error while compiling statement: FAILED: SemanticException [Error 10001]: Line 1:21 Table not found &#x27;t_email&#x27; (state=42S02,code=10001)</span><br><span class="line"></span><br><span class="line">--查看信息</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; show partitions titan_temp.t_email;</span><br><span class="line">+------------+--+</span><br><span class="line">| partition  |</span><br><span class="line">+------------+--+</span><br><span class="line">+------------+--+</span><br><span class="line">No rows selected (0.208 seconds)</span><br><span class="line"></span><br><span class="line">--修复meta信息，恢复分区信息</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; msck repair table titan_temp.t_email;</span><br><span class="line">No rows affected (0.238 seconds)</span><br><span class="line"></span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; show partitions titan_temp.t_email;</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">|                partition                 |</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">| action_time=202006/import_time=20200629  |</span><br><span class="line">| action_time=202007/import_time=20200729  |</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">2 rows selected (0.164 seconds)</span><br><span class="line"></span><br><span class="line">重新执行count(1) 或者执行统计信息分析</span><br><span class="line">select count(1) 或者 0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; analyze table titan_temp.t_email partition(action_time,import_time) compute statistics;</span><br><span class="line">No rows affected (0.422 seconds)</span><br><span class="line"></span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; select count(1) from titan_temp.t_email;</span><br><span class="line">+------+--+</span><br><span class="line">| _c0  |</span><br><span class="line">+------+--+</span><br><span class="line">| 400  |</span><br><span class="line">+------+--+</span><br><span class="line">1 row selected (0.154 seconds)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-删除分区后的恢复过程"><a href="#4-删除分区后的恢复过程" class="headerlink" title="4. 删除分区后的恢复过程"></a>4. 删除分区后的恢复过程</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; alter table titan_temp.t_email drop if exists partition (action_time=202006);</span><br><span class="line">INFO  : Dropped the partition action_time=202006/import_time=20200629</span><br><span class="line">No rows affected (0.272 seconds)</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; select count(1) from titan_temp.t_email;</span><br><span class="line">+------+--+</span><br><span class="line">| _c0  |</span><br><span class="line">+------+--+</span><br><span class="line">| 200  |</span><br><span class="line">+------+--+</span><br><span class="line">1 row selected (0.094 seconds)</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; show partitions titan_temp.t_email;</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">|                partition                 |</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">| action_time=202007/import_time=20200729  |</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">1 row selected (0.167 seconds)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">-bash-4.1$ hdfs dfs -ls /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email</span><br><span class="line">Found 2 items</span><br><span class="line">drwx------   - hive hdfs          0 2020-07-31 14:44 /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email/action_time=202006</span><br><span class="line">drwxr-xr-x   - hive hdfs          0 2020-07-31 14:44 /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email/action_time=2020061596177856492</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">-bash-4.1$ hdfs dfs -mv /user/hive/.Trash/Current/apps/hive/warehouse/titan_temp.db/t_email/action_time=202006 /apps/hive/warehouse/titan_temp.db/t_email</span><br><span class="line">-bash-4.1$ hdfs dfs -ls /apps/hive/warehouse/titan_temp.db/t_email</span><br><span class="line">Found 2 items</span><br><span class="line">drwx------   - hive hdfs          0 2020-07-31 14:44 /apps/hive/warehouse/titan_temp.db/t_email/action_time=202006</span><br><span class="line">drwxr-xr-x   - hive hdfs          0 2020-07-31 14:30 /apps/hive/warehouse/titan_temp.db/t_email/action_time=202007</span><br><span class="line"></span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; msck repair table titan_temp.t_email;</span><br><span class="line">No rows affected (0.229 seconds)</span><br><span class="line">0: jdbc:hive2://192.168.10.27:2181,192.168.10&gt; show partitions titan_temp.t_email;</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">|                partition                 |</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">| action_time=202006/import_time=20200629  |</span><br><span class="line">| action_time=202007/import_time=20200729  |</span><br><span class="line">+------------------------------------------+--+</span><br><span class="line">2 rows selected (0.161 seconds)</span><br></pre></td></tr></table></figure>
+
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/%E7%8E%B0%E5%9C%BAHive%E7%94%A8%E8%BF%87%E7%9A%84%E8%AF%AD%E6%B3%95.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BigData/" rel="tag">BigData</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hive/" rel="tag">Hive</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/spark_shuffle%E6%9D%82%E8%AE%B0.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            spark_shuffle杂记
+          
+        </div>
+      </a>
+    
+    
+      <a href="/Hive%E5%B0%8F%E6%96%87%E4%BB%B6%E5%90%88%E5%B9%B6%E9%97%AE%E9%A2%98.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Hive小文件合并问题</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>类加载过程和双亲委派模型 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Java/JVM问题/类加载过程和双亲委派模型"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  类加载过程和双亲委派模型
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B%E5%92%8C%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE%E6%A8%A1%E5%9E%8B.html" class="article-date">
+  <time datetime="2021-11-29T09:22:09.000Z" itemprop="datePublished">2021-11-29</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a> / <a class="article-category-link" href="/categories/Java/JVM/">JVM</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">5.9k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">22 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="类加载过程和双亲委派模型"><a href="#类加载过程和双亲委派模型" class="headerlink" title="类加载过程和双亲委派模型"></a>类加载过程和双亲委派模型</h1><h1 id="简述类加载过程"><a href="#简述类加载过程" class="headerlink" title="简述类加载过程"></a>简述类加载过程</h1><blockquote>
+<p>详细流程，看一下 《深入理解 Java 虚拟机》中的虚拟机的类加载章节</p>
+</blockquote>
+<p>一般来说我们把 Java 的类加载过程分为三个主要步骤（其中链接又细分了三个子步骤）：</p>
+<ul>
+<li>加载 （Loading）<ul>
+<li>将 Java 字节码数据从不同的数据源读取到 JVM 中，并映射为 JVM 认可的数据结构（Class 对象）。如果输入的数据不满足 ClassFile 结构（Java 虚拟机规范中的4.1和4.8章节内容），则会抛出 <code>ClassFormatError</code>。<blockquote>
+<ol>
+<li>这里的数据源可能是各种各样的形态，如 jar 文件、class 文件，甚至可以是网络数据源等；</li>
+<li>loading 阶段是用户可以参与的阶段，除了 JVM 内置的三种类加载器外，我们可以自定义类加载器，实现自己的类加载过程；</li>
+</ol>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>链接 （Linking）（有三个子步骤）<blockquote>
+<p>这是核心的步骤，简单说就是把原始的类定义信息平滑地转入 JVM 运行过程中。</p>
+</blockquote>
+<ul>
+<li>验证 （Verification）<ul>
+<li>验证字节信息是符合 Java 虚拟机规范的（4.9章节内容），否则就抛出 VerifyError，这样可以防止恶意信息或者不合规的信息危害 JVM 的运行。这是 JVM 安全的重要保障。<blockquote>
+<p>verification 阶段可能触发更多 class 的加载，但不需要对它们进行验证和准备。</p>
+<p>问题：额外触发的类加载，它们的 linking 什么时候来做？排队等当前linking 做完？</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>准备 （Preparation）<ul>
+<li>创建类或接口中的<strong>静态变量</strong>，并为它们赋初始值（分配内存空间）。<blockquote>
+<p>但是这里的赋初始值，与后面显示初始化阶段(initialization)的内容有区别，侧重点在于分配变量所需要的内存空间，并不会执行更进一步的 JVM 指令。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>解析 （Resolution）<ul>
+<li>将运行时常量池中的符号引用（symbolic reference）替换为直接引用。</li>
+<li>Java 虚拟机指令 <code>anewarray, checkcast, getfield, getstatic, instanceof, invokedynamic, invokeinterface, invokespecial, invokestatic, invokvirtual, ldc, ldc_w, multianewarray, new, putfield，和putstatic</code> 在运行时常量池中是符号引用。这些指令的执行都需要解析其符号引用变为直接引用。<blockquote>
+<p>上面提到的指令，除 invokedynamic 之外，其他指令解析一次其符号引用即可。</p>
+<p>invokedynamic 指令解析的具体值是绑定到具体的 invokedynamic 调用位置的。</p>
+</blockquote>
+</li>
+<li>解析是动态地从运行时常量池中的符号引用确定具体值的过程。<blockquote>
+<p>符号引用可以理解为是标记的标签，设置一个接话，暂时没有人选，设定该人员为 A ，等开始做的时候，确定让小明去做。解析就是把 A（符号引用）替换为小明（直接引用）。符号引用就是一个字面量，没有什么实质性的意义，只是一个代表。直接引用指的是一个真实引用，在内存中可以通过这个引用查到目标。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>初始化 （Initialization）<ul>
+<li>这一步骤是真正去执行类初始化的代码逻辑，包括静态字段赋值，执行静态代码块的逻辑，父类型的初始化逻辑优先当前类的逻辑。</li>
+<li>下面5个操作会对类或接口 C 进行初始化操作：<ol>
+<li>执行任何引用C 的Java 虚拟机指令 <code>new, getstatic, putstatic或invokestatic (new, getstatic, putstatic, invokestatic)</code> 。这些指令通过字段引用或者方法引用直接或间接引用类或接口C，则会初始化C。</li>
+<li>在类库中调用某些反射方法，例如，在类class或者<code>java.lang.reflect</code>中调用。</li>
+<li>如果C 是一个类，它的一个子类初始化，则类C 也会被初始化。</li>
+<li>如果C 是一个声明非抽象、非静态方法的接口，则直接或间接实现C 的类初始化，也会初始化C。</li>
+<li>如果C 是一个类，它在Java 虚拟机启动时被指定为初始类，则会初始化C。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://ligongzhao-pics.oss-cn-hangzhou.aliyuncs.com/img04classloader_detail.png"></p>
+<h2 id="补充："><a href="#补充：" class="headerlink" title="补充："></a>补充：</h2><ol>
+<li>JVM 是动态加载，链接和初始化类和接口的；</li>
+<li>在 JVM 层面，每个 Java 类的构造函数都是实例初始化的方法。编译器将该方法命名为 <code>init</code>。</li>
+</ol>
+<h1 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h1><p>通过查看 <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.3">Java 虚拟机规范</a> 内容我们可以知道，对于 Java 虚拟机来说，只有两种类加载器：</p>
+<ul>
+<li>启动类加载器（bootstrap class loader）<ul>
+<li>这个类加载器使用 C&#x2F;C++ 语言实现，是虚拟机自身的一部分；（Hotspot 使用 C++，JRockit 和 J9 使用 C，具体可以参考《深入理解Java虚拟机》虚拟机类加载机制，章节）<ul>
+<li><strong>虚拟机自身一部分</strong>，这样理解，虚拟机自身是由 C&#x2F;C++ 实现的，启动类加载器是在虚拟机内部实现的；其他的核心类库都是属于虚拟机外部</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>其他类加载器（虚拟机规范中称为：user-defined class loader）<ul>
+<li>这些类加载器都是有 Java 语言实现，独立存在于虚拟机外部，并且全都继承自抽象类 <code>java.lang.ClassLoader</code>。<ul>
+<li>包括扩展类加载器和应用类加载器都在 rt.jar 核心库中，由 Java 语言实现，虚拟机启动时加载创建，都属于 <code>user-defind class loader</code>。</li>
+<li>JDK提供的内置类加载器的关系查看下面内容。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="类与类加载器"><a href="#类与类加载器" class="headerlink" title="类与类加载器"></a>类与类加载器</h2><p> <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.3">Java 虚拟机规范</a> </p>
+<blockquote>
+<p>We will sometimes represent a class or interface using the notation <code>&lt;N, Ld&gt;</code>, where <code>N</code> denotes the name of the class or interface and <code>Ld</code> denotes the defining loader of the class or interface.</p>
+<p>We will also represent a class or interface using the notation <code>NLi</code>, where <code>N</code> denotes the name of the class or interface and <code>Li</code> denotes an initiating loader of the class or interface.</p>
+</blockquote>
+<p>从上面内容我们可以知道，</p>
+<p>对于任何一个类，都必须由加载它的类加载器和这个类本身一起共同确立其在 Java 虚拟机中的<strong>唯一性</strong>，每个类加载器，都拥有一个独立的类名称空间。</p>
+<p>更通俗一些：比较两个类是否<strong>相等</strong>，只有在这两个类是<strong>由同一个类加载器加载的前提下</strong>才有意义。否则，即使这两个类来源于同一个 Class 文件，被同一个 Java 虚拟机加载，只要加载他们的类加载器不同，那这两个类就必定不相等。</p>
+<ul>
+<li>这里所指的“相等”，包括代表类的 Class 对象的 <code>equals()</code>方法、<code>isAssignableFrom()</code>方法、<code>isInstance()</code>方法的返回结果，也包括了使用 <code>isstanceof</code> 关键字做对象所属关系判定等各种情况。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spoonli.mall.jvm;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.InputStream;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ClassLoaderTest</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">ClassLoader</span> <span class="variable">myLoader</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassLoader</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> Class&lt;?&gt; loadClass(String name) <span class="keyword">throws</span> ClassNotFoundException &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          <span class="type">String</span> <span class="variable">fileName</span> <span class="operator">=</span> name.substring(name.lastIndexOf(<span class="string">&quot;.&quot;</span>) + <span class="number">1</span>) + <span class="string">&quot;.class&quot;</span>;</span><br><span class="line">          <span class="type">InputStream</span> <span class="variable">is</span> <span class="operator">=</span> getClass().getResourceAsStream(fileName);</span><br><span class="line">          <span class="keyword">if</span> (is == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">super</span>.loadClass(name);</span><br><span class="line">          &#125;</span><br><span class="line">          <span class="type">byte</span>[] b = <span class="keyword">new</span> <span class="title class_">byte</span>[is.available()];</span><br><span class="line">          is.read(b);</span><br><span class="line">          <span class="keyword">return</span> defineClass(name, b, <span class="number">0</span>, b.length);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ClassNotFoundException</span>(name);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="comment">// 用自定义的类加载器加载该类并实例化</span></span><br><span class="line">    <span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> myLoader.loadClass(<span class="string">&quot;com.spoonli.mall.jvm.ClassLoaderTest&quot;</span>).newInstance();</span><br><span class="line">    System.out.println(obj.getClass());</span><br><span class="line">    <span class="comment">// 判断对象是否为 ClassLoaderTest 类型</span></span><br><span class="line">    System.out.println(obj <span class="keyword">instanceof</span> ClassLoaderTest);</span><br><span class="line">    <span class="comment">// 查看通过自定义类加载器加载并实例化的对象的类加载器与 jvm内加载的ClassLoaderTest的类加载器；</span></span><br><span class="line">    System.out.println(obj.getClass().getClassLoader());</span><br><span class="line">    System.out.println(ClassLoaderTest.class.getClassLoader());</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">------</span><br><span class="line">运行结果：</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">com</span>.spoonli.mall.jvm.ClassLoaderTest</span><br><span class="line"><span class="literal">false</span></span><br><span class="line">com.spoonli.mall.jvm.ClassLoaderTest$<span class="number">1</span>@7e32c033</span><br><span class="line">sun.misc.Launcher$AppClassLoader@18b4aac2</span><br></pre></td></tr></table></figure>
+
+<p>上面代码构造了一个简单的类加载器，从运行结果看，尽管来自同一个 Class 文件，但是自定义类加载器加载的创建的对象，在做所属类型判断时返回了 false 。因为此时 Java 虚拟机中同时存在两个 ClassLoaderTest 类，一个由 jvm 虚拟机的应用程序类加载器加载的，一个是我们自定义的类加载器加载的。在虚拟机中是两个相互独立的类，所以所对象所属类型检查时的结果为 false 。</p>
+<blockquote>
+<p>这段来自 《深入Java虚拟机》第3版P281。</p>
+</blockquote>
+<h2 id="Java-8-及其之前，JDK-提供的三种内置类加载器"><a href="#Java-8-及其之前，JDK-提供的三种内置类加载器" class="headerlink" title="Java 8 及其之前，JDK 提供的三种内置类加载器"></a>Java 8 及其之前，JDK 提供的三种内置类加载器</h2><ul>
+<li><p>启动类加载器（Bootstrap Class Loader）</p>
+<ul>
+<li>它属于虚拟机自身的一部分，用 C++ 实现的，主要负责加载 <code>jre/lib</code> 目录中的 jar 文件，如 rt.jar，或被 <code>-Xbootclasspath</code> 参数指定的路径中的并且文件名是被虚拟机识别的文件</li>
+</ul>
+</li>
+<li><p>扩展类加载器（Extension or Ext Class Loader）</p>
+<ul>
+<li>它是 Java 实现的，独立于虚拟机，负责加载<code>jre/lib/ext</code>目录下的 jar 包，这就是所谓的 extension 机制，该目录也可以通过设置 <code>java.ext.dir</code> 系统参数来覆盖  <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -Djava.ext.dirs=xxx your_app</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>应用类加载器（Application or App Class Loader）</p>
+<ul>
+<li>它是 Java 实现的，独立于虚拟机。负责加载用户指定的 <code>classpath</code>的内容。<blockquote>
+<p>有个容易混淆的概念，系统(system)类加载器，通常来说，其默认就是 JDK 内建的应用类加载器，但是它同样可以通过系统参数修改，例如</p>
+</blockquote>
+</li>
+</ul>
+  <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -Djava.system.class.loader=com.yourapp.YourClassLoader your_app</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意，如果我们指定了system参数，JDK 内建的应用类加载器就会成为我们自定义加载器的父亲，这种方式通常在类似需要改变双亲委派模型的场景。</p>
+</blockquote>
+</li>
+</ul>
+<p>所以，一般情况（没有自定义类加载器时），类加载会从应用类加载器委托给扩展类加载器，再委托给启动类加载器，启动类加载器找不到然后扩展类加载器找，扩展类加载器找不到再由应用类加载器找。</p>
+<p><img src="https://ligongzhao-pics.oss-cn-hangzhou.aliyuncs.com/img02parents_delegation_model.png" alt="双亲委派模型"></p>
+<h2 id="如何看出三种内置加载器的父子关系？"><a href="#如何看出三种内置加载器的父子关系？" class="headerlink" title="如何看出三种内置加载器的父子关系？"></a>如何看出三种内置加载器的父子关系？</h2><ol>
+<li><code>AppClassLoader</code> 与<code>ExtClassLoader</code></li>
+</ol>
+<p><code>AppClassLoader</code>,<code>ExtClassLoader</code>是由<code>sun.misc.Launcher</code>初始化的，查看<code>Launcher</code> 和 <code>ClassLoader</code> 源码的构造方法可以知道<code>AppClassLoader</code>与<code>ExtClassLoader</code>的父子关系由<code>Launcher</code>保证。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 下面源码摘录自 sun.misc.Launcher.class(jdk1.8.0_291)</span></span><br><span class="line"><span class="comment">// 代码为IDE反编译获得，所以变量名可读性较弱，但不影响理解</span></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">Launcher</span><span class="params">()</span> &#123;</span><br><span class="line">  Launcher.ExtClassLoader var1;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// var1 是 ExtClassLoader 变量，这里获取 ExtClassLoader</span></span><br><span class="line">    var1 = Launcher.ExtClassLoader.getExtClassLoader();</span><br><span class="line">  &#125; <span class="keyword">catch</span> (IOException var10) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InternalError</span>(<span class="string">&quot;Could not create extension class loader&quot;</span>, var10);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// ExtClassLoader 即 var1 作为入参，传入了 getAppClassLoader(var1)</span></span><br><span class="line">    <span class="built_in">this</span>.loader = Launcher.AppClassLoader.getAppClassLoader(var1);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (IOException var9) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InternalError</span>(<span class="string">&quot;Could not create application class loader&quot;</span>, var9);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Thread.currentThread().setContextClassLoader(<span class="built_in">this</span>.loader);</span><br><span class="line">  <span class="comment">//省略其他代码</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>沿着 <code>getAppClassLoader()</code> 方法，根据对应参数和涉及方法，最后可以追踪到 <code>ClassLoader</code> 的构造方法中，可以看到 <code>getAppClassLoader(var1)</code> 中传入的参入 <code>var1</code> 最终被保存在 <code>ClassLoader</code> 的 <code>parent</code> 成员变量中。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="title function_">ClassLoader</span><span class="params">(Void unused, ClassLoader parent)</span> &#123;</span><br><span class="line">    <span class="comment">// 在 ClassLoader 中 parent 就是当前类加载器的父加载器，在 loadClass() 方法中，即父委派模型的具体实现代码中，可以看到 parent 的作用。</span></span><br><span class="line">    <span class="built_in">this</span>.parent = parent;</span><br><span class="line">    <span class="comment">// 省略部分代码</span></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>综上所述，<code>AppClassLoader</code> 与 <code>ExtClassLoader</code> 的父子关系由 <code>Launcher</code> 保证。</p>
+<ol start="2">
+<li><code>BootStrapClassLoader</code> 与 <code>ExtClassLoader</code> 父子关系如何确定的？</li>
+</ol>
+<p><code>ClassLoader</code> 中 <code>loadClass()</code> 的源码逻辑提供了答案。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 下面源码摘录自 java.lang.ClassLoader.java (jdk1.8.0_291)</span></span><br><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; loadClass(String name, <span class="type">boolean</span> resolve)</span><br><span class="line">        <span class="keyword">throws</span> ClassNotFoundException</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (getClassLoadingLock(name)) &#123;</span><br><span class="line">            <span class="comment">// 首先，检查请求的类是否已经被加载过滤</span></span><br><span class="line">            Class&lt;?&gt; c = findLoadedClass(name);</span><br><span class="line">            <span class="keyword">if</span> (c == <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (parent != <span class="literal">null</span>) &#123;</span><br><span class="line">                        c = parent.loadClass(name, <span class="literal">false</span>);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        c = findBootstrapClassOrNull(name);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">                    <span class="comment">// 如果父加载器抛出 ClassNotFoundException 异常，</span></span><br><span class="line">                    <span class="comment">// 说明父加载器无法完成加载请求。</span></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (c == <span class="literal">null</span>) &#123;</span><br><span class="line">                    <span class="comment">// 在父加载器无法加载时，再调用本身的 findClass 方法进行加载。</span></span><br><span class="line">                    c = findClass(name);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (resolve) &#123;</span><br><span class="line">                resolveClass(c);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> c;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们注意到，在加载类的过程中，找不到 <code>parent</code> 的时候，会首先调用 <code>findBootstrapClassOrNull(name)</code> 去尝试返回由 <code>BootStrapClassLoader</code> 加载的 Java 核心类。<strong>这种机制便保证了 <code>BootStrapClassLoader</code> 是所有<code>ClassLoader</code> 的父加载器。</strong></p>
+<blockquote>
+<p>bootstrap class loader 作为顶级类加载器，没有 parent ，所以 parent &#x3D;&#x3D; null，就可以表示使用的是 bootstrap class loader。</p>
+</blockquote>
+<h2 id="Java-9开始，Java-类加载器的变化"><a href="#Java-9开始，Java-类加载器的变化" class="headerlink" title="Java 9开始，Java 类加载器的变化"></a>Java 9开始，Java 类加载器的变化</h2><p>在 JDK 9 中，由于 Jigsaw 项目引入了 Java平台模块化系统（JPMS），Java SE 的源代码被划分为一系列模块。</p>
+<p>类加载器，类文件容器等都发生了非常大的变化。</p>
+<ul>
+<li><p>前面提到的 <code>-Xbootclasspath</code>即修改启动类加载器加载目录的参数不可用了。API 已经被划分到具体的模块中了，所以编程了对相应模块进行修改的方式了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">假设修改的模块为 java.base，那么先编译好相关模块，并替换 java.base 模块，然后通过下面参数替换。</span></span><br><span class="line">java --patch-module java.base=your_path yourApp</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>扩展类加载器被重命名为<strong>平台类加载器（Platform Class Loader）</strong>，而且 extension 机制被移除。也就意味着，如果我们指定 <code>java.ext.dirs</code>系统变量，或者 <code>lib/ext</code> 目录存在，则 JVM 将直接返回错误！</p>
+<blockquote>
+<p>建议解决办法就是将其放入 classpath 中。</p>
+</blockquote>
+</li>
+<li><p>部分不需要 AllPermission 的 Java 基础模块，被降级到平台类加载器中，相应的权限也被更精细粒度地限制起来。</p>
+</li>
+<li><p>rt.jar 和 tools.jar 同样被移除了，JDK 的核心类库以及相关资源，被存储在 Jimage 文件中，并通过新的 JRT 文件系统访问，而不是原有的 JAR 文件系统。<strong>但是对大部分软件兼容性影响不大。</strong></p>
+</li>
+<li><p>增加了 <code>Layer</code> 的抽象，JVM 启动默认创建 <code>BootLayer</code>，开发者也可以自定义和实例化 <code>Layer</code>，可以更加方便的实现类似容器一般的抽象逻辑。</p>
+</li>
+<li><p>内建类加载器器都在 <code>BootLayer</code>中，其他 <code>Layer</code>内部有自定义的类加载器，不同版本模块，可以同时工作在不同的 <code>Layer</code>。</p>
+</li>
+</ul>
+<h2 id="通常类加载机制的基本特征"><a href="#通常类加载机制的基本特征" class="headerlink" title="通常类加载机制的基本特征"></a>通常类加载机制的基本特征</h2><ol>
+<li><p>双亲委派模型。但不是一种强制性约束，它是一种 JAVA 设计者推荐使用类加载器的方式。所以<strong>不是所有类加载都遵守这个模型</strong>，比如 JDK 内部的 <strong>SPI 机制</strong>。用户可以在标准 API 框架上，提供自己的实现。这种机制不会用双亲委派模型去加载，而是利用所谓的<strong>上下文加载器</strong>。</p>
+<blockquote>
+<p>关于 SPI 机制，和上下文加载器，参考<a href="TODO">TODO</a></p>
+</blockquote>
+</li>
+<li><p>类可见性，一个类加载器只能看到由他自己家或是其父辈类加载器加载的类，它自己是看不到更低层级类加载器所加载的类的。</p>
+<ul>
+<li>例如，如果父加载器（ExtClassLoader）需要加载的类<code>$JAVA_HOME/jre/ext/xxx.jar#Class A</code> 引用了存在于更低层级类加载器 <code>AppClassLoader</code>负责范围（<code>$class_path</code>）中才存在的类，那么在加载过程中就报错。</li>
+<li>当这种需求出现的时候，可以使用 JDK 提供的另一种类加载器 <code>ContentClassLoader</code> 予以解决。</li>
+</ul>
+</li>
+<li><p>单一性，由于父加载器的类对自家在其是可见的，所以父加载器加载过的类，就不会在子加载器中重复加载。但是注意，类加载器“邻居”间，同一个类仍然可以被加载多次，因为互相并不可见。</p>
+</li>
+<li><p>全盘负责原则，当一个 classloader 加载一个 Class 的时候，这个 Class 所依赖的和引用的其他 Class <code>通常</code> 也由这个 classloader 负责加载；</p>
+</li>
+<li><p>cache 机制，如果 cache 中保存了这个 class 就直接返回它，如果没有才从文件中读取和转换成 Class，并存入 cache。（这就是为什么修改了 class 但是必须重启 JVM 才能生效，并且类只加载一次的原因。）</p>
+</li>
+</ol>
+<h2 id="自定义类加载器"><a href="#自定义类加载器" class="headerlink" title="自定义类加载器"></a>自定义类加载器</h2><p>常见的场景：</p>
+<ul>
+<li>实现类似进程内隔离，类加载器实际上用作不同的命名空间，以提供类似容器、模块化的效果。这方便的集大成者是 <code>Java EE</code>,<code>OSGI</code>,<code>JPMS</code>等框架<ul>
+<li>例如，两个模块依赖某个类库的不同版本，如果分别被不同的容器加载，就可以互补干扰。</li>
+</ul>
+</li>
+<li>应用需要从不同的数据源获取类定义信息。<ul>
+<li>例如，网络数据源；</li>
+</ul>
+</li>
+<li>需要自己操纵字节码，动态修改或生成类。</li>
+</ul>
+<p>简单理解自定义类加载过程：</p>
+<ol>
+<li>指定类或接口的名称，找到其二进制描述并加载，（这里往往就是自定义类加载器会“定制”的部分），例如在特定数据源根据名字获取字节码，或者修改或生成字节码。</li>
+<li>创建 Class 对象，并完成类加载过程。二进制信息到 Class 对象的转换，通常就是依赖 <code>defineClass</code>，我们无需自己实现，它是 <code>final</code> 方法。有了 Class 对象，后序完成加载过程就顺利成章了。</li>
+</ol>
+<p>具体实现可以参考<a target="_blank" rel="noopener" href="https://www.baeldung.com/java-classloaders">用例</a></p>
+<p>JDK 目前对 “java.”开头的包增加了权限保护，在自定义类加载器的时候，可以将这些包仍然交给 jdk 加载。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (name.startWith(<span class="string">&quot;java.&quot;</span>)) &#123;</span><br><span class="line">    <span class="keyword">return</span>  ClassLoader.getSystemClassLoader().loadClass(name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即使再重写 <code>loadClass(String name)</code>方法时，也只需要重写我们需要的部分，可以将父类中 <code>loadClass()</code>方法的相关内容抄过来。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">例如：</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> Class&lt;?&gt; loadClass(String name) <span class="keyword">throws</span> ClassNotFoundException &#123;</span><br><span class="line">	Class&lt;?&gt; c = findLoadedClass(name);</span><br><span class="line">    <span class="keyword">if</span> (c == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (name.startWith(<span class="string">&quot;java.&quot;</span>)) &#123;</span><br><span class="line">		    <span class="keyword">return</span>  ClassLoader.getSystemClassLoader().loadClass(name);</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">// 执行我们重写的 findClass(name) 方法；</span></span><br><span class="line">        <span class="keyword">return</span> findClass(name);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="什么是双亲委派模型？"><a href="#什么是双亲委派模型？" class="headerlink" title="什么是双亲委派模型？"></a>什么是双亲委派模型？</h1><p>简单说，就是当类加载器（Class Loader）试图加载某个类的时候，首先将这个类加载请求委派给父加载器去完成，如果父加载器还有父类则接着向上委托，一直递归到顶层。当父加载器找不到相应的类，无法完成这个请求时，子类才会尝试去加载。</p>
+<p>使用委派模型的目的，是避免重复加载 Java 类。</p>
+<blockquote>
+<p>注：这里的“双亲”是翻译的有些问题的，称为 <strong>“父委派模型”</strong> 可能更合适，因为每一层只有一个父加载器，并不能称为双亲（父母两个），不过既然流传已久，知道这里的“双亲委派模型”中的双亲的真实含义即可。可以理解为一种长久的翻译错误。</p>
+</blockquote>
+<p>委派模型的 Oracle 官方出处： <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/tutorial/ext/basics/load.html">The Java Class Loading Mechanism</a></p>
+<blockquote>
+<p>The Java platform uses <code>a delegation model</code> for loading classes. The basic idea is that <code>every class loader has a &quot;parent&quot; class loader</code>. When  loading a class, a class loader <code>first &quot;delegates&quot; the search for the  class to its parent class loader</code> before attempting to find the class  itself.</p>
+</blockquote>
+<p>翻译一下就是：</p>
+<blockquote>
+<p>Java平台使用<code>委托模型</code>来加载类。基本思想是，每个类加载器都有一个“父”类加载器。当加载类时，类加载器首先将查找类的任务“委托”给它的父类加载器，然后再尝试自己去加载这个类。</p>
+</blockquote>
+<p>文档中也介绍了具体实现，查看源码 <code>java.lang.ClassLoader</code>的<code>loadClass</code>方法。</p>
+<p>但是父类委派模型的基本特性没有找到出处：</p>
+<ul>
+<li><p>单一性</p>
+</li>
+<li><p>一般性</p>
+</li>
+<li><p>可见性</p>
+</li>
+<li><p>全盘负责</p>
+</li>
+</ul>
+<p>上面这些网上找来的委派模型和类加载器的原则，暂时没有找到官方出处。</p>
+<h2 id="如何定义符合父委派模型的类加载器？"><a href="#如何定义符合父委派模型的类加载器？" class="headerlink" title="如何定义符合父委派模型的类加载器？"></a>如何定义符合父委派模型的类加载器？</h2><ol>
+<li>首先，自定义一个类加载器继承<code>ClassLoader</code>;</li>
+<li>重写 <code>ClassLoader</code> 中的<code>findClass(String name)</code> 方法，<ul>
+<li>在方法中自行实现读取 class 文件为 byte 数组；</li>
+<li>调用 <code>defineClass</code> 方法将 byte 数组解析加载为类；</li>
+</ul>
+</li>
+</ol>
+<p>经过之前分析 <code>loadClass()</code>方法，如果父辈加载失败，会自动调用自己的 <code>findClass()</code>方法来完成加载。</p>
+<h2 id="如何自定义一个违背父委派模型的类加载器？"><a href="#如何自定义一个违背父委派模型的类加载器？" class="headerlink" title="如何自定义一个违背父委派模型的类加载器？"></a>如何自定义一个违背父委派模型的类加载器？</h2><ol>
+<li>首先，自定义一个类加载器并继承<code>ClassLoader</code>;</li>
+<li>重写 <code>ClassLoader</code>中的<code>loadClass(String name)</code>方法；</li>
+</ol>
+<p>总结：自定义类加载器时，重写 <code>findClass(String name)</code>方法会遵循父委派模型，重写<code>loadClass(String name)</code> 方法会破坏&#x2F;违背父委派模型。</p>
+<h1 id="有哪些没有按照双亲委派模型实现的例子？"><a href="#有哪些没有按照双亲委派模型实现的例子？" class="headerlink" title="有哪些没有按照双亲委派模型实现的例子？"></a>有哪些没有按照双亲委派模型实现的例子？</h1><p>即，打破&#x2F;违反了双亲委派模型</p>
+<p>上面提到的 [通常类加载机制的三个基本特征](# 通常类加载机制的三个基本特征) 中有写，SPI 机制没有遵守双亲委派模型。例如 Java 中 JNDI，JDBC等都是利用这种机制。</p>
+<h2 id="为什么说-JDBC-破坏了-x2F-没有遵守双亲委派模型？"><a href="#为什么说-JDBC-破坏了-x2F-没有遵守双亲委派模型？" class="headerlink" title="为什么说 JDBC 破坏了&#x2F;没有遵守双亲委派模型？"></a>为什么说 JDBC 破坏了&#x2F;没有遵守双亲委派模型？</h2><p>重点在 <code>DriverManager</code>的静态代码块：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Load the initial JDBC drivers by checking the System property</span></span><br><span class="line"><span class="comment"> * jdbc.properties and then use the &#123;<span class="doctag">@code</span> ServiceLoader&#125; mechanism</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">    loadInitialDrivers();</span><br><span class="line">    println(<span class="string">&quot;JDBC DriverManager initialized&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在由 Bootstrap Class Loader 加载的类中，加载了由 App Class Loader 加载的类，破坏了类加载器机制中的可见性，所以没有遵守双亲委派模型？直接使用了上下文加载器就避开破坏可见性的问题了。？是这样吗？</p>
+<p><code>DriverManager</code>的 <code>classloader</code> 是bootstrap，而得到的 <code>connection</code> 的<code>classloader</code>是application。如果在A类引用B类时发现B类还没有加载，那么会调用A类的类加载器进行加载，并且由于可见性的原因，bootstrap加载的类是看不到ext或者application加载的类的，对应这里的<code>DriverManager</code>和<code>connection</code>，所以说SPI破坏了双亲委任模型。</p>
+<p>可见性？在哪里规定的？</p>
+<blockquote>
+<p>这是创建 SPI 的原因吗？</p>
+</blockquote>
+<p>没有SPI时，你可以现在classpath里加一个mysql-connector-java.jar，然后这样写</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> <span class="variable">clz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;com.mysql.jdbc.Driver&quot;</span>);</span><br><span class="line"><span class="type">Driver</span> <span class="variable">d</span> <span class="operator">=</span> (Driver) clz.newInstance();</span><br></pre></td></tr></table></figure>
+
+<p>这就没问题了，这里用了Application Classloader加载了mysql-connector-java.jar的com.mysql.jdbc.Driver。问题是你这里进行了硬编码（hard code），即一定要加载”com.mysql.jdbc.Driver”，不是很优雅，不能实现“用接口编程，自动实例化真的实现“的这种编码形式。</p>
+<p>问题：</p>
+<ol>
+<li>为什么 Bootstrap Class Loader 加载器只负责加载 jre&#x2F;lib 目录下的文件？是在哪里硬编码（hardcode ）了吗？</li>
+<li>从哪里得出三个内置加载器的关系？</li>
+<li>Class.forName(<className>) vs  classloader.loadClass(<className>)？</li>
+</ol>
+<h1 id="Tomcat-如何违背父委派模型，以及为什么违背"><a href="#Tomcat-如何违背父委派模型，以及为什么违背" class="headerlink" title="Tomcat 如何违背父委派模型，以及为什么违背"></a>Tomcat 如何违背父委派模型，以及为什么违背</h1><p>首先，tomcat 官方文档中描述了其自定义的类加载器层级关系：</p>
+<blockquote>
+<p>When Tomcat is started, it creates a set of class loaders that are organized into the following parent-child relationships, where the parent class loader is above the child class loader:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">    Bootstrap ($JAVA_HOME/jre/lib/ ; $JAVA_HOME/jre/lib/ext)</span><br><span class="line">        |</span><br><span class="line">     System  ($CATALINA_HOME/bin/bootstrap.jar ; $CATALINA_BASE/bin/tomcat-juli.jar / $CATALINA_HOME/bin/tomcat-juli.jar ; $CATALINA_HOME/bin/commons-daemon.jar)</span><br><span class="line">        |</span><br><span class="line">     Common ($CATALINA_BASE/lib ; $CATALINA_HOME/lib)</span><br><span class="line">     /     \</span><br><span class="line">Webapp1   Webapp2 ... (/WEB-INF/classes ; /WEB-INF/lib )</span><br></pre></td></tr></table></figure>
+
+
+</blockquote>
+<h2 id="如何违背父委派模型"><a href="#如何违背父委派模型" class="headerlink" title="如何违背父委派模型"></a>如何违背父委派模型</h2><p>每一个 webapp classloader 在加载类时，会优先在 <code>WEB-INF/classes</code> 和 <code>WEB-INF/lib</code> 中搜索并尝试加载，而不是优先委托给父加载器尝试加载。</p>
+<p>这样做的好处是它允许不同的 web 项目去重载 Tomcat 提供的 lib 包（如 <code>$CATALINA_HOME/lib/</code>中的 jar 包）。</p>
+<p>这极大程度上保证了不同 web 项目的独立性和自由度。</p>
+<h2 id="为什么违背"><a href="#为什么违背" class="headerlink" title="为什么违背"></a>为什么违背</h2><p>Tomcat 作为一个服务器容器，需要有同时运行多个 war 包的能力，而每个 war 包中都拥有自己的依赖 lib 库（<code>WEB-INF/lib</code>）以及各自的项目代码（<code>WEB-INF/classes</code>），为了保证每个 web 项目可以共同运行，互不干扰，Tomcat 为每个项目都创建一个单独的 webapp classloader，它会负责加载对应的 web 项目下 <code>WEB-INF/classes</code> 的 class 文件和资源以及 <code>WEB-INF/lib</code>下的 jar 包中所包含的 class 文件和资源文件，使得这些被加载的内容仅对该 web 项目可见，对其他 web 项目不可见。</p>
+<blockquote>
+<p>类加载器的可见性，自带隔离特性。</p>
+</blockquote>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B%E5%92%8C%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE%E6%A8%A1%E5%9E%8B.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/" rel="tag">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE/" rel="tag">双亲委派</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%B1%BB%E5%8A%A0%E8%BD%BD/" rel="tag">类加载</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/Java%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Java类加载机制
+          
+        </div>
+      </a>
+    
+    
+      <a href="/==%20and%20equals()%20and%20hashCode().html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">== and equals() and hashCode()</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

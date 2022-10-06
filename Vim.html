@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Vim |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/Rust-xmind-master/Vim"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Vim
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/Vim.html" class="article-date">
+  <time datetime="2020-08-30T13:47:52.000Z" itemprop="datePublished">2020-08-30</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a> / <a class="article-category-link" href="/categories/Rust/Rust-xmind-master/">Rust-xmind-master</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.1k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">7 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="什么是Vim"><a href="#什么是Vim" class="headerlink" title="什么是Vim"></a>什么是Vim</h1><p>Vim是从Vi发展而来的一款编辑器，功能较为强大，在程序员中，尤其是底层开发程序员中使用较多。<br>一般来说，Ubuntu等linux操作系统在安装时自带Vi编辑器，但是使用Vim则需要进行安装，安装方式如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt install vim</span><br></pre></td></tr></table></figure>
+
+<h1 id="Vim三种模式介绍"><a href="#Vim三种模式介绍" class="headerlink" title="Vim三种模式介绍"></a>Vim三种模式介绍</h1><p>Vim有三种模式，分别是命令模式（Command mode）、插入模式（Insert mode）、底线命令模式（Last line mode）。</p>
+<h2 id="命令模式"><a href="#命令模式" class="headerlink" title="命令模式"></a>命令模式</h2><p>刚打开Vim时，Vim所处的模式就是命令模式，此时敲击键盘的字母会被视为命令而非输入字符。<br>命令模式下常用命令如下：</p>
+<ul>
+<li>i，切换到插入模式；</li>
+<li>:，切换到底线命令模式；</li>
+<li>x，删除当前光标所处的字符；</li>
+<li>r，替换当前光标所处的字符；</li>
+</ul>
+<h2 id="插入模式"><a href="#插入模式" class="headerlink" title="插入模式"></a>插入模式</h2><p>在命令模式下，按i就进入到输入模式。在输入模式下，可以就行代码的编辑。<br>在插入模式下，要切换到命令模式，在需要按<br>ESC键。</p>
+<h2 id="底线命令模式"><a href="#底线命令模式" class="headerlink" title="底线命令模式"></a>底线命令模式</h2><p>在命令模式下，按下:（英文冒号）则切换到底线命令模式。<br>在底线命令模式下，最常用的命令就是保存和退出命令：</p>
+<ul>
+<li>:q，退出程序；</li>
+<li>:w，保存文件。</li>
+</ul>
+<h1 id="更详细的用法"><a href="#更详细的用法" class="headerlink" title="更详细的用法"></a>更详细的用法</h1><h2 id="命令模式下命令"><a href="#命令模式下命令" class="headerlink" title="命令模式下命令"></a>命令模式下命令</h2><ul>
+<li>移动光标的方法</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">h 或 向左箭头键(←)	光标向左移动一个字符</span><br><span class="line"></span><br><span class="line">j 或 向下箭头键(↓)	光标向下移动一个字符</span><br><span class="line"></span><br><span class="line">k 或 向上箭头键(↑)	光标向上移动一个字符</span><br><span class="line"></span><br><span class="line">l 或 向右箭头键(→)	光标向右移动一个字符</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ps：如果想要进行多次移动的话，例如向下移动 3 行，可以使用 “3j” 或 “3↓” 的组合按键， 亦即加上想要进行的次数即可。</span><br><span class="line"></span><br><span class="line">[Ctrl] + [f]	屏幕『向下』移动一页，相当于 [Page Down]按键</span><br><span class="line"></span><br><span class="line">[Ctrl] + [b]	屏幕『向上』移动一页，相当于 [Page Up] 按键</span><br><span class="line"></span><br><span class="line">[Ctrl] + [d]	屏幕『向下』移动半页</span><br><span class="line"></span><br><span class="line">[Ctrl] + [u]	屏幕『向上』移动半页</span><br><span class="line"></span><br><span class="line">+	光标移动到非空格符的下一行</span><br><span class="line"></span><br><span class="line">–	光标移动到非空格符的上一行</span><br><span class="line"></span><br><span class="line">n&lt;space&gt;	按下数字后再按空格键，光标会向右移动这一行的 n 个字符。例如 20&lt;space&gt; 则光标会向后面移动 20 个字符距离。</span><br><span class="line"></span><br><span class="line">0 或功能键[Home]	这是数字『 0 』：移动到这一行的最前面字符处</span><br><span class="line"></span><br><span class="line">$ 或功能键[End]	移动到这一行的最后面字符处</span><br><span class="line"></span><br><span class="line">H	光标移动到这个屏幕的最上方那一行的第一个字符</span><br><span class="line"></span><br><span class="line">M	光标移动到这个屏幕的中央那一行的第一个字符</span><br><span class="line"></span><br><span class="line">L	光标移动到这个屏幕的最下方那一行的第一个字符</span><br><span class="line"></span><br><span class="line">G	移动到这个文件的最后一行</span><br><span class="line"></span><br><span class="line">nG	n 为数字。移动到这个文件的第 n 行，可配合set nu</span><br><span class="line"></span><br><span class="line">gg	移动到这个文件的第一行，相当于 1G</span><br><span class="line"></span><br><span class="line">n&lt;Enter&gt;	n 为数字。光标向下移动 n 行</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>搜索替换</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/word	向光标之下寻找一个名称为 word 的字符串</span><br><span class="line"></span><br><span class="line">?word	向光标之上寻找一个字符串名称为 word 的字符串</span><br><span class="line"></span><br><span class="line">n	这个 n 是英文按键。代表重复前一个搜寻的动作。</span><br><span class="line"></span><br><span class="line">N	这个 N 是英文按键。与 n 刚好相反，为『反向』进行前一个搜寻动作。 使用 /word 配合 n 及 N 是非常有帮助的,可以让你重复的找到一些你搜寻的关键词。</span><br><span class="line"></span><br><span class="line">:n1,n2s/word1/word2/g	n1 与 n2 为数字。在第 n1 与 n2 行之间寻找 word1 这个字符串，并将该字符串取代为 word2， 举例：</span><br><span class="line">『:100,200s/vbird/VBIRD/g』。</span><br><span class="line"></span><br><span class="line">:1,$s/word1/word2/g	从第一行到最后一行寻找 word1 字符串，并将该字符串取代为 word2 。</span><br><span class="line"></span><br><span class="line">:1,$s/word1/word2/gc	从第一行到最后一行寻找 word1 字符串，并将该字符串取代为 word2并且在取代前显示提示字符给用户确认 (confirm) 是否需要取代。</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>删除、复制与贴上</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">x, X	在一行字当中，x 为向后删除一个字符 (相当于 [del] 按键)， X 为向前删除一个字符(相当于 [backspace] 亦即是退格键) </span><br><span class="line"></span><br><span class="line">nx	n 为数字，连续向后删除 n 个字符。举例来说，要连续删除 10 个字符， 『10x』</span><br><span class="line"></span><br><span class="line">dd	删除游标所在的那一整行</span><br><span class="line"></span><br><span class="line">ndd	n 为数字。删除光标所在的向下 n 行，例如 20dd 则是删除 20 行</span><br><span class="line"></span><br><span class="line">d1G	删除光标所在到第一行的所有数据</span><br><span class="line"></span><br><span class="line">dG	删除光标所在到最后一行的所有数据</span><br><span class="line"></span><br><span class="line">d$	删除游标所在处，到该行的最后一个字符</span><br><span class="line"></span><br><span class="line">d0	那个是数字的 0 ，删除游标所在处，到该行的最前面一个字符</span><br><span class="line"></span><br><span class="line">yy	复制游标所在的那一行</span><br><span class="line"></span><br><span class="line">nyy	n 为数字。复制光标所在的向下 n 行，例如 20yy 则是复制 20 行</span><br><span class="line"></span><br><span class="line">y1G	复制游标所在行到第一行的所有数据</span><br><span class="line"></span><br><span class="line">yG	复制游标所在行到最后一行的所有数据</span><br><span class="line"></span><br><span class="line">y0	复制光标所在的那个字符到该行行首的所有数据</span><br><span class="line"></span><br><span class="line">y$	复制光标所在的那个字符到该行行尾的所有数据</span><br><span class="line"></span><br><span class="line">p, P	p 为将已复制的数据在光标下一行贴上，P 则为贴在游标上一行.</span><br><span class="line">例如，目前光标在第 20 行，且已经复制了 10 行数据。则按下 p 后， 那 10 行数据会贴在原本的 20 行之后，亦即由 21 行开始贴。但如果是按下 P 呢？ 那么原本的第 20 行会被推到变成 30 行。 </span><br><span class="line"></span><br><span class="line">J	将光标所在行与下一行的数据结合成同一行</span><br><span class="line"></span><br><span class="line">c	重复删除多个数据，例如向下删除 10 行，[ 10cj ]</span><br><span class="line"></span><br><span class="line">u	复原前一个动作</span><br><span class="line"></span><br><span class="line">[Ctrl]+r	重做上一个动作,这个 u 与 [Ctrl]+r 是很常用的指令,一个是复原，另一个则是重做一次</span><br></pre></td></tr></table></figure>
+
+<h2 id="命令模式切换到插入模式常用命令"><a href="#命令模式切换到插入模式常用命令" class="headerlink" title="命令模式切换到插入模式常用命令"></a>命令模式切换到插入模式常用命令</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">i, I	进入插入模式(Insert mode),i 为『从目前光标所在处插入』， I 为『在目前所在行的第一个非空格符处开始插入』</span><br><span class="line"></span><br><span class="line">a, A	进入插入模式(Insert mode),</span><br><span class="line">a 为『从目前光标所在的下一个字符处开始插入』， A 为『从光标所在行的最后一个字符处开始插入』</span><br><span class="line"></span><br><span class="line">o, O	进入插入模式(Insert mode), o 为『在目前光标所在的下一行处插入新的一行』； O 为在目前光标所在处的上一行插入新的一行</span><br><span class="line"></span><br><span class="line">r, R	进入取代模式(Replace mode),</span><br><span class="line">r 只会取代光标所在的那一个字符一次；R会一直取代光标所在的文字，直到按下 ESC 为止；</span><br><span class="line"></span><br><span class="line">[Esc]	退出编辑模式，回到一般模式中</span><br></pre></td></tr></table></figure>
+
+<h2 id="底线命令模式下常用命令"><a href="#底线命令模式下常用命令" class="headerlink" title="底线命令模式下常用命令"></a>底线命令模式下常用命令</h2><ul>
+<li>指令行的保存、离开等指令</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">:w	将编辑的数据写入文件中</span><br><span class="line"></span><br><span class="line">:w!	若文件属性为『只读』时，强制写入该文件。</span><br><span class="line"></span><br><span class="line">:q	离开 vi </span><br><span class="line"></span><br><span class="line">:q!	若曾修改过文件，又不想抱存，使用 ! 为强制离开不保存文件</span><br><span class="line"></span><br><span class="line">:wq	保存后离开，若为 :wq! 则为强制保存后离开 </span><br><span class="line"></span><br><span class="line">ZZ	若文件没有改动，则不保存离开，若文件已经被改动过，则保存后离开</span><br><span class="line"></span><br><span class="line">:w [filename]	将编辑的数据保存成另一个文件</span><br><span class="line"></span><br><span class="line">:r [filename]	在编辑的数据中，读入另一个文件的数据。亦即将 『filename』 这个文件内容加到游标所在行后面</span><br><span class="line"></span><br><span class="line">:n1,n2 w [filename]	将 n1 到 n2 的内容保存成 filename 这个文件</span><br><span class="line"></span><br><span class="line">:! command	暂时离开 vi 到指令行模式下执行 command 的显示结果，例如</span><br><span class="line">『:! ls /home』即可在 vi 当中察看 /home 底下以 ls 输出的文件信息</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>vim 环境的变更</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">:set nu	显示行号，设定之后，会在每一行的前缀显示该行的行号</span><br><span class="line">:set nonu	与 set nu 相反，取消行号</span><br></pre></td></tr></table></figure>
+
+<h1 id="编写程序中常用方式讲解"><a href="#编写程序中常用方式讲解" class="headerlink" title="编写程序中常用方式讲解"></a>编写程序中常用方式讲解</h1><p>写一个简短的程序，说明一下命令用法。</p>
+<h1 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h1><ul>
+<li>列操作</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">命令模式下，ctrl+v 选中要操作的列，然后进行操作即可</span><br></pre></td></tr></table></figure> 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/Vim.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust-xmind-master/" rel="tag">Rust-xmind-master</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/README.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            README
+          
+        </div>
+      </a>
+    
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

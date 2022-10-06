@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>SpringBoot学习 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/SpringBoot/SpringBoot学习"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  SpringBoot学习
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/SpringBoot%E5%AD%A6%E4%B9%A0.html" class="article-date">
+  <time datetime="2021-11-29T09:22:09.000Z" itemprop="datePublished">2021-11-29</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringBoot/">SpringBoot</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">8.8k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">33 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>总体需要学习掌握哪些？</p>
+<p>怎么用？</p>
+<p>什么场景使用？</p>
+<p>特性是什么？</p>
+<p>有没有什么注意点？</p>
+<p>原理是什么？</p>
+<ol>
+<li>sprint boot 如何快速开始一个任务？</li>
+</ol>
+<p>1.1. 看一下pom的内容<br>    需要有自己这个moudle的名字，group和artifactid<br>    有父类依赖的，需要有parent，没有的则不需要<br>    默认的pom至少有出去开头部分，至少有两块<br>        dependencies   –用于引入依赖<br>    和  build.plugins   –用于编包<br>        spring-boot-maven-plugin  –这个plugin可以做什么？</p>
+<p>1.2. 不使用自带的parent dependency，应该如何写？</p>
+<ol start="2">
+<li>如何操作数据？</li>
+</ol>
+<p>2.1. 如何配置一个数据源？</p>
+<p>2.2. 如果需要多个数据源，应该如何配置？</p>
+<p>2.3. 如何使用数据库连接池？好处是什么？</p>
+<p>2.4. spring 中如何操作数据库的事务？</p>
+<p>2.5. 怎么判断回滚？<br>    在transaction注解中可以设置当遇到指定异常类时才回滚</p>
+<hr>
+<h1 id="SpringBoot注解annotation总结"><a href="#SpringBoot注解annotation总结" class="headerlink" title="SpringBoot注解annotation总结"></a>SpringBoot注解annotation总结</h1><p>&#x2F;&#x2F; 用在class上，<br>&#x2F;&#x2F; 意味着，这个class可以用于spring boot的web request请求<br>@RestController</p>
+<p>&#x2F;&#x2F; 用在method上<br>&#x2F;&#x2F; 意味着，@RequestMapping(“xxx”) 这个后面的xxx与标记的方法是对应的，当通过浏览器或者curl访问<br>这个url时，就是在调用这个方法<br>@RequestMapping</p>
+<p>because @RestController combines @Controller and @ResponseBody, two annotations that results in web requests returning data rather than a view.</p>
+<p>@SpringBootApplication</p>
+<p>@Configuration</p>
+<p>@EnableAutoConfiguration</p>
+<p>@ComponentScan</p>
+<p>@Component</p>
+<blockquote>
+<p>spring发现该注解后，会自动将有该注解的类变成Bean注册到容器中</p>
+</blockquote>
+<p>有两个很常用的词<br>configure</p>
+<p>注入型的注解</p>
+<ul>
+<li>@Autowired</li>
+<li></li>
+</ul>
+<p>Bean是Spring容器中成员的最小组成部分，它也是普通的JavaBean</p>
+<h1 id="spring的事务"><a href="#spring的事务" class="headerlink" title="spring的事务"></a>spring的事务</h1><p>编程式事务</p>
+<p>声明式事务</p>
+<h1 id="Spring数据访问"><a href="#Spring数据访问" class="headerlink" title="Spring数据访问"></a>Spring数据访问</h1><ul>
+<li>jdbc</li>
+<li>ORM</li>
+<li>NoSQL</li>
+<li>Reactive</li>
+</ul>
+<h1 id="12-spring的jdbc异常抽象"><a href="#12-spring的jdbc异常抽象" class="headerlink" title="12 spring的jdbc异常抽象"></a>12 spring的jdbc异常抽象</h1><p>无论使用何种数据访问方式，都能使用一样的异常</p>
+<p>spring是怎么识别那些错误码的？</p>
+<p>spring-error-code.xml 将各个数据库常见的数据码和错误定义在该文件中</p>
+<p>也支持自定义错误码</p>
+<h1 id="JPA"><a href="#JPA" class="headerlink" title="JPA"></a>JPA</h1><h1 id="Mybatis"><a href="#Mybatis" class="headerlink" title="Mybatis"></a>Mybatis</h1><p>可以使Mybatis更好用的工具</p>
+<ul>
+<li>Mybatis Generator<ul>
+<li>一些内嵌子工具</li>
+</ul>
+</li>
+<li>Mybatis PageHelper<ul>
+<li>帮助更好的处理分页的</li>
+<li>支持多种数据库</li>
+<li>支持多种分页形式</li>
+</ul>
+</li>
+</ul>
+<p>注意：如果既要使用组件自动生成的部分，又需要对它做一个手动的微调</p>
+<p>把手动处理的部分和自动生成的部分放在不同的位置</p>
+<p>有两套model，mapper，xml，这样下次自动生成时就会仅覆盖自动成的部分，不会干扰手动处理的部分</p>
+<p>尽管Mybatis Genertor有合并的逻辑，但是并不是很靠谱。</p>
+<h1 id="分库分表的中间件"><a href="#分库分表的中间件" class="headerlink" title="分库分表的中间件"></a>分库分表的中间件</h1><p> TDDL、Cobar、MyCAT、Sharding-Shpere</p>
+<h1 id="SpringApplicationContext"><a href="#SpringApplicationContext" class="headerlink" title="SpringApplicationContext"></a>SpringApplicationContext</h1><p>上下文和切面增强</p>
+<p>FooConfig.java：父上下文（parent application context）。<br>applicationContext.xml：子上下文（child application context）。</p>
+<p>FooConfig.java 中定义两个 testBean，分别为 testBeanX(foo) 和 testBeanY(foo)。<br>applicationContext.xml 定义了一个 testBeanX(bar)。</p>
+<p>委托机制：在自己的 context 中找不到 bean，会委托父 context 查找该 bean。</p>
+<hr>
+<p>代码解释：<br>fooContext.getBean(“testBeanX”)，在父上下文查找 testBeanX，命中直接返回 testBeanX(foo)。<br>barContext.getBean(“testBeanX”)，在子上下文查找 testBeanX，命中直接返回 testBeanX(bar)。<br>barContext.getBean(“testBeanY”)，在子上下文查找 testBeanY，未命中；委托父上下文查找，命中，返回 testBeanY(foo)。</p>
+<hr>
+<p>场景一：<br>父上下文开启 @EnableAspectJAutoProxy 的支持<br>子上下文未开启 &lt;aop: aspectj-autoproxy &#x2F;&gt;<br>切面 fooAspect 在 FooConfig.java 定义（父上下文增强）</p>
+<p>输出结果：<br>testBeanX(foo) 和 testBeanY(foo) 均被增强。<br>testBeanX(bar) 未被增强。</p>
+<p>结论：<br>在父上下文开启了增强，父的 bean 均被增强，而子的 bean 未被增强。</p>
+<hr>
+<p>场景二：<br>父上下文开启 @EnableAspectJAutoProxy 的支持<br>子上下文开启 &lt;aop: aspectj-autoproxy &#x2F;&gt;<br>切面 fooAspect 在 applicationContext.xml 定义（子上下文增加）</p>
+<p>输出结果：<br>testBeanX(foo) 和 testBeanY(foo) 未被增强。<br>testBeanX(bar) 被增强。</p>
+<p>结论：<br>在子上下文开启增强，父的 bean 未被增强，子的 bean 被增强。</p>
+<hr>
+<p>根据场景一和场景二的结果，有结论：“各个 context 相互独立，每个 context 的 aop 增强只对本 context 的 bean 生效”。如果想将切面配置成通用的，对父和子上下文的 bean 均支持增强，则：</p>
+<ol>
+<li>切面 fooAspect 定义在父上下文。</li>
+<li>父上下文和子上下文，均要开启 aop 的增加，即 @EnableAspectJAutoProxy 或&lt;aop: aspectj-autoproxy &#x2F;&gt; 的支持。</li>
+</ol>
+<h1 id="SringMV的请求处理流程"><a href="#SringMV的请求处理流程" class="headerlink" title="SringMV的请求处理流程"></a>SringMV的请求处理流程</h1><p>官方文档中有流程解析图</p>
+<p>一个请求的大致处理流程</p>
+<p>SpringMVC 中的 DispatcherServlet</p>
+<blockquote>
+<p>render，如果是在图形相关内容，可以翻译为，“渲染”</p>
+<p>但是在Sring中，目前选择翻译为 <code>“呈现”</code> </p>
+</blockquote>
+<p>idea中发起request请求的插件</p>
+<p>handler与mapping</p>
+<p>如何寻找合适的handler？</p>
+<p>charset 字符集</p>
+<h1 id="如何定义Controller？和Controller中的一些方法？"><a href="#如何定义Controller？和Controller中的一些方法？" class="headerlink" title="如何定义Controller？和Controller中的一些方法？"></a>如何定义Controller？和Controller中的一些方法？</h1><h2 id="如何定义映射关系"><a href="#如何定义映射关系" class="headerlink" title="如何定义映射关系"></a>如何定义映射关系</h2><p>@Controller</p>
+<p>@RequestMapping</p>
+<ul>
+<li>path &#x2F; method 指定映射路径与http方法</li>
+<li>params &#x2F; headers 限定参数映射范围</li>
+<li>consumes &#x2F; produces 限定只包含特定Content-Type的请求，&#x2F; 限定特定响应格式，需要加特定accept头</li>
+</ul>
+<p>一些快捷方式</p>
+<ul>
+<li>@RestController  （@Controller 与 @ResponseBody结合到一起）</li>
+<li>@GetMapping &#x2F; @PostMapping &#x2F; @PutMapping &#x2F; @DeleteMapping &#x2F; @PatchMapping</li>
+</ul>
+<p>定义处理方法的常用注解</p>
+<ul>
+<li>@RequestBody 请求正文&#x2F; @ResponseBody 响应正文&#x2F; @ResponseStatus  Http响应的返回码&#x2F;状态码</li>
+<li>下面是定义参数时使用的</li>
+<li>@PathVariable URL路径中的变量&#x2F; @RequestParam 请求的参数&#x2F; @RequestHeader 请求的HTTP头</li>
+<li>参数中可以接受 HttpEntity &#x2F; 响应的时候可以为 ResponseEntity</li>
+</ul>
+<p>很多参数与返回类型可供选择<br>具体参考SpringMVC官方网站文档<br>1.3.3 Handler Methods<br>Method Arguments<br>Return Values</p>
+<p>@Controller的方法能够接受的参数与返回值<br>mvc-ann-arguments  方法参数<br>mvc-ann-return-types  方法返回值</p>
+<p>问题：<br>@Controller与@RestController具体有什么区别？请求上有什么区别？仅仅是@RestController&#x3D;@Controller+@ResponseBody??</p>
+<p>样例：</p>
+<h2 id="定义类型转换"><a href="#定义类型转换" class="headerlink" title="定义类型转换"></a>定义类型转换</h2><ol>
+<li>自己实现WebMvcConfigurer<ul>
+<li>SpringBoot 在WebMvcAutoConfiguration（自动配置类）中实现了一个<ul>
+<li>需要关注 addFormatter这个实现方法，分别获取Converter，GenericConverter,Formatter</li>
+</ul>
+</li>
+<li>添加自定义的Converter</li>
+<li>添加自定义的Formatter</li>
+</ul>
+</li>
+</ol>
+<h2 id="定义校验"><a href="#定义校验" class="headerlink" title="定义校验"></a>定义校验</h2><ul>
+<li>通过Validator 对绑定结果进行校验<ul>
+<li>Hibernate Validator， 如果有这个就使用</li>
+</ul>
+</li>
+<li>在绑定的对象上添加一个， @Valid 注解</li>
+<li>BindingResult ， 绑定的检查结果，在参数中通过BindingResult传递进去<ul>
+<li>当不希望SpringMvc处理绑定报错，想自己处理报错内容时使用，参考43节，第6章，more-complex代码</li>
+</ul>
+</li>
+</ul>
+<h2 id="Multipart-上传"><a href="#Multipart-上传" class="headerlink" title="Multipart 上传"></a>Multipart 上传</h2><ul>
+<li>配置MultipartResolver<ul>
+<li>SpringBoot 自动配置 MultipartAutoconfiguration</li>
+</ul>
+</li>
+<li>支持类型 multipart&#x2F;form-data</li>
+<li>MultipartFile 类型</li>
+</ul>
+<p>org.apache.commons-lang3 类库<br>NumberUtils<br>StringUtils.split()</p>
+<p>处理表单？？？<br>    - 可以不适用@RequestBody?<br>    - 在@PostMapping中使用consumes&#x3D;MediaType.application_form_urlencoded_value就可以？<br>    - 这就涉及到@RequestBody与@RequestParam两个注解的区别了<br>        - 可以看一下Spring中这两个注解的注释<br>        - @RequestBody注解，是把整个请求的Body传给参数<br>        - @RequestParam注解，是可以把Body里的对应部分却出来传给参数</p>
+<p>postman中，form-data 与x-www-form-urlencoded有啥区别？</p>
+<h1 id="SprigMVC中的视图解析机制"><a href="#SprigMVC中的视图解析机制" class="headerlink" title="SprigMVC中的视图解析机制"></a>SprigMVC中的视图解析机制</h1><h2 id="视图解析的基本实现"><a href="#视图解析的基本实现" class="headerlink" title="视图解析的基本实现"></a>视图解析的基本实现</h2><p>ViewResolver与view接口<br>用的比较多的ViewResolver</p>
+<h2 id="DispatcherServlet-中的视图解析逻辑"><a href="#DispatcherServlet-中的视图解析逻辑" class="headerlink" title="DispatcherServlet 中的视图解析逻辑"></a>DispatcherServlet 中的视图解析逻辑</h2><p>针对有ModelAndView返回的解析过程</p>
+<ul>
+<li>初始化DispatcherServlet的时候，会初始化所有的ViewResolver，这里它会把Spring上下文当中所有的ViewResolver都加载进来（一般建议不改动，也可以选择只加载对应的某一个viewResolver）</li>
+<li>具体请求时，会在doDispatch()中对我们处理的ModelAndView的结果去做processDispatchResult()的时候，会去做从视图名到具体视图的一个解析，当解析出View对象的时候，会做一个视图的呈现。<ul>
+<li>如果没有返回视图的话，使用RequestToViewNameTrnaslater去做一个尝试解析一个View的名字</li>
+</ul>
+</li>
+</ul>
+<p>转发（forword）与重定向(redirect)的区别</p>
+<ul>
+<li>forword是服务器的跳转，浏览器是感知不到的，浏览器地址不会改变</li>
+<li>redirect是客户端的跳转，浏览器地址会改变</li>
+</ul>
+<h1 id="45-SpringMVC中的视图解析机制（下）"><a href="#45-SpringMVC中的视图解析机制（下）" class="headerlink" title="45 SpringMVC中的视图解析机制（下）"></a>45 SpringMVC中的视图解析机制（下）</h1><h2 id="加了-ResponseBody注解的请求，它的结果是如何输出到Response当中去的"><a href="#加了-ResponseBody注解的请求，它的结果是如何输出到Response当中去的" class="headerlink" title="加了@ResponseBody注解的请求，它的结果是如何输出到Response当中去的"></a>加了@ResponseBody注解的请求，它的结果是如何输出到Response当中去的</h2><h1 id="SpringMVC中的常用视图"><a href="#SpringMVC中的常用视图" class="headerlink" title="SpringMVC中的常用视图"></a>SpringMVC中的常用视图</h1><ul>
+<li>查看spring官方文档，支持的视图列表</li>
+<li>最常用的Jackson-based JSON&#x2F;XML</li>
+<li>支持的模板引擎<ul>
+<li>最常用的Thymeleaf &amp; FreeMarker</li>
+</ul>
+</li>
+</ul>
+<h2 id="配合MessageConverter-类型到视图的转换"><a href="#配合MessageConverter-类型到视图的转换" class="headerlink" title="配合MessageConverter, 类型到视图的转换"></a>配合MessageConverter, 类型到视图的转换</h2><h2 id="SpringBoot对Jackson的支持"><a href="#SpringBoot对Jackson的支持" class="headerlink" title="SpringBoot对Jackson的支持"></a>SpringBoot对Jackson的支持</h2><p>Spring自动配置相关内容：</p>
+<ol>
+<li>需要支持我们需要配置什么？</li>
+<li>SpringBoot帮我们处理了什么？</li>
+</ol>
+<p>SpringBoot会自动处理一下在classpath中出现的，需要处理转换的类型，</p>
+<ul>
+<li>我们只需要将依赖放到dependency中就可以</li>
+<li>当然我们也可以自己做这些Bean的配置</li>
+</ul>
+<h2 id="Thymeleaf"><a href="#Thymeleaf" class="headerlink" title="Thymeleaf"></a>Thymeleaf</h2><p>java模板引擎</p>
+<p>模板如何写？可以参考Thymeleaf官方文档</p>
+<p>（我个人理解，使用场景是web页面）</p>
+<h1 id="48-静态资源和缓存"><a href="#48-静态资源和缓存" class="headerlink" title="48 静态资源和缓存"></a>48 静态资源和缓存</h1><blockquote>
+<p>有比java程序更合适提供静态资源的工具，比如使用nginx（lzy就是这样）</p>
+</blockquote>
+<p>通常关于用户的静态资源一般放在CDN上，由CDN提供静态资源的访问，当CDN回源时，有一组专门提供静态资源服务的服务器，来提供CND回源所需要的的服务。<br>也可以有一个CMS的服务，由后台配置该资源的访问，同时静态资源本身还可以添加一些缓存（例如，Squid，Varnish）</p>
+<p>另一方面，应用的请求，可以通过Gateway进入到我们的后台系统来，在Gateway中可以设置特定路径的Cache-controller的配置。<br>也可以通过nginx设置对缓存的控制</p>
+<h1 id="Spring-MVC的异常解析"><a href="#Spring-MVC的异常解析" class="headerlink" title="Spring MVC的异常解析"></a>Spring MVC的异常解析</h1><p>核心接口</p>
+<ul>
+<li>HandlerExceptionResolver</li>
+</ul>
+<h2 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h2><p>DispatcherServlet中doService方法中处理异常的代码</p>
+<h2 id="如何写异常处理方法"><a href="#如何写异常处理方法" class="headerlink" title="如何写异常处理方法"></a>如何写异常处理方法</h2><p>处理方法</p>
+<ul>
+<li>@ExceptionHandler</li>
+</ul>
+<p>添加位置</p>
+<ul>
+<li>@Controller &#x2F; @RestController</li>
+<li>@ControllerAdvice &#x2F; @RestControllerAdvice (优先级会低于上面的两个)</li>
+</ul>
+<p>官方文档 1.3.6 Exceptions</p>
+<h1 id="在Spring-MVC-如何使用-x2F-实现-拦截器"><a href="#在Spring-MVC-如何使用-x2F-实现-拦截器" class="headerlink" title="在Spring MVC 如何使用&#x2F;实现 拦截器"></a>在Spring MVC 如何使用&#x2F;实现 拦截器</h1><p>核心接口</p>
+<ul>
+<li>HandlerInterceptor<ul>
+<li>boolean preHandler()  true -&gt; 继续处理，false -&gt; 停止处理</li>
+<li>void postHandler()</li>
+<li>void afterCompletion()</li>
+</ul>
+</li>
+</ul>
+<p>针对 @ResponseBody 和 ResponseEntity 的情况</p>
+<ul>
+<li>提供了 ResponseBodyAdvice</li>
+</ul>
+<p>针对异步请求的接口</p>
+<ul>
+<li>AsyncHandlerInterceptor<ul>
+<li>void afterConcurrentHandlingStarted()</li>
+<li>如果是异步操作，是不会执行postHandler() 和 afterCompletion()方法的</li>
+</ul>
+</li>
+</ul>
+<p>看一下在DispatcherServlet()方法中如何处理的<br>    - doDispath<br>    - applyPreHandle()<br>    - handle<br>    - applyPostHandle()</p>
+<h2 id="配置拦截器"><a href="#配置拦截器" class="headerlink" title="配置拦截器"></a>配置拦截器</h2><p>常规方法</p>
+<ul>
+<li>WebMvcConfigurer.addInterceptors()<ul>
+<li>各种Interceptor 添加的动作</li>
+</ul>
+</li>
+</ul>
+<p>Spring Boot中的配置</p>
+<ul>
+<li>创建一个带@Configuraion注解的类，让这个类去实现(implements) WebMvcConfigurer 配置类，然后自己去实现当中的 addInterceptors 的方法</li>
+<li>不能带 @EnableWebMvc (想彻底自己控制MVC配合除外)</li>
+</ul>
+<p>参考 第6章的springbucket代码</p>
+<h1 id="52-课程答疑"><a href="#52-课程答疑" class="headerlink" title="52 课程答疑"></a>52 课程答疑</h1><ol>
+<li>使用MySQL代替H2</li>
+<li>示例中使用到的一些Java语言特性说明</li>
+<li>MyBatis Generator 生成代码时的一些说明</li>
+<li>MyBatis-Plus 介绍</li>
+</ol>
+<p>第7章</p>
+<h1 id="通过-RestTemplate-访问-Web-资源"><a href="#通过-RestTemplate-访问-Web-资源" class="headerlink" title="通过 RestTemplate 访问 Web 资源"></a>通过 RestTemplate 访问 Web 资源</h1><p>SpringBoot中的RestTemplate</p>
+<ul>
+<li>SpringBoot 中没有自动配置 RestTemplate</li>
+<li>SpringBoot 提供了 RestTemplateBuilder<ul>
+<li>RestTemplateBuilder.build()</li>
+</ul>
+</li>
+</ul>
+<p>RestTemplate 中常用的方法</p>
+<p>它提供了与http 的Method 对应的方法</p>
+<p>GET请求</p>
+<ul>
+<li>getForObject() &#x2F; getForEntity()</li>
+</ul>
+<p>Post请求</p>
+<ul>
+<li>postForObject() &#x2F; postForEntity()</li>
+</ul>
+<p>Put请求</p>
+<ul>
+<li>put()</li>
+</ul>
+<p>Delete 请求</p>
+<ul>
+<li>delete()</li>
+</ul>
+<p>提供了构造URI 的一些 方法</p>
+<p>构造URI</p>
+<ul>
+<li>UriComponentsBuilder<br>构造相对于当前请求的URI</li>
+<li>ServletUriComponentsBuilder<br>构造指向Controller 的 URI</li>
+<li>MvcUriComponentsBuilder</li>
+</ul>
+<h1 id="RestTemplate-的高阶用法"><a href="#RestTemplate-的高阶用法" class="headerlink" title="RestTemplate 的高阶用法"></a>RestTemplate 的高阶用法</h1><p>传递 Http Header</p>
+<ul>
+<li>RestTemplate.exchange() + RequestEntity<T> &#x2F; ResponseEntity<T></li>
+</ul>
+<p>类型转换</p>
+<ul>
+<li>@JsonComponent + JsonSerializer &#x2F; JsonDeserializer</li>
+</ul>
+<p>解析泛型类型</p>
+<ul>
+<li>RestTemplate.exchange() +  ParameterizedTypeReference<T></li>
+<li>ParameterizedTypeReference<T><ul>
+<li>帮助定义泛型的类型</li>
+</ul>
+</li>
+</ul>
+<h1 id="简单定义RestTemplate"><a href="#简单定义RestTemplate" class="headerlink" title="简单定义RestTemplate"></a>简单定义RestTemplate</h1><p>RestTemplate 支持的HTTP 库</p>
+<p>通用接口</p>
+<ul>
+<li>clientHttpRequestFactory<br>默认实现 (默认是JDK自带的)</li>
+<li>SimpleClientHttpRequestFactory</li>
+</ul>
+<h2 id="优化底层请求策略"><a href="#优化底层请求策略" class="headerlink" title="优化底层请求策略"></a>优化底层请求策略</h2><p>连接管理</p>
+<ul>
+<li>PoolingHttpClientConnectionManager</li>
+<li>KeepAlive 策略<br>超时设置</li>
+<li>connectTimeout &#x2F; readTimeout</li>
+</ul>
+<p>SSL校验</p>
+<ul>
+<li>证书检查策略</li>
+</ul>
+<p>apache HttpComponents 提供了默认的KeepAlived 策略，同时，它的官网上提供了一个定制方式。</p>
+<h1 id="通过WebClient-访问Web-资源"><a href="#通过WebClient-访问Web-资源" class="headerlink" title="通过WebClient 访问Web 资源"></a>通过WebClient 访问Web 资源</h1><blockquote>
+<p>通过 Reactive 的方式访问HTTP 资源</p>
+</blockquote>
+<h2 id="了解-WebClient"><a href="#了解-WebClient" class="headerlink" title="了解 WebClient"></a>了解 WebClient</h2><ul>
+<li>一个以 Reactive 方式处理 Http 请求的非阻塞式的客户端</li>
+</ul>
+<p>支持的底层 HTTP 库</p>
+<ul>
+<li>Reactive Netty - ReactorClientHttpConnector  (使用的更多)</li>
+<li>Jetty ReactiveStream HttpClient - JettyClientHttpConnector</li>
+</ul>
+<p>WebClient 的基本使用</p>
+<p>创建 WebClient</p>
+<p>在Spring Boot 中没有自动配置，需要自己创建</p>
+<ul>
+<li>WebClient.create()</li>
+<li>WebClient.buidler()</li>
+</ul>
+<p>发起请求</p>
+<ul>
+<li>get() &#x2F; post() &#x2F; put() &#x2F; delete() &#x2F; patch()</li>
+</ul>
+<p>获取结果</p>
+<ul>
+<li>retrieve() &#x2F; exchange()</li>
+</ul>
+<p>处理 HTTP Status</p>
+<ul>
+<li>onStatus()</li>
+</ul>
+<p>响应正文</p>
+<ul>
+<li>bodyToMono() &#x2F; bodyToFlux()</li>
+</ul>
+<blockquote>
+<p>个人理解，是一种处理 http 请求的客户端，所以需要有 创建连接，发起请求，获取请求结果，处理请求结果和状态 的过程</p>
+<p>特色是使用 Reactive 的方式处理。</p>
+</blockquote>
+<p>第7章样例中，main方法中没有启用web，为什么？</p>
+<p><strong>注意：</strong><br>Reactive ，我们不能根据代码的书写顺序来决定它的执行顺序</p>
+<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ol>
+<li>如果使用 WebFlux，那么请求处理过程中需要访问其他 http 服务时，就可以使用 WebClient。</li>
+<li>在通用一点，如果你希望通过异步线程来访问 HTTP 服务时，，就可以考虑使用 WebClient。Reactor 可以简化你的多线程代码</li>
+</ol>
+<h4 id="关于-Spring-中各种-xxxTemplate-的优点"><a href="#关于-Spring-中各种-xxxTemplate-的优点" class="headerlink" title="关于 Spring 中各种 xxxTemplate 的优点"></a>关于 Spring 中各种 xxxTemplate 的优点</h4><p>Spring 中的 xxxTempalte 都是对一些常见的操作做了统一的封装，屏蔽了底层的各种实现差异（即，底层依赖上可以更换各种支持的库，上层操作基本不用变），对上提供统一的操作。<br>RestTemplate 封装了各种 http 客户端，底层可以使用 JDK 内置的 HTTP 操作，也可以使用 HttpClient (apache 的 HTTPComponent 的 http 客户端)，和 OKHttp，同时还提供了与 Spring MVC 一致的格式转换能力，这是单纯的 http 客户端无法比拟的能力。</p>
+<h1 id="设计好的-RESTful-Web-Service"><a href="#设计好的-RESTful-Web-Service" class="headerlink" title="设计好的 RESTful Web Service"></a>设计好的 RESTful Web Service</h1><p>什么是 REST？</p>
+<p>Roy Thomas Fielding 博士的论文：<br><a target="_blank" rel="noopener" href="https://www.infoq.cn/article/web-based-apps-archit-design">https://www.infoq.cn/article/web-based-apps-archit-design</a></p>
+<p>不全面的理解：RESTful 是一种风格，但也可以暂时把它理解为一种 http uri 的表现形式。</p>
+<p>Richardson 成熟度模型 - Glory of REST</p>
+<h2 id="如何实现-RESTful-Web-Service"><a href="#如何实现-RESTful-Web-Service" class="headerlink" title="如何实现 RESTful Web Service"></a>如何实现 RESTful Web Service</h2><ul>
+<li>识别资源</li>
+<li>选择合适的资源粒度</li>
+<li>设计 URI</li>
+<li>选择合适的 HTTP 方法和返回码</li>
+<li>设计资源的表述 （JSON &#x2F; XML &#x2F; …）</li>
+</ul>
+<h3 id="识别资源"><a href="#识别资源" class="headerlink" title="识别资源"></a>识别资源</h3><ul>
+<li>找到领域名词<ul>
+<li>能用 CRUD 操作的名词  ？？？</li>
+</ul>
+</li>
+<li>将资源组合为集合（即集合资源） ，如，将所有coffee 放到一起成为 coffee 的集合，订单放到一起成为订单集合</li>
+<li>将资源合并为复合资源， 如，将 coffee + order 一起返回，即组成了一个复合资源</li>
+<li>计算或处理函数， 例如：从上海到北京的距离，是一种计算，没有领域名词，但也可以处理成为一种资源</li>
+</ul>
+<h3 id="设计资源的粒度"><a href="#设计资源的粒度" class="headerlink" title="设计资源的粒度"></a>设计资源的粒度</h3><p>站在服务端的角度，要考虑</p>
+<ul>
+<li>网络效率， 在一次网络交互传输多少？</li>
+<li>表述的多少？？？</li>
+<li>客户端的易用程度</li>
+</ul>
+<p>站在客户端的角度，要考虑</p>
+<ul>
+<li>可缓存性</li>
+<li>修改频率</li>
+<li>可变性</li>
+</ul>
+<h3 id="如何构建更好的-URI"><a href="#如何构建更好的-URI" class="headerlink" title="如何构建更好的 URI"></a>如何构建更好的 URI</h3><ul>
+<li>使用域及子域对资源进行合理的分组或者划分</li>
+<li>在 URI 的路径部分，使用斜杠分隔符（&#x2F;）来表示资源之间的层次关系</li>
+<li>在 URI 的路径部分，使用逗号（,）和分号（;）来表示非层次元素 （不同的库，使用的分隔符不一定一致，,和; 用的并不是很多）？？？</li>
+<li>使用连字符（-）和下划线（_）来改善长路径中名称的可读性</li>
+<li>在 URI 的查询部分，使用“与”符号（&amp;）来分隔参数</li>
+<li>在 URI 中避免出现文件扩展名（如，.php, .aspx 和 .jsp）</li>
+</ul>
+<h3 id="认识-HTTP-的方法"><a href="#认识-HTTP-的方法" class="headerlink" title="认识 HTTP 的方法"></a>认识 HTTP 的方法</h3><ul>
+<li>安全，它不会改变我们资源中的各种内容</li>
+<li>幂等，不管请求多少次结果都是一样的</li>
+</ul>
+<p>get<br>post<br>delete<br>put<br>head<br>options<br>trace</p>
+<h3 id="认识-HTTP-状态码"><a href="#认识-HTTP-状态码" class="headerlink" title="认识 HTTP 状态码"></a>认识 HTTP 状态码</h3><p>200<br>201<br>202<br>301<br>303<br>304<br>307<br>400<br>401<br>403<br>404<br>410<br>500<br>503</p>
+<p>具体可以参考 <a target="_blank" rel="noopener" href="https://www.runoob.com/http/http-status-codes.html">https://www.runoob.com/http/http-status-codes.html</a></p>
+<h3 id="选择合适的表述"><a href="#选择合适的表述" class="headerlink" title="选择合适的表述"></a>选择合适的表述</h3><ul>
+<li>JSON<ul>
+<li>各种子类</li>
+</ul>
+</li>
+<li>XML</li>
+<li>HTML</li>
+<li>ProtoBuf</li>
+</ul>
+<h1 id="什么是-HATEOAS"><a href="#什么是-HATEOAS" class="headerlink" title="什么是 HATEOAS"></a>什么是 HATEOAS</h1><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><h2 id="与传统的服务契约的区别"><a href="#与传统的服务契约的区别" class="headerlink" title="与传统的服务契约的区别"></a>与传统的服务契约的区别</h2><h1 id="使用-Spring-Data-REST-实现简单的超媒体服务"><a href="#使用-Spring-Data-REST-实现简单的超媒体服务" class="headerlink" title="使用 Spring Data REST 实现简单的超媒体服务"></a>使用 Spring Data REST 实现简单的超媒体服务</h1><h2 id="认识-HAL"><a href="#认识-HAL" class="headerlink" title="认识 HAL"></a>认识 HAL</h2><p>全称：Hypertext Application Language</p>
+<ul>
+<li>基于 JSON 的扩展</li>
+<li>HAL 是一种简单的格式，为 API 中的资源提供简单一致的链接</li>
+</ul>
+<p>HAL 帮助我们定义了一个模型，模型中包含下面几部分</p>
+<ul>
+<li>链接，我们所有的这种链接资源</li>
+<li>内嵌资源， embedded 的 resource</li>
+<li>状态</li>
+</ul>
+<h2 id="Spring-Data-REST"><a href="#Spring-Data-REST" class="headerlink" title="Spring Data REST"></a>Spring Data REST</h2><p>Spring Boot 依赖</p>
+<ul>
+<li>spring-boot-starter-data-rest</li>
+</ul>
+<p>Spring Boot 做了自动配置</p>
+<p>常用注解和类</p>
+<ul>
+<li>@RepositoryRestResource   ，使用了该接口时，当我们有了一个 Repository ，那么Spring Data REST 会自动将该 Repository 变成一个 RESTful 的接口，把它变成一个资源</li>
+<li>Resource<T></li>
+<li>PageResource<T></li>
+</ul>
+<h1 id="63-分布式环境中，如何解决-Session-的问题"><a href="#63-分布式环境中，如何解决-Session-的问题" class="headerlink" title="63 分布式环境中，如何解决 Session 的问题"></a>63 分布式环境中，如何解决 Session 的问题</h1><p>问题：使用场景是什么？</p>
+<p>使用spring session 实现简单的分布式会话管理</p>
+<p>使用第三方数据库进行session存储</p>
+<h1 id="64-使用-WebFlux-代替-Spring-MVC"><a href="#64-使用-WebFlux-代替-Spring-MVC" class="headerlink" title="64 使用 WebFlux 代替 Spring MVC"></a>64 使用 WebFlux 代替 Spring MVC</h1><p>什么是 WebFlux？</p>
+<ul>
+<li>基于 Reactive 技术栈之上的，用于构建 Web 应用程序</li>
+<li>基于 Reactive Stream API ，运行在非阻塞服务器（Netty，Jetty，并不是指物理上的服务器，应该是指服务容器）上</li>
+</ul>
+<p>为什么会有 WebFlux?</p>
+<ul>
+<li>对于非阻塞 Web 应用的需要</li>
+<li>函数式编程的需要及普及</li>
+</ul>
+<p>关于 WebFlux 的性能</p>
+<ul>
+<li>单次请求的耗时并不会很大的改善，改善的是并行操作</li>
+<li>仅需要少量固定数量的线程和较少的内存即可实现扩展</li>
+</ul>
+<p>Spring MVC v.s. WebFlux ，如何做取舍？</p>
+<ul>
+<li>已有 Spring MVC 应用，运行正常，就别改了</li>
+<li>依赖了大量阻塞式持久化 API 和网络 API，建议使用 Spring MVC</li>
+<li>已经使用了非阻塞技术栈，可以考虑使用 WebFlux</li>
+<li>想要使用 Java8 Lambda 结合轻量级函数式框架，可以考虑 WebFlux</li>
+</ul>
+<p>问题：哪些是阻塞式持久化？mysql是的？redis，mongodb不是？</p>
+<h1 id="重新认识-Spring-Boot-的组成部分"><a href="#重新认识-Spring-Boot-的组成部分" class="headerlink" title="重新认识 Spring Boot 的组成部分"></a>重新认识 Spring Boot 的组成部分</h1><p>Spring Boot 用于构建应用程序</p>
+<p>Spring Boot 不是什么？</p>
+<ul>
+<li><p>不是应用服务器</p>
+<blockquote>
+<p>这里是指，不是 Tomcat 或 Jetty 这样的东西，在 Spring Boot 的应用程序中，可以囊括 Tomcat&#x2F;Jetty，或者可以将应用打成 war 包，部署在这些上面</p>
+</blockquote>
+</li>
+<li><p>不是 JavaEE 之类的规范</p>
+</li>
+<li><p>不是代码生成器</p>
+</li>
+<li><p>不是 Spring Framework 的升级版</p>
+<blockquote>
+<p>是为了帮助大家更好的使用 Spring Framework 的</p>
+</blockquote>
+</li>
+</ul>
+<p>Spring Boot 的特性</p>
+<ul>
+<li><p>方便地创建可独立运行的 Spring 应用程序</p>
+</li>
+<li><p>直接内嵌 Tomcat,Jetty 或者 Undertow</p>
+</li>
+<li><p>简化了项目的构建配置</p>
+<blockquote>
+<p>简化了 mvn , gradle 这样的配置</p>
+</blockquote>
+</li>
+<li><p>为 Spring 及第三方库提供自动配置</p>
+</li>
+<li><p>提供生产级特性 ？？</p>
+<ul>
+<li>例如，监控</li>
+</ul>
+</li>
+<li><p>无需生成代码或进行 XML 配置</p>
+<ul>
+<li>可直接使用 Java Configuration 等</li>
+</ul>
+</li>
+</ul>
+<p>Spring Boot 的四大特性</p>
+<ul>
+<li>自动配置 - Auto Configuration</li>
+<li>起步依赖 - Starter Dependency</li>
+<li>命令行界面 - Spring Boot CLI</li>
+<li>Actuator</li>
+</ul>
+<h1 id="了解自动配置的实现原理"><a href="#了解自动配置的实现原理" class="headerlink" title="了解自动配置的实现原理"></a>了解自动配置的实现原理</h1><p>自动配置</p>
+<ul>
+<li>基于添加的 JAR 依赖（在 ClassPath 中出现的类,application.properties,等），自动对 Spring Boot 应用程序进行配置</li>
+<li>在 spring-boot-autoconfiguration jar包中</li>
+</ul>
+<p>开启自动配置</p>
+<ul>
+<li><p>@EnableAutoConfiguration</p>
+<ul>
+<li><p>exclude&#x3D;Class&lt;?&gt;[]</p>
+<blockquote>
+<p>如果希望排除掉一些自动配置的类，可以使用 exclude 这个属性排除掉指定的类即可</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p>@SpringBootApplication</p>
+<blockquote>
+<p>这个注解中包含了 @EnableAutoConfiguration 注解，同时这个注解也可以使用 @EnableAutoConfiguration 注解的属性，如，exclude</p>
+</blockquote>
+</li>
+</ul>
+<p>@EnableAutoConfiguration 的实现原理</p>
+<ul>
+<li><p>自动帮忙我们 import AutoConfigurationImportSelector</p>
+<blockquote>
+<p>这个类会自动帮助我们加载 META-INF&#x2F;spring.factories 中的特定属性，即 org.springframework.boot.autoconfigure.EnableAutoConfiguration</p>
+</blockquote>
+</li>
+</ul>
+<p>条件注解</p>
+<ul>
+<li>@Conditional</li>
+<li>@ConditionalOnClass</li>
+<li>@ConditionalOnBean  –有指定bean时的操作</li>
+<li>…OnMissBean  –没有指定bean时的操作</li>
+<li>…OnProperty</li>
+<li>…</li>
+</ul>
+<p>观察自动配置的判断结果，了解哪些自动配置生效了，哪些没有生效</p>
+<ul>
+<li>在命令行中添加 “–debug” 这个参数</li>
+</ul>
+<p>会有完整的输出，哪些匹配了match，哪些没有匹配，哪些exclude 没有加载，哪些是无条件配置的…</p>
+<p>问题：初始化加载顺序，注解加载的优先级</p>
+<h1 id="动手实现自己的自动配置"><a href="#动手实现自己的自动配置" class="headerlink" title="动手实现自己的自动配置"></a>动手实现自己的自动配置</h1><p>自动配置部分是，当我们在主程序中没有提供自己的配置&#x2F;代码，那么 Spring Boot 会自动加载内置的&#x2F;已有的自动配置好的配置&#x2F;代码</p>
+<p>当我们希望 Spring 可以自动加载我们的定制功能，我们可以通过实现自己的自动配置集成到Spring Boot中让其来加载</p>
+<h2 id="主要工作"><a href="#主要工作" class="headerlink" title="主要工作"></a>主要工作</h2><ol>
+<li>首先我们需要自己写一个 Configuration 的配置类，</li>
+<li>然后在配置类中做我们需要的自动配置，<ul>
+<li>主要通过一些条件注解来实现的</li>
+</ul>
+</li>
+<li>与内置的自动配置类一样，在我们的 spring.factories 当中去声明一下我们的自动配置类，让 Spring Boot 可以找到我们的自动配置</li>
+</ol>
+<p>这个过程分别对应下面三个部分：</p>
+<p>编写 Java Config</p>
+<ul>
+<li>@Configuration</li>
+</ul>
+<p>添加条件</p>
+<ul>
+<li>@Conditional</li>
+</ul>
+<p>定位自动配置</p>
+<ul>
+<li>META-INF&#x2F;spring.factories</li>
+</ul>
+<h3 id="条件注解大家庭"><a href="#条件注解大家庭" class="headerlink" title="条件注解大家庭"></a>条件注解大家庭</h3><p>条件注解</p>
+<ul>
+<li>@Conditional</li>
+<li>所有的条件注解都是基于这个注解，它是 Spring 4 引入的新的注解，（在 Spring 3 中没有@Conditional 这个注解，后面会提交如何在 Spring 3.x版本当中如何实现自动配置）</li>
+</ul>
+<p>类条件</p>
+<ul>
+<li>@ConditionalOnClass  存在指定Class时怎么样</li>
+<li>@ConditionalOnMissingClass   不存在指定Class时怎么样</li>
+</ul>
+<p>属性条件</p>
+<ul>
+<li>@ConditionalOnProperty</li>
+</ul>
+<p>Bean 条件</p>
+<ul>
+<li>@ConditionalOnBean</li>
+<li>@ConditionalOnMissingBean</li>
+<li>@ConditionalOnSingleCandidate</li>
+</ul>
+<p>资源条件</p>
+<ul>
+<li>@ConditionalOnResource</li>
+</ul>
+<p>Web 应用条件</p>
+<ul>
+<li>@ConditionalOnWebApplication</li>
+<li>@ConditionalOnNotWebApplication</li>
+</ul>
+<p>其他条件</p>
+<ul>
+<li>@ConditionalOnExpression</li>
+<li>@ConditionalOnJava</li>
+<li>@ConditionalOnJndi</li>
+</ul>
+<h3 id="自动配置的执行顺序"><a href="#自动配置的执行顺序" class="headerlink" title="自动配置的执行顺序"></a>自动配置的执行顺序</h3><p>执行顺序</p>
+<ul>
+<li>@AutoConfigureBefore</li>
+<li>@AutoConfigureAfter</li>
+<li>@AutoConfigureOrder</li>
+</ul>
+<h1 id="Spring-Boot-提供的错误分析机制"><a href="#Spring-Boot-提供的错误分析机制" class="headerlink" title="Spring Boot 提供的错误分析机制"></a>Spring Boot 提供的错误分析机制</h1><blockquote>
+<p>在 Spring Boot 官方文档中的 Spring Boot Features 章节  1.1. Startup Failure 中有涉及这部分的内容</p>
+</blockquote>
+<p>FailureAnalysis.class</p>
+<p>三个组成部分</p>
+<ul>
+<li>description 失败的描述</li>
+<li>action  失败后的动作</li>
+<li>Throwable cause  失败后的异常</li>
+</ul>
+<h1 id="70-如何在低版本-Spring-中快速实现类似自动配置的功能"><a href="#70-如何在低版本-Spring-中快速实现类似自动配置的功能" class="headerlink" title="70 如何在低版本 Spring 中快速实现类似自动配置的功能"></a>70 如何在低版本 Spring 中快速实现类似自动配置的功能</h1><p>需求与问题</p>
+<ol>
+<li><p>核心诉求</p>
+<ul>
+<li>现存系统，不打算重构</li>
+<li>Spring 版本3.x，不打算升级版本和引入 Spring Boot</li>
+<li>期望能够在少改代码的前提下实现一些功能增强</li>
+</ul>
+</li>
+<li><p>面临问题</p>
+<ul>
+<li>3.x 的 Spring 没有条件注解</li>
+<li>无法自动定位需要加载的自动配置</li>
+</ul>
+</li>
+</ol>
+<h3 id="核心解决思路"><a href="#核心解决思路" class="headerlink" title="核心解决思路"></a>核心解决思路</h3><p>解决加载加载条件判断的问题</p>
+<p>条件判断</p>
+<ul>
+<li>通过 BeanFactoryPostProcessor 进行判断<ul>
+<li>在bean定义完成之后，初始化之前，对我们的这些 bean 的定义做一些后置的处理</li>
+</ul>
+</li>
+</ul>
+<p>配置加载</p>
+<ol>
+<li>编写 Java Config 类<ul>
+<li>使用 @Configuration</li>
+</ul>
+</li>
+<li>引入配置类<ul>
+<li>通过 component-scan， 让 component-scan中包含我们写的 Java Config</li>
+<li>通过 XML 文件 import，如果原有系统是使用 XML的方式，就通过 XML来加载我们的配置<blockquote>
+<p>如果需要被扫描类所属 package 是带有 @SpringBootApplication 注解类所在 package以下的所有package里面所有的配置，所以即使即使没有通过 component-scan 或者XML做明确定义，也能扫描到我们提供的配置类；</p>
+<p>但是如果提供的配置类与 @SpringBootApplication 所在 package 不是上下级关系，需要增加 component-scan 扩展扫描范围。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="Spring-的两个扩展点"><a href="#Spring-的两个扩展点" class="headerlink" title="Spring 的两个扩展点"></a>Spring 的两个扩展点</h3><ol>
+<li>BeanPostProcessor<ul>
+<li><p>在 Bean 初始化之后，可以针对 Bean 实例进行一些处理</p>
+<blockquote>
+<p>比如对 bean 做一些增强，处理一些逻辑</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li>在 Bean创建后提供定制逻辑回调</li>
+</ul>
+<ol start="2">
+<li>BeanFactoryPostProcessor 接口<ul>
+<li>针对 Bean 定义</li>
+<li>在容器创建 Bean 前获取配置元数据</li>
+<li>Java Config 中需要定义为 static 方法<ul>
+<li>如果不定义为 static 那么，spring 在启动的时候会报一个 warning</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="与-Bean-定制相关的一些内容"><a href="#与-Bean-定制相关的一些内容" class="headerlink" title="与 Bean 定制相关的一些内容"></a>与 Bean 定制相关的一些内容</h2><ol>
+<li><p>生命周期的Callback</p>
+<ul>
+<li>初始化相关， 在 Bean创建之后对它做一些定制（创建之后调用特定的方法），一共有三种方式 <ul>
+<li>实现 InitializingBean 接口</li>
+<li>使用 @PostConstruct 注解</li>
+<li>用我的Bean 定义的 XML文件里面指定一个 init-method， 或者在我的Bean 注解里面指定 init-method</li>
+</ul>
+</li>
+<li>在 Bean 回收&#x2F;销毁的时候做一些操作<ul>
+<li>实现 DisposableBean 接口，spring会调用指定方法</li>
+<li>使用 @PreDestroy 注解，当Bean销毁的时候，Spring 会进行一个调用</li>
+<li>在Bean定义的XML文件中 配置一个 destroy-method ，指定Bean销毁时调用哪个方法， 或者在Bean的注解中指定</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>xxxAware 接口 （注入相关内容）</p>
+<ul>
+<li>ApplicationContextAware， 把整个ApplicationContext 通过接口注入到Bean中，这样在Bean中就可以取得整个 ApplicationContext</li>
+<li>BeanFactoryAware， 类似 ApplicationContext ???</li>
+<li>BeanNameAware ，把Bean 的名字注入到实例中</li>
+</ul>
+</li>
+</ol>
+<p>AbstractBeanFactory.java</p>
+<ul>
+<li>getBean()</li>
+</ul>
+<p>AbstractAutowireCapableBeanFactory.java</p>
+<ul>
+<li>hasDestoryMethod()<blockquote>
+<p>即使我们的 Bean 不是 DisposableBean 或者 AutoCloseableBean，只要有一个Close或者Shutdown的方法，Spring 也会在销毁 Bean 的时候去调用它们</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="Bean-的一些其他常用操作"><a href="#Bean-的一些其他常用操作" class="headerlink" title="Bean 的一些其他常用操作"></a>Bean 的一些其他常用操作</h2><p>判断类是否存在</p>
+<ul>
+<li>ClassUtils.isPresent()， 用于判断一个类是否存在于ClassPath中</li>
+</ul>
+<p>判断 Bean 是否已定义</p>
+<ul>
+<li>ListableBeanFactory.containsBeanDefinition()</li>
+<li>ListableBeanFactory.getBeanNamesForType()</li>
+</ul>
+<p>注册 Bean 定义</p>
+<ul>
+<li>如果是 BeanDefinitionRegistry， 使用 BeanDefinitionRegistry.registerBeanDefinition() 方法注册<ul>
+<li>注册前要先利用 GenericBeanDefinition 去setBeanClass</li>
+</ul>
+</li>
+<li>如果不是上面的类型，就使用 BeanFactory.registerSingleton() 方法注册，并传入实例</li>
+</ul>
+<p><strong>注</strong><br>如果使用 Spring4.x以上版本，即Spring支持自动配置后，尽管我们的定义的配置类不在 @SpringBootApplication 默认packge 下，SpringBoot 也会扫描到，<br>因为在 spring.factories 文件中默认配置了 org.springframework.boot.autoconfigure.EnableAutoConfiguration, SpringBoot 就会找到我们的自动配置类。</p>
+<h1 id="71-了解起步依赖及其原理"><a href="#71-了解起步依赖及其原理" class="headerlink" title="71 了解起步依赖及其原理"></a>71 了解起步依赖及其原理</h1><p>Spring Boot 的特色功能之一，Starter Dependency</p>
+<p>问题，SpringBoot 为什么会提供Starter Dependency 这样的功能，其背后是如何实现的</p>
+<blockquote>
+<p>需要关注的就是 Maven 如何管理依赖</p>
+</blockquote>
+<p>没有 Starter Dependency 之前的时候</p>
+<ul>
+<li>传统maven项目，需要我们自己管理依赖问题</li>
+<li>要实现一个功能， 需要引入哪些依赖</li>
+<li>多个依赖项目之间是否会有兼容问题<ul>
+<li>当多个版本的包被引入到依赖，Classpath中同package同方法时就可能出现依赖冲突</li>
+</ul>
+</li>
+</ul>
+<h2 id="关于-Maven-依赖管理的一些小技巧"><a href="#关于-Maven-依赖管理的一些小技巧" class="headerlink" title="关于 Maven 依赖管理的一些小技巧"></a>关于 Maven 依赖管理的一些小技巧</h2><p>了解你的依赖</p>
+<ul>
+<li>mvn dependency:tree , 打印工程所有的maven依赖</li>
+<li>IDEA Maven Helper 插件</li>
+<li>使用 duplicate-finder 这个mvn插件来找到可能冲突的类</li>
+</ul>
+<p>排除特定依赖</p>
+<ul>
+<li>exclusion ， 在pom.xml中排除指定依赖</li>
+</ul>
+<p>统一管理依赖</p>
+<ul>
+<li>dependencyManagement ， 当项目是多module的时候，在parent的pom.xml中统一管理部分依赖</li>
+<li>Bill of Materials - bom， Maven提供的一种功能，具体去搜一下</li>
+</ul>
+<h2 id="SprigBoot-的起步依赖（Starter-Dependency）"><a href="#SprigBoot-的起步依赖（Starter-Dependency）" class="headerlink" title="SprigBoot 的起步依赖（Starter Dependency）"></a>SprigBoot 的起步依赖（Starter Dependency）</h2><p>Starter Dependencies</p>
+<ul>
+<li>直接面向功能， 即我们只需要知道自己要什么功能，去SpringBoot 中找到相关功能的Starter Dependency， 然后剩下的该功能有哪些依赖，SpringBoot会帮我们处理这个功能所需要的的所有的相关依赖。</li>
+<li>好处，一站获得所有相关依赖，不再复制粘贴</li>
+</ul>
+<p>官方的 Starters</p>
+<blockquote>
+<p>从官方文档的 Starters 章节中，我们可以看到它帮我们制作提供了很多功能模块的 starters， 我们需要时，只要做一个指定 starter的引入即可</p>
+</blockquote>
+<ul>
+<li>spring-boot-starter-*</li>
+</ul>
+<p>问题：引入多个 Starter 依赖，它们里面有重复的依赖，或者不同版本的依赖时，SpringBoot 是如何解决的？</p>
+<ul>
+<li>Spring Boot 同一个版本中统一处理了所有支持的第三方依赖的版本，所以在使用同版本的starter时，会不出现jar冲突问题。</li>
+</ul>
+<h1 id="72-定制自己的起步依赖"><a href="#72-定制自己的起步依赖" class="headerlink" title="72 定制自己的起步依赖"></a>72 定制自己的起步依赖</h1><p>主要内容</p>
+<ol>
+<li>自动配置相关模块，即 autoconfigure 模块，包含自动配置代码。 如果你的依赖需要做自动配置，可以在该模块中写下自己的自动配置。<blockquote>
+<p><strong>注：</strong> 这个模块不是必须的，</p>
+<p>如果我们的模块不需要自动配置，就不需要 autoconfigure 模块。<br>如果我们的模块依赖了 spring-boot-starter ，因为 SpringBoot 的自动配置都集中在 SpringBoot的autoconfigure中，所以也会自动加载SpringBoot的自动配置</p>
+</blockquote>
+</li>
+<li>starter 模块， 包含指向自动配置模块的依赖及其他相关依赖</li>
+</ol>
+<p>命名方式</p>
+<ul>
+<li>xxx-spring-boot-autoconfigure</li>
+<li>xxx-spring-boot-starter<blockquote>
+<p>通过加前缀的方式，来与官方的依赖做区分。</p>
+</blockquote>
+</li>
+</ul>
+<p>一些注意事项</p>
+<ul>
+<li><code>不要使用 spring-boot 作为依赖的前缀</code>，这样容易与 Spring 官方的混淆在一起</li>
+<li><code>不要使用 spring-boot 的配置命名空间</code>， 同上</li>
+<li>starter 中仅添加必要的依赖，减少最终打出来的包的依赖</li>
+<li>（非必须）声明对 spring-boot-starter 的依赖<ul>
+<li>主要是为了加载一些 SpringBoot 的自动配置，如果上层项目引入了 spring-boot-starter 的依赖，也就不需要了，因为大部分SpringBoot项目都会有该依赖</li>
+</ul>
+</li>
+</ul>
+<h1 id="73-深挖-Spring-Boot-的配置加载机制"><a href="#73-深挖-Spring-Boot-的配置加载机制" class="headerlink" title="73 深挖 Spring Boot 的配置加载机制"></a>73 深挖 Spring Boot 的配置加载机制</h1><p>SpringBoot是如何加载配置文件和配置项的？</p>
+<p>根据 SpringBoot 的官方文档 24 章节 外置配置的内容</p>
+<p>外化配置加载顺序，按照先后出现顺序加载</p>
+<ol>
+<li>开启 DevTools 时，~&#x2F;.spring-boot-devtools.properties</li>
+<li>测试类上的 @TestPropertySource 注解</li>
+<li>@SpringBootTest#properties 属性</li>
+<li><code>命令行参数 （例如，--server.port=9000）</code> 优先加载</li>
+<li>SPRING_APPLICATION_JSON 中的属性</li>
+<li>ServletConfig 初始化参数</li>
+<li>ServletContext 初始化参数</li>
+<li>java:comp&#x2F;env 中的 JNDI 属性</li>
+<li><code>System.getProperties()</code>  java -D 参数指定的属性，在命令行中可以通过 -D 参数来指定一些系统属性</li>
+<li><code>操作系统环境变量</code></li>
+<li>random.* 涉及到的 RandomValuePropertySource</li>
+<li>jar包外部的 application-{profile}.properties 或者 .yml</li>
+<li>jar包内部的 application-{profile}.properties 或者 .yml</li>
+<li>jar包外部的 appliaction.properties 或者 .yml</li>
+<li>jar包内部的 application.properties 或者 .yml</li>
+<li>@Configuration 类上的 @PropertySource</li>
+<li>SpringApplication.setDefaultProperties() 设置的默认属性</li>
+</ol>
+<p>application[-profile].properties 文件的默认位置</p>
+<ul>
+<li>.&#x2F;config</li>
+<li>.&#x2F;</li>
+<li>CLASSPATH 中的 &#x2F;config</li>
+<li>CLASSPATH 中的 &#x2F;</li>
+</ul>
+<p>通过命令行参数，修改名字或者路径</p>
+<ul>
+<li>spring.config.name  修改配置文件的名字，比如不叫做application.properties，改为env.properties</li>
+<li>spring.config.location</li>
+<li>spring.config.additional-location</li>
+</ul>
+<h3 id="Relaxed-Binding"><a href="#Relaxed-Binding" class="headerlink" title="Relaxed Binding"></a>Relaxed Binding</h3><p>什么是<code>Relaxed Binding</code></p>
+<table>
+<thead>
+<tr>
+<th>命令风格</th>
+<th>使用范围</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>短划线分隔 (优先使用)</td>
+<td>properties 文件 &#x2F; YAML文件 &#x2F; 系统属性</td>
+<td>geektime.spring-boot.first-demo</td>
+</tr>
+<tr>
+<td>驼峰式</td>
+<td>同上</td>
+<td>geektime.springBoot.firstDemo</td>
+</tr>
+<tr>
+<td>下划线分隔</td>
+<td>同上</td>
+<td>geektime.spring_boot.first_demo</td>
+</tr>
+<tr>
+<td>全大写，下划线分隔</td>
+<td>环境变量</td>
+<td>GEEKTIME_SPRINGBOOT_FIRSTDEMO</td>
+</tr>
+</tbody></table>
+<h1 id="74-理解配置背后的-PropertySource-抽象"><a href="#74-理解配置背后的-PropertySource-抽象" class="headerlink" title="74 理解配置背后的 PropertySource 抽象"></a>74 理解配置背后的 PropertySource 抽象</h1><p>添加 PropertySource</p>
+<ul>
+<li>使用XML文件的时候，通过 <a href="context:property-placeholder">context:property-placeholder</a> 这个标签来声明配置文件 ？？？</li>
+<li>PropertySourcesPlaceholderConfigurer  Spring 3.1开始使用这个类来处理，为了兼容之前的版本，下面的类也依然存在<ul>
+<li>PropertyPlaceholderConfigurer</li>
+</ul>
+</li>
+<li>如果使用的是 Java Config 配置的形式，那么只需要在Config类上添加下面的注解即可<ul>
+<li>@PropertySource</li>
+<li>@PropertySources  多个数据源就使用这个</li>
+</ul>
+</li>
+</ul>
+<p>如果是使用 SpringBoot，SpringBoot 提供了 @ConfigurationProperties 注解更方便使用</p>
+<ul>
+<li>可以将属性绑定到结构化对象上</li>
+<li>支持 Relaxed Binging</li>
+<li>支持安全的类型转换</li>
+<li>@EnableConfigurationProperties</li>
+</ul>
+<h2 id="定制-PropertySource"><a href="#定制-PropertySource" class="headerlink" title="定制 PropertySource"></a>定制 PropertySource</h2><p>主要步骤</p>
+<ol>
+<li>实现 PropertySource<T></li>
+<li>将 PropertySource 注册到 Environment中<ol>
+<li>实现下面的接口<ul>
+<li>EnvironmentPostProcessor</li>
+<li>BeanFactoryPostProcessor</li>
+</ul>
+</li>
+<li>从 Environment 对象中获取 PropertySources</li>
+<li>将自己的 PropertySource 添加到合适的位置</li>
+</ol>
+</li>
+</ol>
+<h1 id="79-如果定制Web容器的运行参数"><a href="#79-如果定制Web容器的运行参数" class="headerlink" title="79 如果定制Web容器的运行参数"></a>79 如果定制Web容器的运行参数</h1><p>SpringBoot支持的Web容器</p>
+<ul>
+<li>spring-boot-starter-tomcat</li>
+<li>spring-boot-starter-jetty</li>
+<li>spring-boot-starter-undertow</li>
+<li>spring-boot-starter-reactor-netty</li>
+</ul>
+<p>通过选择不同的 starter-dependency 来实现不同Web容器的替换</p>
+<h2 id="修改容器配置"><a href="#修改容器配置" class="headerlink" title="修改容器配置"></a>修改容器配置</h2><p>端口</p>
+<ul>
+<li>server.port</li>
+<li>server.address</li>
+</ul>
+<p>压缩相关内容</p>
+<ul>
+<li>server.compression.enabled</li>
+<li>server.compression.min-response-size</li>
+<li>server.compression.mime-types</li>
+</ul>
+<p>Tomcat 特定配置</p>
+<ul>
+<li>server.tomcat.max-connections&#x3D;10000</li>
+<li>server.tomcat.max-http-post-size&#x3D;2MB</li>
+<li>server.tomcat.max-swallow-size&#x3D;2MB</li>
+<li>server.tomcat.max-threads&#x3D;200</li>
+<li>server.tomcat.min-spare-threads&#x3D;10</li>
+</ul>
+<p>其他Web容器，分别在不同的 <code>server.xxx</code>下面</p>
+<p>错误处理</p>
+<ul>
+<li>server.error.path&#x3D;&#x2F;error</li>
+<li>server.error.include-exception&#x3D;false</li>
+<li>server.error.include-stacktrace&#x3D;never</li>
+<li>server.error.whitelabel.enabled&#x3D;true</li>
+</ul>
+<p>其他</p>
+<ul>
+<li>server.use-forward-headers</li>
+<li>server.servlet.session.timeout</li>
+</ul>
+<p>通过编程的方式实现容器的配置</p>
+<ul>
+<li>WebServerFacotoryCustomizer<T><ul>
+<li>TomcatServletWebServerFactory</li>
+<li>JettyServletWebServerFactory</li>
+<li>UndertowServletWebServerFactory<br>官方文档也提供了其他的编程方式来处理</li>
+</ul>
+</li>
+</ul>
+<h1 id="82-编写命令行运行的程序"><a href="#82-编写命令行运行的程序" class="headerlink" title="82 编写命令行运行的程序"></a>82 编写命令行运行的程序</h1><h2 id="关闭-Web-容器"><a href="#关闭-Web-容器" class="headerlink" title="关闭 Web 容器"></a>关闭 Web 容器</h2><p>有以下几种方式</p>
+<ol>
+<li><p>控制依赖</p>
+<ul>
+<li>不添加 Web相关依赖</li>
+</ul>
+</li>
+<li><p>通过修改配置的方式</p>
+<blockquote>
+<p>如果代码中有一些与Web服务接口调用等相关的交互，或者很难完全去除Web相关依赖，可以使用修改配置的方式，关闭Web 容器的支持</p>
+</blockquote>
+<ul>
+<li>spring.main.web-application-type&#x3D;none</li>
+</ul>
+</li>
+<li><p>编程的方式</p>
+<ul>
+<li>SpringApplication<ul>
+<li>setWebApplicationType() 方法，将 <code>webApplicationType</code> 类型设置为<code>none</code></li>
+</ul>
+</li>
+<li>SpringApplicationBuilder<ul>
+<li>Web()</li>
+</ul>
+</li>
+<li>在调用 SpringApplication 的 run() 方法前设置 WebApplicationType</li>
+</ul>
+</li>
+</ol>
+<h2 id="常用工具类"><a href="#常用工具类" class="headerlink" title="常用工具类"></a>常用工具类</h2><p>不同的Runner， 功能上类似，在程序启动的时候执行一段代码， 区别在于参数不同</p>
+<ul>
+<li>ApplicationRunner<ul>
+<li>参数是 ApplicationArguments</li>
+</ul>
+</li>
+<li>CommandLineRunner<ul>
+<li>参数是 String[]</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>如果有多个Runner，可以通过添加 @Order 注解，或者实现 Order 接口来指定运行顺序</p>
+</blockquote>
+<p>返回码</p>
+<ul>
+<li>ExitCodeGenerator</li>
+</ul>
+<h1 id="83-了解可执行-Jar包背后的秘密"><a href="#83-了解可执行-Jar包背后的秘密" class="headerlink" title="83 了解可执行 Jar包背后的秘密"></a>83 了解可执行 Jar包背后的秘密</h1><h2 id="认识可执行-Jar"><a href="#认识可执行-Jar" class="headerlink" title="认识可执行 Jar"></a>认识可执行 Jar</h2><p>其中包含4部分</p>
+<ul>
+<li><p>Jar 描述，META-INF&#x2F;MANIFEST.MF</p>
+<blockquote>
+<p>manifest 翻译为 程序集清单，装配件清单</p>
+</blockquote>
+</li>
+<li><p>SpringBoot Loader，org&#x2F;springframework&#x2F;boot&#x2F;loader&#x2F;<spring boot loader classes></p>
+</li>
+<li><p>项目内容， BOOT-INF&#x2F;classes&#x2F;xxx&#x2F;yourclass.class</p>
+</li>
+<li><p>项目依赖， BOOT-INF&#x2F;lib&#x2F;dependency1.jar,dependency2.jar…</p>
+</li>
+</ul>
+<p>其中不包含</p>
+<ul>
+<li>jdk &#x2F; jre</li>
+</ul>
+<h2 id="如何找到程序的入口"><a href="#如何找到程序的入口" class="headerlink" title="如何找到程序的入口"></a>如何找到程序的入口</h2><p>jar的启动类</p>
+<ul>
+<li>MANIFEST.MF<ul>
+<li>Main-Class: org.springframework.boot.loader.JarLauncher<blockquote>
+<p>在这里指定 jar -jar xxx.jar 要运行需要的启动类，因为是jar包，所以是JarLuncher，如果是war包，则换成 WarLauncher</p>
+<p>指定之后，java就会找到这个类运行。那么JarLauncher又是怎样找到SpringBoot的应用程序的呢？通过下面的Start-Class指定的类去执行</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<p>项目的主类</p>
+<ul>
+<li>MANIFEST.MF<ul>
+<li><p>Start-Class: xxx.yyy.zzz</p>
+<blockquote>
+<p>这里是我们添加了 <code>@SpringApplication</code> 注解的类的全限定类名</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="如何创建可直接执行的jar（无需-java-jar来引导执行，直接通过-x2F-xxx-jar即可执行）"><a href="#如何创建可直接执行的jar（无需-java-jar来引导执行，直接通过-x2F-xxx-jar即可执行）" class="headerlink" title="如何创建可直接执行的jar（无需 java -jar来引导执行，直接通过 .&#x2F;xxx.jar即可执行）"></a>如何创建可直接执行的jar（无需 java -jar来引导执行，直接通过 .&#x2F;xxx.jar即可执行）</h2><p>通过plugin，org.springframework.boot.spring-boot-maven-plugin，在<configuration>属性添加为true的<executable>属性</p>
+<ul>
+<li>打包后的jar可直接运行，无需java命令，即不需要 java -jar的命令来引导执行，是可以直接再命令行中运行。</li>
+<li>可以在 <code>&lt;jar文件的同名文件&gt;.conf</code> 的文件中配置程序需要的参数</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>说明</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CONF_FOLDER</td>
+<td>放置.conf的目录位置</td>
+<td>只能放置环境变量中</td>
+</tr>
+<tr>
+<td>JAVA_OPTS</td>
+<td>JVM启动时的参数</td>
+<td>比如 JVM的内存Xms,Xmx，和GC</td>
+</tr>
+<tr>
+<td>RUN_ARGS</td>
+<td>传给程序执行的参数</td>
+<td></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>注：因为是可以直接实行，所以在linux 中也可以放在init.d,或system目录下作为一个服务来操作。</p>
+</blockquote>
+<p>通过less 或者more命令，直接查看这个可独自运行的jar文件，可以知道该文件的开头是一个 SpringBoot生成的执行脚本。如果不是可独自运行的jar，jar文件头没有改可执行脚本。</p>
+<blockquote>
+<p>为什么可以在jar文件头放一个可执行脚本？</p>
+<p>利用了shell文件是从上向下读，zip文件是从尾部向前读的特性。</p>
+</blockquote>
+<p>这段内容可以打出来看看，学习一下。</p>
+<h1 id="84-如何将-SpringBoot应用，打包成Docker镜像文件"><a href="#84-如何将-SpringBoot应用，打包成Docker镜像文件" class="headerlink" title="84 如何将 SpringBoot应用，打包成Docker镜像文件"></a>84 如何将 SpringBoot应用，打包成Docker镜像文件</h1><p>什么是Docker镜像？</p>
+<ul>
+<li>镜像是静态的只读模板</li>
+<li>镜像中包含构建Docker容器的指令</li>
+<li>镜像是分层的 （利用了一个叫做，<code>联合文件系统</code> 的技术来处理）</li>
+<li>通过Dockerfile 来创建镜像</li>
+</ul>
+<p>Dockerfile中常用的指令</p>
+<blockquote>
+<p>可以通过官方文档了解</p>
+</blockquote>
+<h2 id="通过Maven构建-Docker-镜像"><a href="#通过Maven构建-Docker-镜像" class="headerlink" title="通过Maven构建 Docker 镜像"></a>通过Maven构建 Docker 镜像</h2><p>准备工作</p>
+<ul>
+<li>提供一个Dockerfile</li>
+<li>配置 dockerfile-maven-plugin 插件<ul>
+<li>到官网查看一下这个插件如何使用</li>
+</ul>
+</li>
+</ul>
+<p>构建执行</p>
+<ul>
+<li>mvn package</li>
+<li>mvn dockerfile:build</li>
+</ul>
+<p>检查结果</p>
+<ul>
+<li>docker images</li>
+</ul>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/SpringBoot%E5%AD%A6%E4%B9%A0.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SpringBoot/" rel="tag">SpringBoot</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/Mybatis.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Mybatis
+          
+        </div>
+      </a>
+    
+    
+      <a href="/SpringData%E5%AD%A6%E4%B9%A0.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">SpringData学习</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

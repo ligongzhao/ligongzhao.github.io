@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>常用库学习 |  听潮亭</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="听潮亭" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-学习笔记/Rust/常用库学习"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  常用库学习
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/%E5%B8%B8%E7%94%A8%E5%BA%93%E5%AD%A6%E4%B9%A0.html" class="article-date">
+  <time datetime="2022-05-19T02:40:05.000Z" itemprop="datePublished">2022-05-19</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Rust/">Rust</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">3.7k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">16 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>对于实际开发应用问题，需要对同类 crate 进行深入引用、比较分析，有利于遇到实际应用问题时，找到合适解决方案。</p>
+<p>Rust 正在发展，所以这个文档也应该随着 crate 发展而更改。</p>
+<h1 id="标准库"><a href="#标准库" class="headerlink" title="标准库"></a>标准库</h1><h2 id="宏"><a href="#宏" class="headerlink" title="宏"></a>宏</h2><p>利用模板生产字符串</p>
+<p><code>format!()</code></p>
+<p>样例：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">CustomError</span>(<span class="type">String</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">ce</span> = <span class="title function_ invoke__">CustomError</span>(<span class="built_in">format!</span>(<span class="string">&quot;Error reading `&#123;&#125;`: &#123;&#125;&quot;</span>, path, err));</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="println-使用注意"><a href="#println-使用注意" class="headerlink" title="println! 使用注意"></a><code>println!</code> 使用注意</h2><p>注意：<code>println!</code> 语句每次打印都会将内容 flush 到终端，因为通常需要打印新行，所以如果在意程序性能，需要谨慎使用<code>println!</code>，</p>
+<p>如何优化？</p>
+<p>可以使用 <code>BufWriter</code></p>
+<ul>
+<li>它是将 stdout 句柄包装在<code>BufWriter</code> 中，</li>
+<li>默认缓冲区 8KB，</li>
+<li>当需要立刻写到磁盘时，调用<code>.flush()</code> 函数将 <code>BufWriter</code> 中的数据打印出来。</li>
+<li>优点2：可以方便的获取 <code>stdout</code> 和 <code>stderr</code> 的锁，并使用 <code>writeln!()</code> 出来。</li>
+</ul>
+<p><code>std::env::args</code> </p>
+<p>获取命令行参数</p>
+<p>通用编程概念：</p>
+<p>析构函数（destructor），是一个清理实例的函数；</p>
+<p>构造函数，创建实例的函数；</p>
+<ul>
+<li>构造函数与析构函数是一对概念</li>
+</ul>
+<p>Rust 所有权系统会确保引用总是有效，也会确保<code>drop</code> 只会在值不再被使用时被自动调用一次。</p>
+<ul>
+<li>手动调用需要使用 <code>std::mem::drop</code> 方法。</li>
+</ul>
+<p>Rust 的 <code>Option&lt;T&gt;</code> 中 <code>task</code>方法会取出Option中的<code>Some</code>值，只留下<code>None</code>值。</p>
+<ul>
+<li>更多内容查看Option的 task 方法的 API，有实例。</li>
+</ul>
+<p><code>#[allow(dead_code)]</code> 相关内容</p>
+<p>&#x2F;&#x2F; <code>#[allow(dead_code)]</code> is an attribute that disables the <code>dead_code</code> lint</p>
+<p>作用：用在声明但没有使用的函数&#x2F;方法上，消除<code>dead_code</code>的告警。</p>
+<p><code>cfg </code>相关内容</p>
+<ul>
+<li>the <code>cfg</code> attribute: <code>#[cfg(...)]</code> in attribute position</li>
+<li>the <code>cfg!</code> macro: <code>cfg!(...)</code> in boolean expressions</li>
+</ul>
+<p>valgrind 工具的使用</p>
+<p>we can double check for memory errors using <a target="_blank" rel="noopener" href="http://valgrind.org/info/"><code>valgrind</code></a></p>
+<h2 id="Option"><a href="#Option" class="headerlink" title="Option"></a>Option</h2><p>Combinators</p>
+<p>组合器可以用模块化的方式管理控制流（control flow）</p>
+<ul>
+<li>控制流，即条件判断，if，match，for，等都可以用于控制流的表达式。</li>
+</ul>
+<p><code>match</code> 是一种处理 <code>Option</code> 类型有效的方式，但是有时候，当我们需要匹配的值只有一种有效输入时，使用 <code>match</code> 就太重了（即结构复杂，不易读和管理）。</p>
+<p>一般由两种方式代替：</p>
+<ul>
+<li>只关心一种值是否能匹配，即简单模式使用<code>if let</code>模式匹配来处理；</li>
+<li>如果有嵌套判断时（复杂点），使用Combinators中的方法来处理会更优雅一些。</li>
+</ul>
+<p>常用方法：</p>
+<ul>
+<li><code>map()</code></li>
+<li><code>and_then()</code></li>
+</ul>
+<h3 id="map"><a href="#map" class="headerlink" title="map()"></a><code>map()</code></h3><p><code>.map()</code> ，是Option内置的一个方法，提供简单的映射关系，<code>Some-&gt;Some</code>，或<code>None-&gt;None</code>。</p>
+<p>方法签名如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">map</span>&lt;U, F: <span class="title function_ invoke__">FnOnce</span>(T) <span class="punctuation">-&gt;</span> U&gt;(<span class="keyword">self</span>, f: F) <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;U&gt;</span><br><span class="line"></span><br><span class="line">说明：注意参数的返回值类型与外部返回值类型。</span><br><span class="line">f —&gt; U，而 map <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;U&gt;</span><br></pre></td></tr></table></figure>
+
+<p>该方法支持链式调用。即map(xx).map(xx)。</p>
+<h3 id="and-then"><a href="#and-then" class="headerlink" title="and_then()"></a><code>and_then()</code></h3><p><code>.and_then()</code> ，避免复杂的嵌套，类似其他语言中的<code>flatmap()</code>，</p>
+<p>方法签名如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">and_then</span>&lt;U, F: <span class="title function_ invoke__">FnOnce</span>(T) <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;U&gt;&gt;(<span class="keyword">self</span>, f: F) <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;U&gt;</span><br><span class="line"></span><br><span class="line">说明：注意参数的返回值类型与外部返回值类型。</span><br><span class="line">f <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;U&gt;, and_then <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;U&gt;.</span><br></pre></td></tr></table></figure>
+
+<p>当结果为None时，返回None。</p>
+<blockquote>
+<p>从上面的返回值类型对比，可知，</p>
+<p>相同：两者返回类型都有一层封装Option类型，</p>
+<p>不同：<code>map</code> 会比 <code>and_then</code> 多一层封装。</p>
+</blockquote>
+<p><strong>注意：</strong><code>map</code> 或 <code>and_then</code> 结合嵌套使用时，需要注意返回值类型。可以用 <code>and_then</code> 在外层。</p>
+<h3 id="ok"><a href="#ok" class="headerlink" title="ok()"></a><code>ok()</code></h3><h3 id="ok-or"><a href="#ok-or" class="headerlink" title="ok_or()"></a><code>ok_or()</code></h3><p>用来转换<code>Option&lt;T&gt;</code> -&gt; <code>Result&lt;T, E&gt;</code></p>
+<p>参数为转换后的 Error 类型。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">ok_or</span>&lt;E&gt;(<span class="keyword">self</span>, err: E) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;T, E&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">EmptyVec</span>;</span><br><span class="line"><span class="keyword">let</span> <span class="variable">first</span> = vec.<span class="title function_ invoke__">first</span>().<span class="title function_ invoke__">ok_or</span>(EmptyVec)?;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="ok-or-else"><a href="#ok-or-else" class="headerlink" title="ok_or_else()"></a><code>ok_or_else()</code></h3><p>Transforms the <code>Option&lt;T&gt;</code> into a <code>Result&lt;T, E&gt;</code>, mapping [<code>Some(v)</code>] to [<code>Ok(v)</code>] and <code>None</code> to [<code>Err(err())</code>].</p>
+<p>转换 <code>Option&lt;T&gt;</code> -&gt; <code>Result&lt;T, E&gt;</code></p>
+<ul>
+<li><p><code>Some(v)</code> -&gt; <code>Ok(v)</code></p>
+</li>
+<li><p><code>None</code> -&gt; <code>Err(e)</code></p>
+<blockquote>
+<p>转换 None -&gt; Err 的过程需要手动实现并作为参数传入。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="Result"><a href="#Result" class="headerlink" title="Result"></a>Result</h2><ul>
+<li><code>Ok(T)</code></li>
+<li><code>Err(E)</code></li>
+</ul>
+<p><code>.unwrap()</code> </p>
+<ul>
+<li>成功，返回元素T，</li>
+<li>失败，抛出，panic，</li>
+</ul>
+<p><code>.unwrap_or_else()</code></p>
+<ul>
+<li>成功，返回元素T，</li>
+<li>失败，调用传入的闭包&#x2F;函数。</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">echo</span>()...</span><br><span class="line"></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;`echo hello &gt; a/b.txxt`&quot;</span>);</span><br><span class="line"><span class="title function_ invoke__">echo</span>(<span class="string">&quot;hello&quot;</span>, &amp;Path::<span class="title function_ invoke__">new</span>(<span class="string">&quot;a/b.txt&quot;</span>)).<span class="title function_ invoke__">unwrap_or_else</span>(|why| <span class="built_in">println!</span>(<span class="string">&quot;! &#123;:?&#125;&quot;</span>, why.<span class="title function_ invoke__">kind</span>()));</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="在-main-函数中使用-Result"><a href="#在-main-函数中使用-Result" class="headerlink" title="在 main() 函数中使用 Result"></a>在 main() 函数中使用 Result</h3><p>通常的main函数如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Hello world&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当main 函数需要返回时，可以使用如下方式：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;(), ParseIntError&gt;&#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">number_str</span> = <span class="string">&quot;10&quot;</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">number</span> = <span class="keyword">match</span> number_str.parse::&lt;<span class="type">i32</span>&gt;() &#123;</span><br><span class="line">        <span class="title function_ invoke__">Ok</span>(number) =&gt; number,</span><br><span class="line">        <span class="title function_ invoke__">Err</span>(e) =&gt; <span class="keyword">return</span> <span class="title function_ invoke__">Err</span>(e),</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, number);</span><br><span class="line">    <span class="title function_ invoke__">Ok</span>(())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>与Option 类型中的组合器的使用方式与注意事项类似</p>
+<ul>
+<li><p><code>map()</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">map</span>&lt;U, F: <span class="title function_ invoke__">FnOnce</span>(T) <span class="punctuation">-&gt;</span> U&gt;(<span class="keyword">self</span>, op: F) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;U, E&gt;</span><br><span class="line"></span><br><span class="line">返回值类型注意点：</span><br><span class="line">op <span class="punctuation">-&gt;</span> U, map <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;U, E&gt;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p><code>and_then()</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">and_then</span>&lt;U, F: <span class="title function_ invoke__">FnOnce</span>(T) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;U, E&gt;&gt;(<span class="keyword">self</span>, op: F) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;U, E&gt;</span><br><span class="line"></span><br><span class="line">返回值类型注意点：</span><br><span class="line">op <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;U, E&gt;, and_then <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;U, E&gt;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<blockquote>
+<p> 特殊点：</p>
+</blockquote>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">double_first_v3</span>(vec: <span class="type">Vec</span>&lt;&amp;<span class="type">str</span>&gt;) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;<span class="type">Option</span>&lt;<span class="type">i32</span>&gt;, ParseIntError&gt; &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">opt</span> = vec.<span class="title function_ invoke__">first</span>().<span class="title function_ invoke__">map</span>(|first| &#123;</span><br><span class="line">        first.parse::&lt;<span class="type">i32</span>&gt;().<span class="title function_ invoke__">map</span>(|n| <span class="number">2</span> * n)</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里的map()，从上面的方法签名可以得知参数为实现了 FnOnce(T) -&gt; U 的类型</span></span><br><span class="line">    <span class="comment">// 这里直接使用了简写的 Some。</span></span><br><span class="line">    opt.<span class="title function_ invoke__">map_or</span>(<span class="title function_ invoke__">Ok</span>(<span class="literal">None</span>), |r| r.<span class="title function_ invoke__">map</span>(<span class="literal">Some</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="Ok"><a href="#Ok" class="headerlink" title="Ok()"></a><code>Ok()</code></h3><p>Converts from <code>Result&lt;T, E&gt;</code> to <code>Option&lt;T&gt;</code>.</p>
+<p>Converts <code>self</code> into an <code>Option&lt;T&gt;</code>, consuming <code>self</code>, and discarding the error, if any.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">x</span>: <span class="type">Result</span>&lt;<span class="type">u32</span>, &amp;<span class="type">str</span>&gt; = <span class="title function_ invoke__">Ok</span>(<span class="number">2</span>);</span><br><span class="line"><span class="built_in">assert_eq!</span>(x.<span class="title function_ invoke__">ok</span>(), <span class="title function_ invoke__">Some</span>(<span class="number">2</span>));</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">x</span>: <span class="type">Result</span>&lt;<span class="type">u32</span>, &amp;<span class="type">str</span>&gt; = <span class="title function_ invoke__">Err</span>(<span class="string">&quot;Nothing here&quot;</span>);</span><br><span class="line"><span class="built_in">assert_eq!</span>(x.<span class="title function_ invoke__">ok</span>(), <span class="literal">None</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="String"><a href="#String" class="headerlink" title="String"></a>String</h2><p><code>string.trim_matches(chars_to_trim)</code></p>
+<p>通过模式匹配，将前后缀中匹配中的重复内容删除</p>
+<ul>
+<li>返回一个字符串切片。</li>
+</ul>
+<p>参数可以是<code>char</code>，或者<code>&amp;[char]</code>（即char的切片），或者函数或闭包。</p>
+<p>The [pattern] can be a [<code>char</code>], a slice of [<code>char</code>]s, or a function or closure that determines if a character matches.</p>
+<h3 id="按字节的16进制值？"><a href="#按字节的16进制值？" class="headerlink" title="按字节的16进制值？"></a>按字节的16进制值？</h3><p>因为 &amp;str 与 String 内部都是 <code>Vec[u8]</code> 封装的，所以在处理字符串的时候，可以直接通过写该字节的16进制表示的形式。</p>
+<ul>
+<li>注意，写16进制表示的值需要<strong>使用<code>\</code> 转义符号</strong>；</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// I&#x27;m writing Rust!;</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">byte_escape</span> = <span class="string">&quot;I&#x27;m writing \x52\x75\x73\x74!&quot;</span>;</span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;What are you doing\x3F (\\x3F means ?) &#123;&#125;&quot;</span>, byte_escape);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>\x</code>，表示是16进制；</li>
+<li><code>\u</code>，表示是Unicode；</li>
+</ul>
+<h3 id="raw-原始字符串表示"><a href="#raw-原始字符串表示" class="headerlink" title="raw 原始字符串表示"></a>raw 原始字符串表示</h3><ul>
+<li><code>r&quot;xxx&quot;</code> ，即表示原始字符串，此时Rust会输出引号内的内容 </li>
+<li>如果在raw string 中需要 <code>&quot;</code>双引号，需要使用一对 <code>#</code> 符号来转义。</li>
+<li>如果内容中需要<code>#</code>，则添加再添加一对 <code>#</code>符号；</li>
+</ul>
+<h3 id="字节字符串"><a href="#字节字符串" class="headerlink" title="字节字符串"></a>字节字符串</h3><p>byte string</p>
+<h3 id="String-from-utf8-vec-Vec-lt-u8-gt"><a href="#String-from-utf8-vec-Vec-lt-u8-gt" class="headerlink" title="String::from_utf8(vec: Vec&lt;u8&gt;)"></a><code>String::from_utf8(vec: Vec&lt;u8&gt;)</code></h3><p>通常用于将字节数组转换为 String 时使用。</p>
+<p>pub fn from_utf8(vec: Vec<u8>) -&gt; Result&lt;String, FromUtf8Error&gt;</p>
+<hr>
+<p>Converts a vector of bytes to a <code>String</code>.</p>
+<p>将一个 <code>Vec&lt;u8&gt;</code> 转换为 String。</p>
+<p>A string (<code>String</code>) is made of bytes (<code>u8</code>), and a vector of bytes ([<code>Vec&lt;u8&gt;</code>]) is made of bytes, so this function converts between the two. Not all byte slices are valid <code>String</code>s, however: <code>String</code> requires that it is valid UTF-8. <code>from_utf8()</code> checks to ensure that the bytes are valid UTF-8, and then does the conversion.</p>
+<p>If you need a [<code>&amp;str</code>] instead of a <code>String</code>, consider <code>std::str::from_utf8</code>.</p>
+<p>注意：</p>
+<ul>
+<li>因为不是所有的 <code>[u8]</code> (byte 切片) 都是 UTF-8 的，所以这个方法会做检查，如果不是 UTF-8 会报错。</li>
+<li>Rust 中要求 String 必须是有效的 UT-8 编码。</li>
+</ul>
+<h2 id="thread"><a href="#thread" class="headerlink" title="thread"></a>thread</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::thread;</span><br><span class="line"><span class="keyword">use</span> std::time::Duration;</span><br><span class="line">thread::<span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_secs</span>(<span class="number">5</span>));</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码作用，sleep 5s 。</p>
+<p>需要两个标准库中的内容，<code>std::thread</code> 和 <code>std::time::Duration</code>。</p>
+<h1 id="Iter"><a href="#Iter" class="headerlink" title="Iter"></a>Iter</h1><p><code>map()</code></p>
+<p>解析失败的情况下，会将error类型返回，并不会触发panic。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">run_map</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">strings</span> = <span class="built_in">vec!</span>[<span class="string">&quot;tofu&quot;</span>,<span class="string">&quot;93&quot;</span>, <span class="string">&quot;18&quot;</span>];</span><br><span class="line">    <span class="comment">// 这里当集合中有遇到解析错误的内容，则整体都会出错。</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">numbers</span>: <span class="type">Vec</span>&lt;_&gt;= strings.<span class="title function_ invoke__">into_iter</span>().<span class="title function_ invoke__">map</span>(|s| s.parse::&lt;<span class="type">i32</span>&gt;()).<span class="title function_ invoke__">collect</span>();</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Results: &#123;:?&#125;&quot;</span>, numbers);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 运行结果：</span></span><br><span class="line">Results: [<span class="title function_ invoke__">Err</span>(ParseIntError &#123; kind: InvalidDigit &#125;), <span class="title function_ invoke__">Ok</span>(<span class="number">93</span>), <span class="title function_ invoke__">Ok</span>(<span class="number">18</span>)]</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>filter_map()</code></p>
+<p><code>filter_map()</code>结合 <code>Ok()</code> 将失败的内容过滤掉，只输出成功的内容。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">strings</span> = <span class="built_in">vec!</span>[<span class="string">&quot;tofu&quot;</span>, <span class="string">&quot;93&quot;</span>, <span class="string">&quot;18&quot;</span>];</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">numbers</span>: <span class="type">Vec</span>&lt;_&gt; = strings</span><br><span class="line">        .<span class="title function_ invoke__">into_iter</span>()</span><br><span class="line">        .<span class="title function_ invoke__">filter_map</span>(|s| s.parse::&lt;<span class="type">i32</span>&gt;().<span class="title function_ invoke__">ok</span>())</span><br><span class="line">        .<span class="title function_ invoke__">collect</span>();</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Results: &#123;:?&#125;&quot;</span>, numbers);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>Result</code> 实现了 <code>FromIter</code> ，因此<code>Vec&lt;Result&lt;T,E&gt;&gt;</code> -&gt; <code>Result&lt;Vec&lt;T&gt;, E&gt;</code>。</p>
+<ul>
+<li>同时，一旦发现<code>Result::Err</code>，迭代就会停止。</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 两种写法作用相同；</span></span><br><span class="line">iter.<span class="title function_ invoke__">find</span>(f) ==&gt; iter.<span class="title function_ invoke__">filter</span>(f).<span class="title function_ invoke__">next</span>()</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Note that <code>iter.find(f)</code> is equivalent to <code>iter.filter(f).next()</code>.</p>
+</blockquote>
+<h1 id="Box"><a href="#Box" class="headerlink" title="Box"></a>Box</h1><p>在 stack 上所占内存空间为 32 bit（8 bytes）</p>
+<p>使用<code>Box::new()</code> 封装的数据类型，在 stack 上占用的空间永远为 8 bytes。 </p>
+<h1 id="集合或迭代器的常用方法"><a href="#集合或迭代器的常用方法" class="headerlink" title="集合或迭代器的常用方法"></a>集合或迭代器的常用方法</h1><p><code>collect()</code></p>
+<p>Because <code>collect()</code> is so general, it can cause problems with type inference. As such, <code>collect()</code> is one of the few times you’ll see the syntax affectionately known as the ‘turbofish’: <code>::&lt;&gt;</code>. This helps the inference algorithm understand specifically which collection you’re trying to collect into.</p>
+<blockquote>
+<p>collect() 方法会通过使用<code>turbofish</code>语法，即<code>::&lt;&gt;</code> ，来标注生成的数据类型。</p>
+</blockquote>
+<p>扩展，是不是所有泛型方法都会这样使用？</p>
+<p>尤其是泛型方法在处理 trait的时候。</p>
+<h1 id="Path"><a href="#Path" class="headerlink" title="Path"></a>Path</h1><p><code>Path</code> 结构体是用来表示底层操作系统的文件路径的，</p>
+<p>注意：<code>Path</code> 使用 <code>Vec&lt;u8&gt;</code> 来存储的，并不是UTF-8字符串，所以使用<code>Path</code>转换为 <code>&amp;str</code> 可能会失败，因为<code>String</code> 和<code>&amp;str</code> 要求字符串为UTF-8编码的。</p>
+<ul>
+<li><code>Path::new()</code></li>
+<li><code>path.display()</code><ul>
+<li>为 Path 实现<code>Display</code> trait,</li>
+</ul>
+</li>
+<li><code>path.join()</code><ul>
+<li>路径拼接，不需要考虑分隔符</li>
+</ul>
+</li>
+<li><code>pathbuf.to_str()</code></li>
+</ul>
+<h1 id="File-I-x2F-O"><a href="#File-I-x2F-O" class="headerlink" title="File I&#x2F;O"></a>File I&#x2F;O</h1><p>因为在执行文件I&#x2F;O操作时，很多事情都可能出错，所以所有的file方法都返回<code>io::Result&lt;T&gt;</code>类型，这是<code>Result&lt;T, io::Error&gt;</code>的别名。</p>
+<h2 id="open"><a href="#open" class="headerlink" title="open"></a><code>open</code></h2><p>用只读模式打开一个文件。</p>
+<h2 id="create"><a href="#create" class="headerlink" title="create"></a><code>create</code></h2><p>create函数以只写（write-only）模式打开文件。</p>
+<ul>
+<li>如果文件已经存在，旧的内容将被销毁。</li>
+<li>否则，将创建一个新文件。</li>
+</ul>
+<h2 id="lines"><a href="#lines" class="headerlink" title="lines()"></a>lines()</h2><p>以迭代器的形式，返回一个文件的所有行。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">lines</span>(<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> Lines&lt;<span class="keyword">Self</span>&gt;</span><br></pre></td></tr></table></figure>
+
+<p>Lines 实现了 <code>Iterator</code> trait 。</p>
+<h1 id="std-io-Stdout"><a href="#std-io-Stdout" class="headerlink" title="std::io::Stdout"></a><code>std::io::Stdout</code></h1><p>Stdout 需要的是 bytes，即<code>u8</code></p>
+<blockquote>
+<p>注意不是 String</p>
+</blockquote>
+<p>当直接传入字面值时，注意使用 <code>b&quot;xxx&quot;</code> 的形式。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">IncompleteUtf8</span> &#123;</span><br><span class="line">    bytes: [<span class="type">u8</span>; <span class="number">4</span>],</span><br><span class="line">    len: <span class="type">u8</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以当需要利用 <code>write!() / writeln!()</code> 向其中写入数据的时候，需要使用 <code>std::io::Write</code> 而不是 <code>std::fmt::Write</code></p>
+<h1 id="Child-process"><a href="#Child-process" class="headerlink" title="Child process"></a>Child process</h1><p>用于与操作系统命令进行交互。</p>
+<p><code>process::Output</code>结构表示一个已完成的子进程的输出，而<code>process::Command</code>结构是一个进程构建器。</p>
+<p><code>std::Child</code>结构表示一个正在运行的子进程，并公开stdin、stdout和stderr句柄，以便通过管道与底层进程进行交互。</p>
+<p><code>child.wait()</code> ，会阻塞当前线程，并等待 child 进程执行结束。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">output</span>: <span class="type">Result</span>&lt;Output, Error&gt; = Command::<span class="title function_ invoke__">new</span>(<span class="string">&quot;rustc&quot;</span>).<span class="title function_ invoke__">output</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">process</span>: <span class="type">Result</span>&lt;Child, Error&gt; = Command::<span class="title function_ invoke__">new</span>(<span class="string">&quot;rustc&quot;</span>).<span class="title function_ invoke__">spawn</span>();</span><br></pre></td></tr></table></figure>
+
+<p>上面的 <code>output()</code> 方法是<code>spawn()</code> + <code>piped()</code> + <code>wait()</code></p>
+<h3 id="常用组合"><a href="#常用组合" class="headerlink" title="* 常用组合"></a>* 常用组合</h3><p>在测试中，我们常常将 </p>
+<p><code>std::process::Command</code> 与</p>
+<p><code>assert_cmd</code> crate 进行组合使用</p>
+<p>得益于 Rust 的 trait 特性，我们可以在自定义的 crate 中通过定义新 trait 从而扩展标准库中已有的 struct 的功能（函数&#x2F;方法）。</p>
+<p>这也是为什么进入第三方 crate 后，标准库中相关 struct 实例调用方法会增多的原因。</p>
+<p>例如：</p>
+<p><code>assert_cmd</code> crate 就通过自定义 trait 并为 <code>std::process::Command</code> struct 实现该 trait，从而扩展了 Command 的方法。</p>
+<ul>
+<li>在使用 VsCode 编码时，可以通过点击该 struct 上面展示的 <code>N implementations</code> 提示来查看本地有多少个 <code>impl 实现块</code>，这些内容实现了 struct ，或者为该struct 实现了指定 trati。</li>
+</ul>
+<p><code>assert_cmd</code> crate 用于通过命令行的形式执行指定 二进制文件并判断执行结果。</p>
+<h1 id="std-fs"><a href="#std-fs" class="headerlink" title="std::fs"></a><code>std::fs</code></h1><p><code>std::fs</code>模块包含几个处理文件系统的函数。</p>
+<h1 id="常用-derive"><a href="#常用-derive" class="headerlink" title="常用 derive"></a>常用 derive</h1><p><code>Clone</code> 解决 rust 所有权问题。</p>
+<p>涉及到所有权</p>
+<ul>
+<li>转移 move</li>
+<li>复制<ul>
+<li>copy （只有基本数据类型实现了 copy）<ul>
+<li>栈</li>
+</ul>
+</li>
+<li>clone<ul>
+<li>堆</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Debug 调试</p>
+<h1 id="Rust-Cookbook"><a href="#Rust-Cookbook" class="headerlink" title="Rust Cookbook"></a>Rust Cookbook</h1><p><a target="_blank" rel="noopener" href="https://rust-lang-nursery.github.io/rust-cookbook/cli/arguments.html">Argument Parsing - Rust Cookbook (rust-lang-nursery.github.io)</a> 命令行解析 crate 的使用。</p>
+<h1 id="Test"><a href="#Test" class="headerlink" title="Test"></a>Test</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/ch11-00-testing.html">The Book</a> chapter on testing</li>
+<li><a target="_blank" rel="noopener" href="https://rust-lang-nursery.github.io/api-guidelines/documentation.html">API Guidelines</a> on doc-testing</li>
+</ul>
+<p><code>predicates</code> crate 常用于测试中，与 assert 一起使用进行断言判断，具体如何使用？</p>
+<p>当测试程序中需要读取文件信息时，有两种方法：</p>
+<ul>
+<li>方法一，提前准备好一个文件，并放到指定位置；</li>
+<li>方法二，创建临时文件<ul>
+<li>这个方法更灵活；</li>
+</ul>
+</li>
+</ul>
+<p><code>assert_fs</code> crate ，可以用来创建临时文件。</p>
+<p> <a target="_blank" rel="noopener" href="https://docs.rs/proptest"><code>proptest</code></a> 用于单元测试</p>
+<p> <a target="_blank" rel="noopener" href="https://rust-fuzz.github.io/book/introduction.html">fuzzer</a> 用于编写模糊测试发现边界错误；</p>
+<h1 id="处理错误信息"><a href="#处理错误信息" class="headerlink" title="处理错误信息"></a>处理错误信息</h1><h2 id="anyhow"><a href="#anyhow" class="headerlink" title="anyhow"></a>anyhow</h2><p>自定义错误信息，建议使用 <code>anyhow</code> 第三方库。</p>
+<ul>
+<li>可以自定义错误信息，同时保留原始错误</li>
+</ul>
+<p>简单使用时，可以利用 <code>anyhow::Context</code> 和 <code>anyhow::Result</code>组合展示，<code>Result</code> 封装实现了标准库中的 trait，所以利用 编译器自动转换。</p>
+<h1 id="可用于命令行的工具"><a href="#可用于命令行的工具" class="headerlink" title="可用于命令行的工具"></a>可用于命令行的工具</h1><h2 id="indicatif"><a href="#indicatif" class="headerlink" title="indicatif"></a><code>indicatif</code></h2><p>用户展示命令行中的进度条信息</p>
+<p>更多内容查看文档和样例：</p>
+<p>See the <a target="_blank" rel="noopener" href="https://docs.rs/indicatif">documentation</a> and <a target="_blank" rel="noopener" href="https://github.com/mitsuhiko/indicatif/tree/master/examples">examples</a> for more information.</p>
+<h1 id="clap"><a href="#clap" class="headerlink" title="clap"></a>clap</h1><p>目前最受欢迎的命令行库</p>
+<p>提供命令行参数解析，并带有友好的结果输出</p>
+<p><code>std::fs::read_to_string()</code> 的缺点：会将整个文件读进内存，当文件过大时，可能导致报错。</p>
+<ul>
+<li>优化方法1，使用 <code>std::io::BufReader</code> 代替 <code>read_to_string()</code>；</li>
+</ul>
+<p>如果需要运行时支持 <code>--verbose</code> 打印详细信息的功能，</p>
+<p>使用，<code>clap-verbosity-flag</code> crate，</p>
+<p>具体使用信息参考，<a target="_blank" rel="noopener" href="https://crates.io/crates/clap-verbosity-flag">clap-verbosity-flag</a></p>
+<h1 id="打印日志"><a href="#打印日志" class="headerlink" title="打印日志"></a>打印日志</h1><h2 id="log"><a href="#log" class="headerlink" title="log"></a><code>log</code></h2><p>rust 轻型日志框架，提供了抽象了实际日志实现的API，</p>
+<p>日志级别：</p>
+<p><em>error</em>, <em>warn</em>, <em>info</em>, <em>debug</em>, and <em>trace</em></p>
+<blockquote>
+<p>error 最高优先级，trace 最低优先级，</p>
+<p>设置低优先级可以打印高优先级的日志信息，</p>
+</blockquote>
+<p>实际使用时，需要结合合适的日志实现 crate 一起使用。</p>
+<ul>
+<li>log crate，提供以日志级别命名的宏，</li>
+<li>其他日志适配器 crate，提供处理日志的方式，</li>
+</ul>
+<p>日志适配器的使用很灵活，可以通过使用合适的日志适配器，将日志写到例如<code>syslog</code>文件，日志服务器等地方。</p>
+<p>例如：</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[dependencies]</span></span><br><span class="line"><span class="attr">log</span> = <span class="string">&quot;0.4.0&quot;</span></span><br><span class="line"><span class="attr">env_logger</span> = <span class="string">&quot;0.8.4&quot;</span>  // 适合cli程序的日志适配器，方便在命名行设置日志级别</span><br></pre></td></tr></table></figure>
+
+<p>更多内容可以查看crate库中的描述：</p>
+<p><a target="_blank" rel="noopener" href="https://crates.io/crates/log">log - crates.io: Rust Package Registry</a></p>
+<h1 id="序列化和反序列化"><a href="#序列化和反序列化" class="headerlink" title="序列化和反序列化"></a>序列化和反序列化</h1><h2 id="常规序列化"><a href="#常规序列化" class="headerlink" title="常规序列化"></a>常规序列化</h2><p>serde </p>
+<p>目前最热的库，添加到 Cargo.toml 的方式如下，一般会添加一个 derive 的features，方便通过 derive 直接添加 <code>Serialize</code> 和 <code>Deserialize</code></p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">serde</span> = &#123; version = <span class="string">&quot;1.0.136&quot;</span>, features = [<span class="string">&quot;derive&quot;</span>] &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="二进制序列化"><a href="#二进制序列化" class="headerlink" title="二进制序列化"></a>二进制序列化</h2><p>bincode</p>
+<h1 id="日期时间库"><a href="#日期时间库" class="headerlink" title="日期时间库"></a>日期时间库</h1><p>chrono</p>
+<p>目前最流行的 Date and time 库</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">chrono</span> = <span class="string">&quot;0.4.19&quot;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="加密库"><a href="#加密库" class="headerlink" title="加密库"></a>加密库</h1><figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">rust-crypto</span> = <span class="string">&quot;0.2.36&quot;</span></span><br></pre></td></tr></table></figure>
+
+
+
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ligongzhao.github.io/%E5%B8%B8%E7%94%A8%E5%BA%93%E5%AD%A6%E4%B9%A0.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Rust/" rel="tag">Rust</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/Cargo%20toml%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E4%BD%BF%E7%94%A8%E8%AE%B0%E5%BD%95.html" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Cargo toml配置文件使用记录
+          
+        </div>
+      </a>
+    
+    
+      <a href="/rust%E7%BC%96%E5%86%99%E7%AE%80%E5%8D%95%E5%8C%BA%E5%9D%97%E9%93%BE.html" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">rust编写简单区块链</div>
+      </a>
+    
+  </nav>
+
+  
+   
+  
+   
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> ligongzhao
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="听潮亭"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>
