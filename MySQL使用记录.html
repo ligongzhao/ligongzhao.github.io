@@ -85,7 +85,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">117</span>
+            <span class="post-count">291</span>
         </span>
     </span>
 
@@ -119,8 +119,16 @@
 <p>样例：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">MySQL 连接远程数据库（192.168.5.116），端口“3306”，用户名为“root”，密码“123456” </span><br><span class="line"></span><br><span class="line">方法一，显示密码</span><br><span class="line">mysql -h 192.168.5.116 -P 3306 -u root -p123456 </span><br><span class="line"></span><br><span class="line">方法二，不显示密码</span><br><span class="line">mysql -h 192.168.5.116 -P 3306 -u root -p</span><br><span class="line">会在登录时提示输入密码</span><br></pre></td></tr></table></figure>
 
+<h1 id="2-创建用户并授权"><a href="#2-创建用户并授权" class="headerlink" title="2. 创建用户并授权"></a>2. 创建用户并授权</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 创建用户 tt，设置密码为 xxx</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> <span class="string">&#x27;tt&#x27;</span>@<span class="string">&#x27;localhost&#x27;</span> IDENTIFIED <span class="keyword">BY</span> <span class="string">&#x27;xxx&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 将本地所有库表的所有权限授予 tt 用户</span></span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> <span class="keyword">ON</span> <span class="operator">*</span>.<span class="operator">*</span> <span class="keyword">to</span> tt@<span class="string">&#x27;localhost&#x27;</span> IDENTIFIED <span class="keyword">BY</span> <span class="string">&#x27;xxx&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 更新权限</span></span><br><span class="line">FLUSH privileges;</span><br></pre></td></tr></table></figure>
 
+<p>授权部分操作权限</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 授予远程登录 tt 用户时对所有库表执行部分权限</span></span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">create</span>,<span class="keyword">insert</span>,<span class="keyword">select</span> <span class="keyword">ON</span> <span class="operator">*</span>.<span class="operator">*</span> <span class="keyword">to</span> tt@<span class="string">&#x27;%&#x27;</span> IDENTIFIED <span class="keyword">BY</span> <span class="string">&#x27;xxx&#x27;</span>;</span><br><span class="line">FLUSH privileges;</span><br></pre></td></tr></table></figure>
 
+<blockquote>
+<p><code>tt@&#39;localhost&#39;</code> , 表示本地登录的权限设置；</p>
+<p><code>tt@&#39;%&#39;</code> , 表示远程登录时的权限设置；</p>
+<p><code>ON *.*</code> ,表示所有库表，当需要指定库表是，<code>ON &lt;库&gt;.&lt;表&gt;</code>, 进行对应替换即可。</p>
+</blockquote>
  
       <!-- reward -->
       

@@ -6,7 +6,7 @@
   <link href="https://ligongzhao.github.io/atom.xml" rel="self"/>
   
   <link href="https://ligongzhao.github.io/"/>
-  <updated>2022-10-05T14:23:37.000Z</updated>
+  <updated>2022-10-07T20:52:04.000Z</updated>
   <id>https://ligongzhao.github.io/</id>
   
   <author>
@@ -15,6 +15,69 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>CentOS7下设置DNS</title>
+    <link href="https://ligongzhao.github.io/CentOS7%E4%B8%8B%E8%AE%BE%E7%BD%AEDNS.html"/>
+    <id>https://ligongzhao.github.io/CentOS7%E4%B8%8B%E8%AE%BE%E7%BD%AEDNS.html</id>
+    <published>2022-10-07T20:52:04.000Z</published>
+    <updated>2022-10-07T20:52:04.000Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;在 CentOS 7 下，手工设置 &lt;code&gt;/etc/resolv.conf&lt;/code&gt; 里的 DNS，过了一会，发现被系统重新覆盖或者清除了。和 CentOS 6 下&lt;br&gt;的设置 DNS 方法不同，有几种方式： &lt;/p&gt;
+&lt;h2</summary>
+        
+      
+    
+    
+    
+    <category term="Linux" scheme="https://ligongzhao.github.io/categories/Linux/"/>
+    
+    <category term="CentOS" scheme="https://ligongzhao.github.io/categories/Linux/CentOS/"/>
+    
+    
+    <category term="Linux" scheme="https://ligongzhao.github.io/tags/Linux/"/>
+    
+    <category term="CentOS7" scheme="https://ligongzhao.github.io/tags/CentOS7/"/>
+    
+    <category term="DNS" scheme="https://ligongzhao.github.io/tags/DNS/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Bash文件名中包含空格的处理方法</title>
+    <link href="https://ligongzhao.github.io/Bash%E6%96%87%E4%BB%B6%E5%90%8D%E4%B8%AD%E5%8C%85%E5%90%AB%E7%A9%BA%E6%A0%BC%E7%9A%84%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95.html"/>
+    <id>https://ligongzhao.github.io/Bash%E6%96%87%E4%BB%B6%E5%90%8D%E4%B8%AD%E5%8C%85%E5%90%AB%E7%A9%BA%E6%A0%BC%E7%9A%84%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95.html</id>
+    <published>2022-10-06T09:20:18.000Z</published>
+    <updated>2022-10-06T09:22:22.000Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;遇到问题&quot;&gt;&lt;a href=&quot;#遇到问题&quot; class=&quot;headerlink&quot; title=&quot;遇到问题&quot;&gt;&lt;/a&gt;遇到问题&lt;/h1&gt;&lt;p&gt;文件或目录名带有空格，例如 “解决VM Workstation安装VMware</summary>
+        
+      
+    
+    
+    
+    <category term="Linux" scheme="https://ligongzhao.github.io/categories/Linux/"/>
+    
+    <category term="Shell" scheme="https://ligongzhao.github.io/categories/Linux/Shell/"/>
+    
+    
+    <category term="Linux" scheme="https://ligongzhao.github.io/tags/Linux/"/>
+    
+    <category term="Bash" scheme="https://ligongzhao.github.io/tags/Bash/"/>
+    
+    <category term="IFS" scheme="https://ligongzhao.github.io/tags/IFS/"/>
+    
+  </entry>
   
   <entry>
     <title>Git学习遇到过的问题</title>
@@ -546,62 +609,6 @@
     
     
     <category term="Java" scheme="https://ligongzhao.github.io/tags/Java/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Java现场技巧汇总</title>
-    <link href="https://ligongzhao.github.io/Java%E7%8E%B0%E5%9C%BA%E6%8A%80%E5%B7%A7%E6%B1%87%E6%80%BB.html"/>
-    <id>https://ligongzhao.github.io/Java%E7%8E%B0%E5%9C%BA%E6%8A%80%E5%B7%A7%E6%B1%87%E6%80%BB.html</id>
-    <published>2022-10-04T09:43:51.000Z</published>
-    <updated>2022-10-05T13:19:59.000Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;现场linux环境下，编译项目的java文件&lt;/p&gt;
-&lt;figure class=&quot;highlight shell&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span</summary>
-        
-      
-    
-    
-    
-    <category term="Java" scheme="https://ligongzhao.github.io/categories/Java/"/>
-    
-    
-    <category term="Java" scheme="https://ligongzhao.github.io/tags/Java/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Java并发未解决问题汇总</title>
-    <link href="https://ligongzhao.github.io/Java%E5%B9%B6%E5%8F%91%E6%9C%AA%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html"/>
-    <id>https://ligongzhao.github.io/Java%E5%B9%B6%E5%8F%91%E6%9C%AA%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html</id>
-    <published>2022-10-04T09:41:02.000Z</published>
-    <updated>2022-10-05T13:19:59.000Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;h1 id=&quot;Java并发未解决问题汇总&quot;&gt;&lt;a href=&quot;#Java并发未解决问题汇总&quot; class=&quot;headerlink&quot;</summary>
-        
-      
-    
-    
-    
-    <category term="Java" scheme="https://ligongzhao.github.io/categories/Java/"/>
-    
-    <category term="Java并发" scheme="https://ligongzhao.github.io/categories/Java/Java%E5%B9%B6%E5%8F%91/"/>
-    
-    
-    <category term="Java" scheme="https://ligongzhao.github.io/tags/Java/"/>
-    
-    <category term="Java并发" scheme="https://ligongzhao.github.io/tags/Java%E5%B9%B6%E5%8F%91/"/>
     
   </entry>
   

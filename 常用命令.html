@@ -85,7 +85,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">4.1k</span>
+            <span class="post-count">5.1k</span>
         </span>
     </span>
 
@@ -94,7 +94,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">17 分钟</span>
+            <span class="post-count">22 分钟</span>
         </span>
     </span>
 </div>
@@ -149,23 +149,30 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">today=$(date +%Y%m%d)  # 指定yyyyMMdd格式的日期</span><br><span class="line"></span><br><span class="line">yesterday=$(date -d &quot;1 day ago&quot; +%Y%m%d)   # 生成昨天yyyyMMdd的日期</span><br></pre></td></tr></table></figure></li>
 </ul>
 <h2 id="计算耗时"><a href="#计算耗时" class="headerlink" title="计算耗时"></a>计算耗时</h2><p>start_time&#x3D;<code>date +%s</code><br>end_time&#x3D;<code>date +%s</code><br>cost_time&#x3D;$(( ${end_time} - ${start_time} ))</p>
-<h1 id="计算-–这里有问题，let不好，重新整理"><a href="#计算-–这里有问题，let不好，重新整理" class="headerlink" title="计算 –这里有问题，let不好，重新整理"></a>计算 –这里有问题，let不好，重新整理</h1><p>let a &#x3D; “1 + 2”</p>
-<h1 id="SED"><a href="#SED" class="headerlink" title="SED"></a>SED</h1><ol>
+<h1 id="计算-–这里有问题，let不好"><a href="#计算-–这里有问题，let不好" class="headerlink" title="计算 –这里有问题，let不好"></a>计算 –这里有问题，let不好</h1><p>let a &#x3D; “1 + 2”</p>
+<h1 id="Sed"><a href="#Sed" class="headerlink" title="Sed"></a>Sed</h1><ol>
 <li><p>使用sed匹配某一行并替换这一行的内容</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sed -i &quot;/&lt;要替换的内容&gt;/c&lt;新内容&gt;&quot; &lt;文件&gt;</span><br><span class="line"></span><br><span class="line">(注意/c&lt;新内容&gt;,这里有一个字母c)</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line">sed -i &quot;/BUILD_NUMBER=/cBUILD_NUMBER=$1&quot; file</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>文件头插入字符串 ABCDE</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">文件头即文件的第一行插入数据</span></span><br><span class="line">sed -i &#x27;1i\ABCDE&#x27; file.txt</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>说明： -i ，表示直接修改文件，（不使用则会将修改后的内容输出到屏幕）。</p>
+</blockquote>
 </li>
 <li><p>查看文件中间一段，你可以使用sed命令，如：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">取文件100~200行[100,200]的数据</span><br><span class="line">sed -n &#x27;100,200p&#x27; filename &gt; xxx </span><br><span class="line"></span><br><span class="line">sed -n &#x27;3p&#x27; filename  # 输出文件的第3行</span><br><span class="line"></span><br><span class="line">sed -n &#x27;2,5p&#x27; filename  # 输出文件的第2到5行</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
 <li><p>删除文件中N行</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sed &#x27;/xxx/d&#x27; filename  # 删除包含xxx的行</span><br><span class="line"></span><br><span class="line">sed &#x27;2d&#x27; filename  # 删除第2行</span><br><span class="line"></span><br><span class="line">sed &#x27;$d&#x27; filename  # 删除最后一行</span><br></pre></td></tr></table></figure></li>
 </ol>
-<h1 id="MV"><a href="#MV" class="headerlink" title="MV"></a>MV</h1><p>批量mv文件到指定目录下</p>
+<h1 id="Mv"><a href="#Mv" class="headerlink" title="Mv"></a>Mv</h1><p>批量mv文件到指定目录下</p>
 <p>-t &lt;执行目录&gt;</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">例如：将查询出的sql文件批量mv到test_target目录下</span><br><span class="line">mv -t test_target `find . -name &quot;gen_sql_file_20200101_1595*.log&quot; -type f`</span><br></pre></td></tr></table></figure>
 
 
 
-<h1 id="AWK"><a href="#AWK" class="headerlink" title="AWK"></a>AWK</h1><p>获取最后一列</p>
+<h1 id="Awk"><a href="#Awk" class="headerlink" title="Awk"></a>Awk</h1><p>获取最后一列</p>
 <p>样例：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cat xxx | awk -F &#x27;-&#x27; &#x27;&#123;print $NF&#125;&#x27;</span><br><span class="line"></span><br><span class="line">上面样例是对传过来的数据，按照 &#x27;-&#x27; 分割，打印最后一列。</span><br></pre></td></tr></table></figure>
 
@@ -300,7 +307,7 @@
 <h4 id="4-样例："><a href="#4-样例：" class="headerlink" title="4. 样例："></a>4. 样例：</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Here is a very simple example, catching Ctrl+C from the user, upon <span class="built_in">which</span> a message is printed. When you try to <span class="built_in">kill</span> this program without specifying the KILL signal, nothing will happen:</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">主要测试，捕获用户输入的Ctrl+C的快捷键，并打印信息。如果你使用<span class="built_in">kill</span>命令来直接杀死这个脚本，那么什么都不会输出</span></span><br><span class="line"></span><br><span class="line">trap &quot;echo Booh!&quot; SIGINT SIGTERM</span><br><span class="line">echo &quot;pid is $$&quot;</span><br><span class="line"></span><br><span class="line">while :			# This is the same as &quot;while true&quot;.</span><br><span class="line">do</span><br><span class="line">        sleep 60	# This script is not really doing anything.</span><br><span class="line">done</span><br></pre></td></tr></table></figure>
 
 
-<h1 id="新手可能常犯的错误"><a href="#新手可能常犯的错误" class="headerlink" title="新手可能常犯的错误"></a>新手可能常犯的错误</h1><h3 id="1-引用变量时，关于引号的使用"><a href="#1-引用变量时，关于引号的使用" class="headerlink" title="1. 引用变量时，关于引号的使用"></a>1. 引用变量时，关于引号的使用</h3><p>引用变量时需要在变量名前添加”$”前缀，但是是否使用引号，以及如何使用，可能会带来不同的结果</p>
+<h1 id="新手可能常犯的错误"><a href="#新手可能常犯的错误" class="headerlink" title="新手可能常犯的错误"></a>新手可能常犯的错误</h1><h2 id="1-引用变量时，关于引号的使用"><a href="#1-引用变量时，关于引号的使用" class="headerlink" title="1. 引用变量时，关于引号的使用"></a>1. 引用变量时，关于引号的使用</h2><p>引用变量时需要在变量名前添加”$”前缀，但是是否使用引号，以及如何使用，可能会带来不同的结果</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">定义变量如下：</span></span><br><span class="line"></span><br><span class="line">example=&quot;Hello world&quot;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">主要注意，不使用引号，使用双引号的区别</span><br><span class="line"></span><br><span class="line">使用方式        结果            单词数</span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">example        Hello world    2</span></span><br><span class="line">&quot;$example&quot;      Hello world    1</span><br></pre></td></tr></table></figure>
 <p>在下面两个地方使用内容中有空格的变量时尤其需要注意：</p>
 <ul>
@@ -327,6 +334,42 @@
 <li>screen -S &lt;新session名称&gt;</li>
 </ul>
 <h2 id="amp-和-nohup"><a href="#amp-和-nohup" class="headerlink" title="&amp; 和 nohup"></a>&amp; 和 nohup</h2><h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><p>总结常用数组的内容</p>
+<p>更多内容可以参考 <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-shell-array.html">Shell 数组</a></p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><h3 id="定义方式1"><a href="#定义方式1" class="headerlink" title="定义方式1"></a>定义方式1</h3><p>Shell 数组用<code>括号()</code>来定义，元素用 <code>空格</code> 符号分割，语法格式如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">array_name=(value1,value2,...)</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tags=(&quot;A&quot; &quot;B&quot; C D)</span><br></pre></td></tr></table></figure>
+
+<h3 id="定义方式2"><a href="#定义方式2" class="headerlink" title="定义方式2"></a>定义方式2</h3><p>直接使用数组下标定义数组：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">array_name[0]=value0</span><br><span class="line">array_name[1]=value1</span><br><span class="line">array_name[2]=value2</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="取值"><a href="#取值" class="headerlink" title="取值"></a>取值</h2><h3 id="获取单个元素"><a href="#获取单个元素" class="headerlink" title="获取单个元素"></a>获取单个元素</h3><p>读取数组元素值的一般格式：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;array_name[index]&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">my_arr=(a b c d)</span><br><span class="line"></span><br><span class="line">echo &quot;first element: $&#123;my_arr[0]&#125;&quot;</span><br><span class="line">echo &quot;second element: $&#123;my_arr[1]&#125;&quot;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h3 id="获取数组中的所有元素"><a href="#获取数组中的所有元素" class="headerlink" title="获取数组中的所有元素"></a>获取数组中的所有元素</h3><p>格式如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使用 @，或者 *</span> </span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;array_name[@]&#125;</span></span><br><span class="line">或</span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;array_name[*]&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">my_arr=(a b c d)</span><br><span class="line"></span><br><span class="line">echo &quot;all elements: $&#123;my_arr[*]&#125;&quot;</span><br><span class="line">echo &quot;all elements: $&#123;my_arr[@]&#125;&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="获取数组索引"><a href="#获取数组索引" class="headerlink" title="获取数组索引"></a>获取数组索引</h3><p>在数组变量名前添加 <code>!</code>感叹号，可以获取素组的所有索引，格式如下： </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;!array_name[*]&#125;</span></span><br><span class="line">或</span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;!array_name[@]&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="获取数组的长度"><a href="#获取数组的长度" class="headerlink" title="获取数组的长度"></a>获取数组的长度</h3><p>获取数组长度的方法与获取字符串长度的方法相同，在数组变量名前添加 <code>#</code>符号， 格式如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;<span class="comment">#array_name[*]&#125;</span></span></span><br><span class="line">或</span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">&#123;<span class="comment">#array_name[@]&#125;</span></span></span><br></pre></td></tr></table></figure>
+
+
+
 <h3 id="1-for-循环遍历数组"><a href="#1-for-循环遍历数组" class="headerlink" title="1. for 循环遍历数组"></a>1. for 循环遍历数组</h3><p>注意点：</p>
 <ol>
 <li>数组要单独定义，不能定义在 for 的 列表位置；</li>
@@ -382,6 +425,45 @@
 <p>centos6</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ckconfig --list</span><br></pre></td></tr></table></figure>
 
+
+
+<h1 id="Shell-判断字符串包含关系"><a href="#Shell-判断字符串包含关系" class="headerlink" title="Shell 判断字符串包含关系"></a>Shell 判断字符串包含关系</h1><h2 id="方法一，利用-grep-查询"><a href="#方法一，利用-grep-查询" class="headerlink" title="方法一，利用 grep 查询"></a>方法一，利用 grep 查询</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">dirp=&quot;学习笔记/运维/ELK&quot;</span><br><span class="line">result=$(echo $dirp| grep &quot;学习笔记&quot;)</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">判断结果是否为空字符串，不为空即包含，为空则不包含；</span></span><br><span class="line">if [[ -n $result ]];then</span><br><span class="line">    echo &quot;包含&quot;</span><br><span class="line">else</span><br><span class="line">    echo &quot;不包含&quot;</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+
+<h2 id="方法二，利用字符串运算符"><a href="#方法二，利用字符串运算符" class="headerlink" title="方法二，利用字符串运算符"></a>方法二，利用字符串运算符</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dirp=&quot;学习笔记/运维/ELK&quot;</span><br><span class="line">if [[ $dirp =~ &quot;学习笔记&quot; ]];then</span><br><span class="line">    echo &quot;包含&quot;</span><br><span class="line">else</span><br><span class="line">    echo &quot;不包含&quot;</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+
+<p>利用 <code>=~</code> 直接判断字符串的包含，结果为 true 则包含，为 false 则不包含。</p>
+<h1 id="bash-如何数组和字符串相互转换"><a href="#bash-如何数组和字符串相互转换" class="headerlink" title="bash 如何数组和字符串相互转换"></a>bash 如何数组和字符串相互转换</h1><p>如何把下面的数组和字符串进行相互转换？</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(&quot;学习笔记&quot; &quot;运维&quot; &quot;ELK&quot;) &lt;=&gt; &quot;学习笔记/运维/ELK&quot;</span><br><span class="line"></span><br><span class="line">tag_arr=(&quot;学习笔记&quot; &quot;运维&quot; &quot;ELK&quot;)</span><br><span class="line">tag_str=&quot;学习笔记/运维/ELK&quot;</span><br></pre></td></tr></table></figure>
+
+<h2 id="数组-gt-字符串"><a href="#数组-gt-字符串" class="headerlink" title="数组-&gt;字符串"></a>数组-&gt;字符串</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DEFAULT_IFS=$IFS</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将数组 -&gt; 字符串</span></span><br><span class="line">tag_str=[$(IFS=,;echo &quot;$&#123;tag_arr[*]&#125;&quot;)]</span><br><span class="line">IFS=$DEFAULT_IFS</span><br></pre></td></tr></table></figure>
+
+<p>通过赋值IFS，指定分隔符&#x2F;连接符。</p>
+<blockquote>
+<p>注意，处理完后，需要恢复 IFS 的默认值，防止后续处理出现问题。</p>
+</blockquote>
+<p>如果连接符不需要特定（默认为 空格，回车，Tab）,那么数组-&gt;字符串只需要将 IFS部分去掉即可</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tag_str=[$(echo &quot;$&#123;tag_arr[*]&#125;&quot;)]</span><br></pre></td></tr></table></figure>
+
+<h2 id="字符串-gt-数组"><a href="#字符串-gt-数组" class="headerlink" title="字符串-&gt; 数组"></a>字符串-&gt; 数组</h2><p>方法一：如果字符串是空格分隔，直接使用下面命令即可</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tag_str=&quot;学习笔记 运维 ELK&quot;</span><br><span class="line">tag_arr=($&#123;tag_str&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>方法二：如果字符串分隔符是其他字符，那么把分隔符变成空格即可。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tag_str=&quot;学习笔记/运维/ELK&quot;</span><br><span class="line">tag_arr=($(echo $tag_str | tr &quot;/&quot; &quot; &quot;))</span><br></pre></td></tr></table></figure>
+
+<p>方法三：使用 awk 命令分割字符串，然后拼接为数组。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tag_arr=($(echo $tag_str | awk &#x27;&#123;len=split($0,a,&quot;/&quot;);for(i=2;i&lt;=len;i++) print a[i]&#125;&#x27;))</span><br></pre></td></tr></table></figure>
+
+
+
+<p>参考链接：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/d663df2cba3e">bash如何把数组和字符串互相转换</a></p>
+<h1 id="lsmod"><a href="#lsmod" class="headerlink" title="lsmod"></a>lsmod</h1><p>lsmod 显示&#x2F;列出 Linux 内核中当前加载的 modules 的状态。该命令将 &#x2F;proc&#x2F;modules 文件的内容进行格式化输出。</p>
+<p><strong>字段含义</strong></p>
+<ul>
+<li><strong>Module</strong>：模块的名称。这通常是模块文件的名称，减去扩展名（.o或.ko），但它可能有一个自定义名称，可以在使用insmod命令插入模块时将其指定为选项。</li>
+<li><strong>Size</strong>：驻留模块使用的内存量，以字节为单位。</li>
+<li><strong>Used by</strong>：此列包含一个数字，表示正在使用的模块实例数。 如果该数字为零，则当前未使用该模块。 数字后面的文本表示有关使用模块的内容的任何可用信息：这通常是设备名称，文件系统标识符或另一个模块的名称。</li>
+</ul>
+<p>参考链接：<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_33712987/article/details/94235806">lsmod命令</a></p>
  
       <!-- reward -->
       

@@ -85,7 +85,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">399</span>
+            <span class="post-count">508</span>
         </span>
     </span>
 
@@ -94,7 +94,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">1 分钟</span>
+            <span class="post-count">2 分钟</span>
         </span>
     </span>
 </div>
@@ -112,9 +112,9 @@
   <h2 id="Windows-Docker-启动容器报端口没有访问权限"><a href="#Windows-Docker-启动容器报端口没有访问权限" class="headerlink" title="Windows Docker 启动容器报端口没有访问权限"></a>Windows Docker 启动容器报端口没有访问权限</h2><p>在 win10 上启动 Docker Desktop 上的 Postgres 容器时，遇到报错，部分内容如下：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exposing port TCP 0.0.0.0:5432 -&gt; 0.0.0.0:0: listen tcp 0.0.0.0:5432: bind: An attempt was made to access a socket in a way forbidden by its access permissions.</span><br></pre></td></tr></table></figure>
 
-<p>最近都没有怎么动这环境，唯一操作就是升级过两次 Docker Desktop。</p>
+<p>最近都没有怎么动这环境。</p>
 <p>可能解决方法，参考如下<a target="_blank" rel="noopener" href="https://github.com/docker/for-win/issues/3171#issuecomment-902533563">此处链接</a>，该链接讨论了多种解决方案，均可尝试。</p>
-<p>总结起来大概是因为 Hyper-V 动态的保留了一些端口，导致无法使用，但是我本地环境确是因为 docker desktop 升级导致，因为另一台 win10 的 docker 环境，是没有升级的版本，保留端口不一样，没有影响启动 Postgres。</p>
+<p>总结起来大概是因为 Hyper-V 动态的保留了一些端口，导致无法使用，在实际使用中这些端口会动态增加，在预留列表中的端口其他进程就无法使用。</p>
 <p>最终我使用了如下方法：</p>
 <ol>
 <li>在 powershell 中使用如下命令查看本地的保留端口：</li>
@@ -122,7 +122,11 @@
 <figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netsh interface ipv4 show excludedportrange protocol=tcp</span><br></pre></td></tr></table></figure>
 
 <ol start="2">
-<li>如果需要使用的端口在其中某一段中，那么停止 <code>winnat</code> 服务：</li>
+<li><p>如果需要使用的端口在其中某一段中，那么停止 <code>winnat</code> 服务：</p>
+<blockquote>
+<p>注意，步骤2-4需要使用管理员权限操作，即右击以管理员身份运行。否则会提示“拒绝访问”，或 “没有权限”。</p>
+</blockquote>
+</li>
 </ol>
 <figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">net stop winnat</span><br></pre></td></tr></table></figure>
 
@@ -141,11 +145,14 @@
 <figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netsh interface ipv4 show excludedportrange protocol=tcp</span><br></pre></td></tr></table></figure></li>
 </ol>
 <blockquote>
-<p>注意，步骤2-4需要使用管理员权限操作，即右击以管理员身份运行。否则会提示“拒绝访问”，或 “没有权限”。</p>
-</blockquote>
-<blockquote>
 <p>注意，电脑重启后，重新查看本地保留端口，会发现有新增的端口。</p>
 </blockquote>
+<h2 id="操作过程可能遇到的问题"><a href="#操作过程可能遇到的问题" class="headerlink" title="操作过程可能遇到的问题"></a>操作过程可能遇到的问题</h2><p>在删除端口段时可能遇到下面报错。</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">PS</span> C:\Windows\system32&gt; netsh int ipv4 delete excludedportrange protocol=tcp startport=<span class="number">3928</span> numberofports=<span class="number">100</span></span><br><span class="line">找不到元素。</span><br></pre></td></tr></table></figure>
+
+<p>不受影响，此时会将多余的端口段全部删除，仅保留默认保留的。继续后续操作，因为列表中的端口是预留的，不会有什么影响。</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">PS</span> C:\Windows\system32&gt; netsh interface ipv4 show excludedportrange protocol=tcp</span><br><span class="line"></span><br><span class="line">协议 tcp 端口排除范围</span><br><span class="line"></span><br><span class="line">开始端口    结束端口</span><br><span class="line"><span class="literal">----------</span>    <span class="literal">--------</span></span><br><span class="line">      <span class="number">3310</span>        <span class="number">3408</span>     *</span><br><span class="line">     <span class="number">50000</span>       <span class="number">50059</span>     *</span><br><span class="line"></span><br><span class="line">* - 管理的端口排除。</span><br></pre></td></tr></table></figure>
+
  
       <!-- reward -->
       
