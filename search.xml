@@ -1026,35 +1026,6 @@ java 包</li>
       </tags>
   </entry>
   <entry>
-    <title>现场Keepalived配置测试</title>
-    <url>//%E7%8E%B0%E5%9C%BAKeepalived%E9%85%8D%E7%BD%AE%E6%B5%8B%E8%AF%95.html</url>
-    <content><![CDATA[<h1 id="keepalived配置"><a href="#keepalived配置" class="headerlink" title="keepalived配置"></a>keepalived配置</h1><p>配置主备，抢占和非抢占模式下的HA（高可用）</p>
-<ol>
-<li>yum 安装 keepalived</li>
-<li>为了通过web来测试，安装nginx，（nginx使用tengine的包）<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yum -y install keepalived</span><br><span class="line">yum -y install tengine</span><br></pre></td></tr></table></figure></li>
-<li>分别配置主副节点的keepalived.conf 配置， 目前仅做简单配置<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">! Configuration File for keepalived</span><br><span class="line"></span><br><span class="line">global_defs &#123;</span><br><span class="line">   router_id LVS_DEVEL  # 删除了email通知</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"># 配置一个vrrp_instacne 名字随便</span><br><span class="line">vrrp_instance VI_1 &#123;</span><br><span class="line">    # 分别是主备</span><br><span class="line">    state MASTER/BACKUP</span><br><span class="line">    # 选择绑定那张网卡，需要是在用的</span><br><span class="line">    interface eth1</span><br><span class="line">    # 主备id要一样</span><br><span class="line">    virtual_router_id 51</span><br><span class="line">    # 主备优先级值一般设置不一样，但是应该遵循master_priority - backup_priority &lt; weight (如果有设置vrrp_script，且设置了weight的情况下)</span><br><span class="line">    priority 100</span><br><span class="line">    # 通信时间</span><br><span class="line">    advert_int 1</span><br><span class="line">    # 认证方式，密码一样，方便主备通信</span><br><span class="line">    authentication &#123;</span><br><span class="line">        auth_type PASS</span><br><span class="line">        auth_pass 1111</span><br><span class="line">    &#125;</span><br><span class="line">    # 绑定的VIP(虚拟IP，即对外用的IP地址)，可以是多个，每行一个。</span><br><span class="line">    virtual_ipaddress &#123;</span><br><span class="line">        192.168.10.193</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li>分别启动服务，然后通过浏览器访问192.168.10.193:15003（我设置nginx监控15003端口，没有使用80），来确定keepalive生效</li>
-</ol>
-<p>当master节点挂掉重启后，会自动抢占成为master</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">主节点关掉后，主节点日志：</span><br><span class="line">Apr 14 00:02:12 ora12c Keepalived[1944]: Stopping Keepalived v1.2.13 (03/19,2015)</span><br><span class="line">Apr 14 00:02:12 ora12c Keepalived_vrrp[1946]: VRRP_Instance(VI_1) sending 0 priority</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">备节点的状态：</span><br><span class="line">Apr 13 16:14:00 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Transition to MASTER STATE</span><br><span class="line">Apr 13 16:14:01 interface16 kernel: ACPI: No handler for Region [POWR] (ffff881821ff72b8) [IPMI]</span><br><span class="line">Apr 13 16:14:01 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Entering MASTER STATE</span><br><span class="line">Apr 13 16:14:01 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) setting protocol VIPs.</span><br><span class="line">Apr 13 16:14:01 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Sending gratuitous ARPs on em1 for 192.168.10.193</span><br><span class="line">Apr 13 16:14:01 interface16 Keepalived_healthcheckers[14032]: Netlink reflector reports IP 192.168.10.193 added</span><br><span class="line">Apr 13 16:14:06 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Sending gratuitous ARPs on em1 for 192.168.10.193</span><br><span class="line"></span><br><span class="line">备用节点ip情况：</span><br><span class="line">2: em1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether b8:2a:72:de:40:c3 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.170/24 brd 192.168.10.255 scope global em1</span><br><span class="line">    inet 192.168.10.193/32 scope global em1</span><br><span class="line">    inet6 fe80::ba2a:72ff:fede:40c3/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">此时VIP已经漂移到170这台机器上了</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">主节点：重启后，messages的日志</span><br><span class="line">Apr 13 23:47:43 ora12c Keepalived_healthcheckers[1945]: Using LinkWatch kernel netlink reflector...</span><br><span class="line">Apr 13 23:47:43 ora12c Keepalived_vrrp[1946]: VRRP_Instance(VI_1) Transition to MASTER STATE</span><br><span class="line">Apr 13 23:47:43 ora12c Keepalived_vrrp[1946]: VRRP_Instance(VI_1) Received lower prio advert, forcing new election</span><br><span class="line">Apr 13 23:47:44 ora12c Keepalived_vrrp[1946]: VRRP_Instance(VI_1) Entering MASTER STATE</span><br><span class="line"></span><br><span class="line">此时主节点ip情况</span><br><span class="line">2: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether 00:0c:29:10:4f:bc brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.191/24 brd 192.168.10.255 scope global eth1</span><br><span class="line">    inet 192.168.10.193/32 scope global eth1</span><br><span class="line">设置的对外IP（即VIP）绑定到 191这台机器上了</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">备节点此时状态：</span><br><span class="line">Apr 13 16:15:22 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Received higher prio advert</span><br><span class="line">Apr 13 16:15:22 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Entering BACKUP STATE</span><br><span class="line">Apr 13 16:15:22 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) removing protocol VIPs.</span><br><span class="line">Apr 13 16:15:22 interface16 Keepalived_healthcheckers[14032]: Netlink reflector reports IP 192.168.10.193 removed</span><br><span class="line">Apr 13 16:15:24 interface16 ntpd[2105]: Deleting interface #7 em1, 192.168.10.193#123, interface stats: received=0, sent=0, dropped=0, active_time=81 secs</span><br><span class="line"></span><br><span class="line">此时备节点ip情况：</span><br><span class="line">2: em1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether b8:2a:72:de:40:c3 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.170/24 brd 192.168.10.255 scope global em1</span><br><span class="line">    inet6 fe80::ba2a:72ff:fede:40c3/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>非抢占模式</p>
-<p>非抢占模式配置：</p>
-<ol>
-<li>主备文件中都在vrrp_instance中添加参数<code>nopreempt</code>，表示不争抢</li>
-<li>在vrrp_instance中将state都改为BACKUP<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">修改完成后先停用主节点，重启备用节点的keepalived进程，</span><br><span class="line">目的是，让备用节点先拿到VIP，验证启动主节点进程后，VIP不会漂移到主节点  --ok，因为配置了nopreempt参数，所以主节点不会抢占，</span><br><span class="line"></span><br><span class="line">此时备用节点ip情况：</span><br><span class="line">2: em1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether b8:2a:72:de:40:c3 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.170/24 brd 192.168.10.255 scope global em1</span><br><span class="line">    inet 192.168.10.193/32 scope global em1</span><br><span class="line"></span><br><span class="line">杀掉备用节点进程</span><br><span class="line">[root@interface16 ~]# killall keepalived</span><br><span class="line"></span><br><span class="line">此时主节点会变成MASTER主节点，日志：</span><br><span class="line">Apr 14 00:20:16 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) Transition to MASTER STATE</span><br><span class="line">Apr 14 00:20:17 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) Entering MASTER STATE</span><br><span class="line">Apr 14 00:20:17 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) setting protocol VIPs.</span><br><span class="line">Apr 14 00:20:17 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) Sending gratuitous ARPs on eth1 for 192.168.10.193</span><br><span class="line">Apr 14 00:20:17 ora12c Keepalived_healthcheckers[2212]: Netlink reflector reports IP 192.168.10.193 added</span><br><span class="line">Apr 14 00:20:22 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) Sending gratuitous ARPs on eth1 for 192.168.10.193</span><br><span class="line"></span><br><span class="line">主节点ip情况：</span><br><span class="line">2: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether 00:0c:29:10:4f:bc brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.191/24 brd 192.168.10.255 scope global eth1</span><br><span class="line">    inet 192.168.10.193/32 scope global eth1</span><br><span class="line">    inet6 fe80::20c:29ff:fe10:4fbc/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft foreve</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">综上，当设置nopreempt非抢占模式时，会根据priority大小选举一个MASTER节点，但是当MASTER节点的keepalived进程出现问题，即使恢复后，就不会再主动抢占MASTER，</span><br><span class="line">但是如果其他备用节点的keepalived进程都出现问题时，该节点会自动接管成为MASTER。</span><br><span class="line">--所以，这也是网上教程中都在提的双主模式下，通过杀掉keepalived进程，实现出现问题时完成主备切换。</span><br></pre></td></tr></table></figure></li>
-</ol>
-]]></content>
-      <categories>
-        <category>Linux</category>
-        <category>Keepalived</category>
-      </categories>
-      <tags>
-        <tag>Linux</tag>
-        <tag>Keepalived</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>yum包管理工具使用</title>
     <url>//yum%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7%E4%BD%BF%E7%94%A8.html</url>
     <content><![CDATA[<h1 id="仅下载不安装"><a href="#仅下载不安装" class="headerlink" title="仅下载不安装"></a>仅下载不安装</h1><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yum install --downloadonly --downloaddir=tmp vsftpd</span><br></pre></td></tr></table></figure>
@@ -1093,6 +1064,80 @@ java 包</li>
         <tag>Linux</tag>
         <tag>Yum</tag>
         <tag>包管理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>现场Keepalived配置测试</title>
+    <url>//%E7%8E%B0%E5%9C%BAKeepalived%E9%85%8D%E7%BD%AE%E6%B5%8B%E8%AF%95.html</url>
+    <content><![CDATA[<h1 id="keepalived配置"><a href="#keepalived配置" class="headerlink" title="keepalived配置"></a>keepalived配置</h1><p>配置主备，抢占和非抢占模式下的HA（高可用）</p>
+<ol>
+<li>yum 安装 keepalived</li>
+<li>为了通过web来测试，安装nginx，（nginx使用tengine的包）<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yum -y install keepalived</span><br><span class="line">yum -y install tengine</span><br></pre></td></tr></table></figure></li>
+<li>分别配置主副节点的keepalived.conf 配置， 目前仅做简单配置<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">! Configuration File for keepalived</span><br><span class="line"></span><br><span class="line">global_defs &#123;</span><br><span class="line">   router_id LVS_DEVEL  # 删除了email通知</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"># 配置一个vrrp_instacne 名字随便</span><br><span class="line">vrrp_instance VI_1 &#123;</span><br><span class="line">    # 分别是主备</span><br><span class="line">    state MASTER/BACKUP</span><br><span class="line">    # 选择绑定那张网卡，需要是在用的</span><br><span class="line">    interface eth1</span><br><span class="line">    # 主备id要一样</span><br><span class="line">    virtual_router_id 51</span><br><span class="line">    # 主备优先级值一般设置不一样，但是应该遵循master_priority - backup_priority &lt; weight (如果有设置vrrp_script，且设置了weight的情况下)</span><br><span class="line">    priority 100</span><br><span class="line">    # 通信时间</span><br><span class="line">    advert_int 1</span><br><span class="line">    # 认证方式，密码一样，方便主备通信</span><br><span class="line">    authentication &#123;</span><br><span class="line">        auth_type PASS</span><br><span class="line">        auth_pass 1111</span><br><span class="line">    &#125;</span><br><span class="line">    # 绑定的VIP(虚拟IP，即对外用的IP地址)，可以是多个，每行一个。</span><br><span class="line">    virtual_ipaddress &#123;</span><br><span class="line">        192.168.10.193</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>分别启动服务，然后通过浏览器访问192.168.10.193:15003（我设置nginx监控15003端口，没有使用80），来确定keepalive生效</li>
+</ol>
+<p>当master节点挂掉重启后，会自动抢占成为master</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">主节点关掉后，主节点日志：</span><br><span class="line">Apr 14 00:02:12 ora12c Keepalived[1944]: Stopping Keepalived v1.2.13 (03/19,2015)</span><br><span class="line">Apr 14 00:02:12 ora12c Keepalived_vrrp[1946]: VRRP_Instance(VI_1) sending 0 priority</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">备节点的状态：</span><br><span class="line">Apr 13 16:14:00 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Transition to MASTER STATE</span><br><span class="line">Apr 13 16:14:01 interface16 kernel: ACPI: No handler for Region [POWR] (ffff881821ff72b8) [IPMI]</span><br><span class="line">Apr 13 16:14:01 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Entering MASTER STATE</span><br><span class="line">Apr 13 16:14:01 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) setting protocol VIPs.</span><br><span class="line">Apr 13 16:14:01 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Sending gratuitous ARPs on em1 for 192.168.10.193</span><br><span class="line">Apr 13 16:14:01 interface16 Keepalived_healthcheckers[14032]: Netlink reflector reports IP 192.168.10.193 added</span><br><span class="line">Apr 13 16:14:06 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Sending gratuitous ARPs on em1 for 192.168.10.193</span><br><span class="line"></span><br><span class="line">备用节点ip情况：</span><br><span class="line">2: em1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether b8:2a:72:de:40:c3 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.170/24 brd 192.168.10.255 scope global em1</span><br><span class="line">    inet 192.168.10.193/32 scope global em1</span><br><span class="line">    inet6 fe80::ba2a:72ff:fede:40c3/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">此时VIP已经漂移到170这台机器上了</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">主节点：重启后，messages的日志</span><br><span class="line">Apr 13 23:47:43 ora12c Keepalived_healthcheckers[1945]: Using LinkWatch kernel netlink reflector...</span><br><span class="line">Apr 13 23:47:43 ora12c Keepalived_vrrp[1946]: VRRP_Instance(VI_1) Transition to MASTER STATE</span><br><span class="line">Apr 13 23:47:43 ora12c Keepalived_vrrp[1946]: VRRP_Instance(VI_1) Received lower prio advert, forcing new election</span><br><span class="line">Apr 13 23:47:44 ora12c Keepalived_vrrp[1946]: VRRP_Instance(VI_1) Entering MASTER STATE</span><br><span class="line"></span><br><span class="line">此时主节点ip情况</span><br><span class="line">2: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether 00:0c:29:10:4f:bc brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.191/24 brd 192.168.10.255 scope global eth1</span><br><span class="line">    inet 192.168.10.193/32 scope global eth1</span><br><span class="line">设置的对外IP（即VIP）绑定到 191这台机器上了</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">备节点此时状态：</span><br><span class="line">Apr 13 16:15:22 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Received higher prio advert</span><br><span class="line">Apr 13 16:15:22 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) Entering BACKUP STATE</span><br><span class="line">Apr 13 16:15:22 interface16 Keepalived_vrrp[14033]: VRRP_Instance(VI_1) removing protocol VIPs.</span><br><span class="line">Apr 13 16:15:22 interface16 Keepalived_healthcheckers[14032]: Netlink reflector reports IP 192.168.10.193 removed</span><br><span class="line">Apr 13 16:15:24 interface16 ntpd[2105]: Deleting interface #7 em1, 192.168.10.193#123, interface stats: received=0, sent=0, dropped=0, active_time=81 secs</span><br><span class="line"></span><br><span class="line">此时备节点ip情况：</span><br><span class="line">2: em1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether b8:2a:72:de:40:c3 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.170/24 brd 192.168.10.255 scope global em1</span><br><span class="line">    inet6 fe80::ba2a:72ff:fede:40c3/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>非抢占模式</p>
+<p>非抢占模式配置：</p>
+<ol>
+<li>主备文件中都在vrrp_instance中添加参数<code>nopreempt</code>，表示不争抢</li>
+<li>在vrrp_instance中将state都改为BACKUP<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">修改完成后先停用主节点，重启备用节点的keepalived进程，</span><br><span class="line">目的是，让备用节点先拿到VIP，验证启动主节点进程后，VIP不会漂移到主节点  --ok，因为配置了nopreempt参数，所以主节点不会抢占，</span><br><span class="line"></span><br><span class="line">此时备用节点ip情况：</span><br><span class="line">2: em1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether b8:2a:72:de:40:c3 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.170/24 brd 192.168.10.255 scope global em1</span><br><span class="line">    inet 192.168.10.193/32 scope global em1</span><br><span class="line"></span><br><span class="line">杀掉备用节点进程</span><br><span class="line">[root@interface16 ~]# killall keepalived</span><br><span class="line"></span><br><span class="line">此时主节点会变成MASTER主节点，日志：</span><br><span class="line">Apr 14 00:20:16 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) Transition to MASTER STATE</span><br><span class="line">Apr 14 00:20:17 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) Entering MASTER STATE</span><br><span class="line">Apr 14 00:20:17 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) setting protocol VIPs.</span><br><span class="line">Apr 14 00:20:17 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) Sending gratuitous ARPs on eth1 for 192.168.10.193</span><br><span class="line">Apr 14 00:20:17 ora12c Keepalived_healthcheckers[2212]: Netlink reflector reports IP 192.168.10.193 added</span><br><span class="line">Apr 14 00:20:22 ora12c Keepalived_vrrp[2213]: VRRP_Instance(VI_1) Sending gratuitous ARPs on eth1 for 192.168.10.193</span><br><span class="line"></span><br><span class="line">主节点ip情况：</span><br><span class="line">2: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP qlen 1000</span><br><span class="line">    link/ether 00:0c:29:10:4f:bc brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.191/24 brd 192.168.10.255 scope global eth1</span><br><span class="line">    inet 192.168.10.193/32 scope global eth1</span><br><span class="line">    inet6 fe80::20c:29ff:fe10:4fbc/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft foreve</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">综上，当设置nopreempt非抢占模式时，会根据priority大小选举一个MASTER节点，但是当MASTER节点的keepalived进程出现问题，即使恢复后，就不会再主动抢占MASTER，</span><br><span class="line">但是如果其他备用节点的keepalived进程都出现问题时，该节点会自动接管成为MASTER。</span><br><span class="line">--所以，这也是网上教程中都在提的双主模式下，通过杀掉keepalived进程，实现出现问题时完成主备切换。</span><br></pre></td></tr></table></figure></li>
+</ol>
+]]></content>
+      <categories>
+        <category>Linux</category>
+        <category>Keepalived</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>Keepalived</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Excel使用学习</title>
+    <url>//Excel%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0.html</url>
+    <content><![CDATA[<h1 id="将Unix-10位的时间戳转换为指定日期格式"><a href="#将Unix-10位的时间戳转换为指定日期格式" class="headerlink" title="将Unix 10位的时间戳转换为指定日期格式"></a>将Unix 10位的时间戳转换为指定日期格式</h1><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">=TEXT((P2+8*3600)/86400+70*365+19,&quot;yyyy-mm-dd hh:mm:ss&quot;)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Excel 的时期实际上是序列值，它以1900-01-01为1，每过一天序列值+1；</p>
+<p>Unix时间戳是从<code>1970-01-01 00:00:00 UTC</code> 开始到现在经过的秒杀；</p>
+<p>所以在Excel中转换Unix的时间戳时需要+70年的时间；</p>
+</blockquote>
+<ul>
+<li><p><code>TEXT()</code>，是Excel公式；</p>
+</li>
+<li><p>P2，是时间戳所在单元格；</p>
+</li>
+<li><p><code>8*3600</code>，为中国所在东八区时区，所以<code>+8*3600</code> ；</p>
+</li>
+<li><p><code>P2 + 8*3600</code>，计算当前时区的时间（秒）；</p>
+</li>
+<li><p><code>(P2+8*3600)/86400</code>，转换单位为天；</p>
+</li>
+<li><p><code>(P2+8*3600)/86400+70*365</code>，加上1900到1970这70年；</p>
+</li>
+<li><p><code>(P2+8*3600)/86400+70*365+19</code>，闰年多出来的天数；</p>
+<blockquote>
+<p>1900年到1970年共17个闰年，考虑到Excel将1900-01-01作为1，那么公式应该+18，为什么要加19？</p>
+<p>答：这是Excel的一个BUG，1900年也被当做闰年了，因此需要多+1。</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>注意1</strong>：另外，在Excel的工具-&gt; 选项-&gt;重新计算中，有个1904年日期系统，如果勾选这个选项，上面的公式应当将70改为66，即<code>(P2+8*3600)/86400+66*365+19</code></p>
+<p><strong>注意2</strong>： 如果需要转换的Unix时间戳为13位的ms格式，那么公式P2部分需要先除1000，即<code>(P2/1000 + 8*3600)/86400 + 66*365 + 19</code></p>
+<p>转换效果如下：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1658746074	-&gt;	2022-07-25 18:47:54</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>Office</category>
+        <category>Excel</category>
+      </categories>
+      <tags>
+        <tag>Office</tag>
+        <tag>Excel</tag>
       </tags>
   </entry>
   <entry>
@@ -1384,51 +1429,6 @@ java 包</li>
       </categories>
       <tags>
         <tag>Maven</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Excel使用学习</title>
-    <url>//Excel%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0.html</url>
-    <content><![CDATA[<h1 id="将Unix-10位的时间戳转换为指定日期格式"><a href="#将Unix-10位的时间戳转换为指定日期格式" class="headerlink" title="将Unix 10位的时间戳转换为指定日期格式"></a>将Unix 10位的时间戳转换为指定日期格式</h1><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">=TEXT((P2+8*3600)/86400+70*365+19,&quot;yyyy-mm-dd hh:mm:ss&quot;)</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>Excel 的时期实际上是序列值，它以1900-01-01为1，每过一天序列值+1；</p>
-<p>Unix时间戳是从<code>1970-01-01 00:00:00 UTC</code> 开始到现在经过的秒杀；</p>
-<p>所以在Excel中转换Unix的时间戳时需要+70年的时间；</p>
-</blockquote>
-<ul>
-<li><p><code>TEXT()</code>，是Excel公式；</p>
-</li>
-<li><p>P2，是时间戳所在单元格；</p>
-</li>
-<li><p><code>8*3600</code>，为中国所在东八区时区，所以<code>+8*3600</code> ；</p>
-</li>
-<li><p><code>P2 + 8*3600</code>，计算当前时区的时间（秒）；</p>
-</li>
-<li><p><code>(P2+8*3600)/86400</code>，转换单位为天；</p>
-</li>
-<li><p><code>(P2+8*3600)/86400+70*365</code>，加上1900到1970这70年；</p>
-</li>
-<li><p><code>(P2+8*3600)/86400+70*365+19</code>，闰年多出来的天数；</p>
-<blockquote>
-<p>1900年到1970年共17个闰年，考虑到Excel将1900-01-01作为1，那么公式应该+18，为什么要加19？</p>
-<p>答：这是Excel的一个BUG，1900年也被当做闰年了，因此需要多+1。</p>
-</blockquote>
-</li>
-</ul>
-<p><strong>注意1</strong>：另外，在Excel的工具-&gt; 选项-&gt;重新计算中，有个1904年日期系统，如果勾选这个选项，上面的公式应当将70改为66，即<code>(P2+8*3600)/86400+66*365+19</code></p>
-<p><strong>注意2</strong>： 如果需要转换的Unix时间戳为13位的ms格式，那么公式P2部分需要先除1000，即<code>(P2/1000 + 8*3600)/86400 + 66*365 + 19</code></p>
-<p>转换效果如下：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1658746074	-&gt;	2022-07-25 18:47:54</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>Office</category>
-        <category>Excel</category>
-      </categories>
-      <tags>
-        <tag>Office</tag>
-        <tag>Excel</tag>
       </tags>
   </entry>
   <entry>
@@ -3704,6 +3704,71 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
+    <title>12一个IO项目：构建命令行程序</title>
+    <url>//12%E4%B8%80%E4%B8%AAIO%E9%A1%B9%E7%9B%AE%EF%BC%9A%E6%9E%84%E5%BB%BA%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%A8%8B%E5%BA%8F.html</url>
+    <content><![CDATA[<ul>
+<li>代码组织（使用 <a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html">第七章</a> 学习的模块）</li>
+<li>vector 和字符串（<a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch08-00-common-collections.html">第八章</a>，集合）</li>
+<li>错误处理（<a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch09-00-error-handling.html">第九章</a>）</li>
+<li>合理的使用 trait 和生命周期（<a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch10-00-generics.html">第十章</a>）</li>
+<li>测试（<a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch11-00-testing.html">第十一章</a>）</li>
+</ul>
+<p>当所需函数嵌套了多于一层模块时，通常将<strong>父模块</strong>引入作用域，而不是其自身。这便于我们利用 <code>std::env</code> 中的其他函数。这比增加了 <code>use std::env::args;</code> 后仅仅使用 <code>args</code> 调用函数要更明确一些，因为 <code>args</code> 容易被错认成一个定义于当前模块的函数。</p>
+<h3 id="args-函数和无效的-Unicode"><a href="#args-函数和无效的-Unicode" class="headerlink" title="args 函数和无效的 Unicode"></a><code>args</code> 函数和无效的 Unicode</h3><p>注意 <code>std::env::args</code> 在其任何参数包含无效 Unicode 字符时会 panic。如果你需要接受包含无效 Unicode 字符的参数，使用 <code>std::env::args_os</code> 代替。</p>
+<p>然而 <code>collect</code> 是一个经常需要注明类型的函数，因为 Rust 不能推断出你想要什么类型的集合。</p>
+<h2 id="二进制项目的关注分离"><a href="#二进制项目的关注分离" class="headerlink" title="二进制项目的关注分离"></a>二进制项目的关注分离</h2><p>对 <code>main</code> 函数进行二进制程序的关注分析的指导性过程。</p>
+<ul>
+<li>将程序拆分成 <code>main.rs</code> 和 <code>lib.rs</code> 并将程序的逻辑放入 lib.rs 中；</li>
+<li>当命令行解析逻辑比较小时，可以保留在 main.rs 中；</li>
+<li>当命令行解析开始变得复杂时，也同样将其从 <code>main.rs</code> 提取到 <code>lib.rs</code> 中。</li>
+</ul>
+<p>经过这些过程之后，保留在 <code>main</code> 函数中的责任应该被限制为：</p>
+<ul>
+<li><p>使用参数值调用命令行解析逻辑；</p>
+</li>
+<li><p>设置任何其他的配置；</p>
+</li>
+<li><p>调用 <code>lib.rs</code> 中的 <code>run</code> 函数；</p>
+</li>
+<li><p>如果 <code>run</code> 返回错误，则处理这个错误；</p>
+</li>
+<li><p>main.rs 处理程序运行，</p>
+<ul>
+<li>不能直接测试 main 函数，所以将所有需要测试的都放进 lib.rs 中</li>
+</ul>
+</li>
+<li><p>lib.rs 处理所有的真正的任务逻辑。</p>
+</li>
+</ul>
+<p>Rust 中 默认项目是私有的，这个私有范围在同一个 mod 模块中，如果没有明确标注 mod ，则一个文件就是一个 mod</p>
+<h4 id="使用-clone-的权衡取舍"><a href="#使用-clone-的权衡取舍" class="headerlink" title="使用 clone 的权衡取舍"></a>使用 <code>clone</code> 的权衡取舍</h4><p>由于其运行时消耗，许多 Rustacean 之间有一个趋势是倾向于避免使用 <code>clone</code> 来解决所有权问题。在关于<strong>迭代器</strong>的第十三章中，我们将会学习如何更有效率的处理这种情况。</p>
+<p><code>Result&lt;T,E&gt;</code> 中的 <code>unwrap_or_else</code> 方法</p>
+<ul>
+<li>通过传递一个<strong>闭包</strong>（closure）作为参数，可以自定义非 <code>panic!</code> 的错误处理；</li>
+<li>当 Result 是 Ok 时，这个方法的行为类似于 unwrap，返回 Ok 内部封装的值；</li>
+<li>如果是 Err ，该方法会调用传进去的闭包。</li>
+</ul>
+<p>trait 对象</p>
+<p><a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch17-00-oop.html">第十七章</a> 会涉及 trait 对象。</p>
+<p>将 <code>std::error::Error</code>引入作用域，同时使用<code>Box&lt;dyn Error&gt;</code> trait 对象，意味着函数会返回实现了<code>Error</code> trait  的类型，不过无需指定具体将会返回的值的类型。这提供了在不同的错误场景可能有不同的错误返回值的灵活性。这也就是 <code>dyn</code> ，它是<em>动态</em>（dynamic）的缩写。</p>
+<ul>
+<li>这比在返回值上使用 impl trait 语法灵活多了。</li>
+</ul>
+<p>当使用 <code>Result&lt;T,E&gt;</code> 处理没有返回值的函数的错误时，</p>
+<ul>
+<li>没有错误时一般使用 <code>Ok(())</code>,<code>()</code> 即unit类型，表示没有返回值</li>
+<li>错误就使用 <code>Err</code> 将错误包装一下返回。</li>
+</ul>
+<h1 id="处理环境变量"><a href="#处理环境变量" class="headerlink" title="处理环境变量"></a>处理环境变量</h1><h1 id="将错误打印到标准错误中"><a href="#将错误打印到标准错误中" class="headerlink" title="将错误打印到标准错误中"></a>将错误打印到标准错误中</h1><p>使用 <code>eprintln!</code> 宏</p>
+]]></content>
+      <categories>
+        <category>Rust</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>11编写自动化测试</title>
     <url>//11%E7%BC%96%E5%86%99%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95.html</url>
     <content><![CDATA[<p>主要内容：</p>
@@ -3886,71 +3951,6 @@ child.logfile = sys.stdout
 <li>只有库 crate 才会向其他 crate 暴露可供调用和使用的函数</li>
 <li>二进制 crate 只关心单独运行。</li>
 </ul>
-]]></content>
-      <categories>
-        <category>Rust</category>
-      </categories>
-      <tags>
-        <tag>Rust</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>12一个IO项目：构建命令行程序</title>
-    <url>//12%E4%B8%80%E4%B8%AAIO%E9%A1%B9%E7%9B%AE%EF%BC%9A%E6%9E%84%E5%BB%BA%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%A8%8B%E5%BA%8F.html</url>
-    <content><![CDATA[<ul>
-<li>代码组织（使用 <a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html">第七章</a> 学习的模块）</li>
-<li>vector 和字符串（<a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch08-00-common-collections.html">第八章</a>，集合）</li>
-<li>错误处理（<a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch09-00-error-handling.html">第九章</a>）</li>
-<li>合理的使用 trait 和生命周期（<a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch10-00-generics.html">第十章</a>）</li>
-<li>测试（<a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch11-00-testing.html">第十一章</a>）</li>
-</ul>
-<p>当所需函数嵌套了多于一层模块时，通常将<strong>父模块</strong>引入作用域，而不是其自身。这便于我们利用 <code>std::env</code> 中的其他函数。这比增加了 <code>use std::env::args;</code> 后仅仅使用 <code>args</code> 调用函数要更明确一些，因为 <code>args</code> 容易被错认成一个定义于当前模块的函数。</p>
-<h3 id="args-函数和无效的-Unicode"><a href="#args-函数和无效的-Unicode" class="headerlink" title="args 函数和无效的 Unicode"></a><code>args</code> 函数和无效的 Unicode</h3><p>注意 <code>std::env::args</code> 在其任何参数包含无效 Unicode 字符时会 panic。如果你需要接受包含无效 Unicode 字符的参数，使用 <code>std::env::args_os</code> 代替。</p>
-<p>然而 <code>collect</code> 是一个经常需要注明类型的函数，因为 Rust 不能推断出你想要什么类型的集合。</p>
-<h2 id="二进制项目的关注分离"><a href="#二进制项目的关注分离" class="headerlink" title="二进制项目的关注分离"></a>二进制项目的关注分离</h2><p>对 <code>main</code> 函数进行二进制程序的关注分析的指导性过程。</p>
-<ul>
-<li>将程序拆分成 <code>main.rs</code> 和 <code>lib.rs</code> 并将程序的逻辑放入 lib.rs 中；</li>
-<li>当命令行解析逻辑比较小时，可以保留在 main.rs 中；</li>
-<li>当命令行解析开始变得复杂时，也同样将其从 <code>main.rs</code> 提取到 <code>lib.rs</code> 中。</li>
-</ul>
-<p>经过这些过程之后，保留在 <code>main</code> 函数中的责任应该被限制为：</p>
-<ul>
-<li><p>使用参数值调用命令行解析逻辑；</p>
-</li>
-<li><p>设置任何其他的配置；</p>
-</li>
-<li><p>调用 <code>lib.rs</code> 中的 <code>run</code> 函数；</p>
-</li>
-<li><p>如果 <code>run</code> 返回错误，则处理这个错误；</p>
-</li>
-<li><p>main.rs 处理程序运行，</p>
-<ul>
-<li>不能直接测试 main 函数，所以将所有需要测试的都放进 lib.rs 中</li>
-</ul>
-</li>
-<li><p>lib.rs 处理所有的真正的任务逻辑。</p>
-</li>
-</ul>
-<p>Rust 中 默认项目是私有的，这个私有范围在同一个 mod 模块中，如果没有明确标注 mod ，则一个文件就是一个 mod</p>
-<h4 id="使用-clone-的权衡取舍"><a href="#使用-clone-的权衡取舍" class="headerlink" title="使用 clone 的权衡取舍"></a>使用 <code>clone</code> 的权衡取舍</h4><p>由于其运行时消耗，许多 Rustacean 之间有一个趋势是倾向于避免使用 <code>clone</code> 来解决所有权问题。在关于<strong>迭代器</strong>的第十三章中，我们将会学习如何更有效率的处理这种情况。</p>
-<p><code>Result&lt;T,E&gt;</code> 中的 <code>unwrap_or_else</code> 方法</p>
-<ul>
-<li>通过传递一个<strong>闭包</strong>（closure）作为参数，可以自定义非 <code>panic!</code> 的错误处理；</li>
-<li>当 Result 是 Ok 时，这个方法的行为类似于 unwrap，返回 Ok 内部封装的值；</li>
-<li>如果是 Err ，该方法会调用传进去的闭包。</li>
-</ul>
-<p>trait 对象</p>
-<p><a href="https://kaisery.gitbooks.io/trpl-zh-cn/content/ch17-00-oop.html">第十七章</a> 会涉及 trait 对象。</p>
-<p>将 <code>std::error::Error</code>引入作用域，同时使用<code>Box&lt;dyn Error&gt;</code> trait 对象，意味着函数会返回实现了<code>Error</code> trait  的类型，不过无需指定具体将会返回的值的类型。这提供了在不同的错误场景可能有不同的错误返回值的灵活性。这也就是 <code>dyn</code> ，它是<em>动态</em>（dynamic）的缩写。</p>
-<ul>
-<li>这比在返回值上使用 impl trait 语法灵活多了。</li>
-</ul>
-<p>当使用 <code>Result&lt;T,E&gt;</code> 处理没有返回值的函数的错误时，</p>
-<ul>
-<li>没有错误时一般使用 <code>Ok(())</code>,<code>()</code> 即unit类型，表示没有返回值</li>
-<li>错误就使用 <code>Err</code> 将错误包装一下返回。</li>
-</ul>
-<h1 id="处理环境变量"><a href="#处理环境变量" class="headerlink" title="处理环境变量"></a>处理环境变量</h1><h1 id="将错误打印到标准错误中"><a href="#将错误打印到标准错误中" class="headerlink" title="将错误打印到标准错误中"></a>将错误打印到标准错误中</h1><p>使用 <code>eprintln!</code> 宏</p>
 ]]></content>
       <categories>
         <category>Rust</category>
@@ -5747,6 +5747,183 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
+    <title>20最后的项目：构建多线程web server</title>
+    <url>//20%E6%9C%80%E5%90%8E%E7%9A%84%E9%A1%B9%E7%9B%AE%EF%BC%9A%E6%9E%84%E5%BB%BA%E5%A4%9A%E7%BA%BF%E7%A8%8Bweb%20server.html</url>
+    <content><![CDATA[<p>在本章中，我们将一同构建另一个项目，来展示最后几章所学，同时复习更早的章节。</p>
+<p>如下是我们将怎样构建此 web server 的计划：</p>
+<ol>
+<li>学习一些 TCP 与 HTTP 知识</li>
+<li>在套接字（socket）上监听 TCP 请求</li>
+<li>解析少量的 HTTP 请求</li>
+<li>创建一个合适的 HTTP 响应</li>
+<li>通过线程池改善 server 的吞吐量</li>
+</ol>
+<p>不过在开始之前，需要提到一点细节：这里使用的方法并不是使用 Rust 构建 web server 最好的方法。<a href="https://crates.io/">crates.io</a> 上有很多可用于生产环境的 crate，它们提供了比我们所要编写的更为完整的 web server 和线程池实现。</p>
+<p>然而，本章的目的在于学习，而不是走捷径。因为 Rust 是一个系统编程语言，我们能够选择处理什么层次的抽象，并能够选择比其他语言可能或可用的层次更低的层次。因此我们将自己编写一个基础的 HTTP server 和线程池，以便学习将来可能用到的 crate 背后的通用理念和技术。</p>
+<h1 id="涉及知识点"><a href="#涉及知识点" class="headerlink" title="涉及知识点"></a>涉及知识点</h1><p> <strong>超文本传输协议</strong>（<em>Hypertext Transfer Protocol</em>，<em>HTTP</em>）</p>
+<p><strong>传输控制协议</strong>（<em>Transmission Control Protocol</em>，<em>TCP</em>）</p>
+<ul>
+<li>都是 <strong>请求-响应</strong>（<em>request-response</em>）协议，</li>
+<li>也就是说，有 <strong>客户端</strong>（<em>client</em>）来初始化请求，并有 <strong>服务端</strong>（<em>server</em>）监听请求并向客户端提供响应。请求与响应的内容由协议本身定义。</li>
+</ul>
+<p>标准库提供了 <code>std::net</code> 模块处理这些功能。</p>
+<p><code>TcpListener</code> 用于监听 TCP 连接。</p>
+<ul>
+<li>具体内容可以查看API文档；</li>
+<li><code>bind</code> 函数返回 <code>Result&lt;T, E&gt;</code>，这表明绑定可能会失败；</li>
+<li><code>TcpListener</code> 的 <code>incoming</code> 方法返回一个迭代器，它提供了一系列的流（更准确的说是 <code>TcpStream</code> 类型的流）。</li>
+</ul>
+<p><strong>流</strong>（<em>stream</em>）代表一个客户端和服务端之间打开的连接。</p>
+<p><strong>连接</strong>（<em>connection</em>）代表客户端连接服务端、服务端生成响应以及服务端关闭连接的全部请求 &#x2F; 响应过程。</p>
+<p>当客户端连接到服务端时 <code>incoming</code> 方法返回错误是可能的，因为我们实际上没有遍历连接，而是遍历 <strong>连接尝试</strong>（<em>connection attempts</em>）。</p>
+<p>当 <code>stream</code> 在循环的结尾离开作用域并被丢弃，其连接将被关闭，作为 <code>drop</code> 实现的一部分。</p>
+<h2 id="读取请求"><a href="#读取请求" class="headerlink" title="读取请求"></a>读取请求</h2><p>将 <code>std::io::prelude</code> 引入作用域来获取读写流所需的特定 trait。</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">handle_connection</span>(<span class="keyword">mut</span> stream: TcpStream) &#123;</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>handle_connection</code> 中，<code>stream</code> 参数是可变的。这是因为 <code>TcpStream</code> 实例在内部记录了所返回的数据。它可能读取了多于我们请求的数据并保存它们以备下一次请求数据。因此它需要是 <code>mut</code> 的<strong>因为其内部状态可能会改变</strong>；通常我们认为 “读取” 不需要可变性，不过在这个例子中则需要 <code>mut</code> 关键字。</p>
+<p>HTTP 是一个基于文本的协议，同时一个请求有如下格式：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Method Request-URI HTTP-Version CRLF</span><br><span class="line">headers CRLF</span><br><span class="line">message-body</span><br></pre></td></tr></table></figure>
+
+<p>第一行叫做 <strong>请求行</strong>（<em>request line</em>），它存放了客户端请求了什么的信息。</p>
+<ul>
+<li><p>请求行的第一部分是所使用的 <em>method</em>，比如 <code>GET</code> 或 <code>POST</code>，这描述了客户端如何进行请求。这里客户端使用了 <code>GET</code> 请求。</p>
+</li>
+<li><p>请求行接下来的部分是 <em>&#x2F;<em>，它代表客户端请求的 <strong>统一资源标识符</strong>（<em>Uniform Resource Identifier</em>，</em>URI</em>） —— URI 大体上类似，但也不完全类似于 URL（<strong>统一资源定位符</strong>，<em>Uniform Resource Locators</em>）。URI 和 URL 之间的区别对于本章的目的来说并不重要，不过 <strong>HTTP 规范使用术语 URI</strong>，所以这里可以简单的将 URL 理解为 URI。</p>
+</li>
+<li><p>最后一部分是客户端使用的HTTP版本，然后请求行以 <strong>CRLF序列</strong> （CRLF代表回车和换行，<em>carriage return line feed</em>，这是打字机时代的术语！）结束。CRLF序列也可以写成<code>\r\n</code>，其中<code>\r</code>是回车符，<code>\n</code>是换行符。 CRLF序列将请求行与其余请求数据分开。 请注意，打印CRLF时，我们会看到一个新行，而不是<code>\r\n</code>。</p>
+</li>
+</ul>
+<p>第二行是 headers；从 <code>Host:</code> 开始的其余的行是 headers；<code>GET</code> 请求没有 body。</p>
+<h2 id="编写响应"><a href="#编写响应" class="headerlink" title="编写响应"></a>编写响应</h2><p>我们将实现在客户端请求的响应中发送数据的功能。响应有如下格式：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HTTP-Version Status-Code Reason-Phrase CRLF</span><br><span class="line">headers CRLF</span><br><span class="line">message-body</span><br></pre></td></tr></table></figure>
+
+<p>第一行叫做 <strong>状态行</strong>（<em>status line</em>），它包含响应的 HTTP 版本、一个数字状态码用以总结请求的结果和一个描述之前状态码的文本原因短语。</p>
+<p>CRLF 序列之后是任意 header，另一个 CRLF 序列，和响应的 body。</p>
+<p>例如，一个没有body的响应</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">200</span> OK\r\n\r\n</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>数据开头增加 <code>b&quot;&quot;</code> <strong>字节字符串</strong>语法将其转换为字节字符串。</p>
+<h2 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h2><p>通道可以通道任务队列的作用</p>
+<p>如何创建并存储空线程？</p>
+<ul>
+<li>使用 <code>JoinHandle</code>来存储创建的线程</li>
+</ul>
+<p>看一下 <code>thread::spawn</code>的签名</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">spawn</span>&lt;F, T&gt;(f: F) <span class="punctuation">-&gt;</span> JoinHandle&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() <span class="punctuation">-&gt;</span> T + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>,</span><br><span class="line">        T: <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br></pre></td></tr></table></figure>
+
+<p><code>spawn</code>返回 <code>JoinHandle&lt;T&gt;</code>，<code>T</code> 是闭包返回的类型。不返回有意义的值则使用<code>()</code></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// thread::spawn() -&gt; JoinHandle&lt;T&gt;;</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(||&#123;&#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">spawn</span>&lt;F, T&gt;(f: F) <span class="punctuation">-&gt;</span> JoinHandle&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() <span class="punctuation">-&gt;</span> T + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>,</span><br><span class="line">        T: <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br></pre></td></tr></table></figure>
+
+<p><code>F</code> 是这里我们关心的参数；</p>
+<p>要理解<code>F</code>的三个 trait bound的目的，</p>
+<ul>
+<li><code>FnOnce()</code> ，线程仅对闭包执行一次，</li>
+<li><code>Send</code> 来将闭包从一个线程转移到另一个线程（安全在线程间转移所有权）；</li>
+<li><code>&#39;static</code> 是因为并不知道线程会执行多久。</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">execute</span>&lt;F&gt;(&amp;<span class="keyword">self</span>, f: F)</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里与上面 <code>spawn</code> 部分 <code>FnOnce</code>的不同有一个知识点：</p>
+<ul>
+<li>使用<code>FnOnce/FnMut/Fn</code>定义 trait bound时，就像普通定义函数签名时一样</li>
+</ul>
+<ol>
+<li>如果有参数和返回值，需要<code>FnOnce(类型) -&gt; 类型2</code>；</li>
+<li>如果没有参数和返回值，或者两者缺一，<ul>
+<li>没有参数时也需要<code>()</code>，即<code>FnOnce()</code>，函数没有参数时也是这样；</li>
+<li>没有返回值时，可以省略返回值，即<code>FnOnce(xxx)</code>（没有返回值时其实就是返回<code>()</code>，不过可以省略）;</li>
+</ul>
+</li>
+</ol>
+<p><code>Vec::with_capacity(size)</code>与 <code>Vec::new()</code>的区别？</p>
+<ul>
+<li><p><code>Vec::with_capacity(size)</code> 效率要高一些，因为会预先进行分配size个元素的空间。</p>
+</li>
+<li><p><code>Vec::new</code> 会随着插入元素而重新改变大小；</p>
+</li>
+</ul>
+<h3 id="使用通道向线程发送请求"><a href="#使用通道向线程发送请求" class="headerlink" title="使用通道向线程发送请求"></a>使用通道向线程发送请求</h3><p>在线程池中，<code>Worker</code> 结构体能够从 <code>ThreadPool</code> 的队列中获取需要执行的代码，并发送到线程中执行他们。</p>
+<p>我们要队列，在这里我们可以简单是使用<strong>通道</strong>来充当任务队列的作用。</p>
+<ol>
+<li><code>ThreadPool</code> 会创建一个通道，其<code>execute</code> 方法会在通道发送端发出期望执行的任务。</li>
+<li>每个 <code>Worker</code> 将会充当通道的接收端。</li>
+</ol>
+<p>注意，<code>mpsc::channel()</code>中，Rust 提供的通道是多生产者，单消费者。</p>
+<ul>
+<li>在线程中的接收端是不能传递给多个<code>worker</code>实例的。</li>
+<li>所以只能所有<code>worker</code>共享单一的receiver了，同时取出任务需要修改receiver。<ul>
+<li>这涉及到在多个线程间共享所有权，并允许线程修改其值得问题。</li>
+<li>需要使用<code>Arc&lt;Mutex&lt;T&gt;&gt;</code>。<code>Arc</code>允许多个线程间共享所有权，<code>Mutex</code> 确保一次只有一个worker能从接收端获取任务并修改。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">receiver</span> = Arc::<span class="title function_ invoke__">new</span>(Mutex::<span class="title function_ invoke__">new</span>(receiver));</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> <span class="variable">id</span> <span class="keyword">in</span> <span class="number">0</span>..size &#123;</span><br><span class="line">   </span><br><span class="line">    <span class="comment">// 共享所有权需要使用clone方法</span></span><br><span class="line">    workers.<span class="title function_ invoke__">push</span>(Worker::<span class="title function_ invoke__">new</span>(id,Arc::<span class="title function_ invoke__">clone</span>(&amp;receiver)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="接收闭包类型的-trait对象的类型别名"><a href="#接收闭包类型的-trait对象的类型别名" class="headerlink" title="接收闭包类型的 trait对象的类型别名"></a>接收闭包类型的 trait对象的类型别名</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="title class_">Job</span> = <span class="type">Box</span>&lt;<span class="keyword">dyn</span> <span class="title function_ invoke__">FnOnce</span>() + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>&gt;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="为什么选择loop而不是while-let"><a href="#为什么选择loop而不是while-let" class="headerlink" title="为什么选择loop而不是while let?"></a>为什么选择<code>loop</code>而不是<code>while let</code>?</h3><p>我们需要闭包<strong>一直循环</strong>，向通道的接收端请求任务，并在得到任务时执行他们</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Worker</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>(id: <span class="type">usize</span>, receiver: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Job&gt;&gt;&gt;) <span class="punctuation">-&gt;</span> Worker &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">            <span class="keyword">loop</span> &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">job</span> = receiver.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">recv</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line"></span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;Worker &#123;&#125; got a job; executing.&quot;</span>, id);</span><br><span class="line"></span><br><span class="line">                <span class="title function_ invoke__">job</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Worker &#123;</span><br><span class="line">            id,</span><br><span class="line">            thread,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>实现上使用了<code>loop</code>，而不是<code>while let</code>，为什么？</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Worker</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>(id: <span class="type">usize</span>, receiver: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Job&gt;&gt;&gt;) <span class="punctuation">-&gt;</span> Worker &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">            <span class="keyword">while</span> <span class="keyword">let</span> <span class="variable">Ok</span>(job) = receiver.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">recv</span>() &#123;</span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;Worker &#123;&#125; got a job; executing.&quot;</span>, id);</span><br><span class="line"></span><br><span class="line">                <span class="title function_ invoke__">job</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Worker &#123;</span><br><span class="line">            id,</span><br><span class="line">            thread,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码可以编译和运行，但是并不会产生所期望的线程行为：一个慢请求仍然会导致其他请求等待执行。– 这里主要因为获取锁的原因；</p>
+<p>原因有些微妙：</p>
+<ul>
+<li><code>Mutex</code> 结构体没有公有 <code>unlock</code> 方法，因为锁的所有权依赖 <code>lock</code> 方法返回的 <code>LockResult&lt;MutexGuard&lt;T&gt;&gt;</code> 中 <code>MutexGuard&lt;T&gt;</code> 的生命周期。<ul>
+<li>因为<code>MutexGuard&lt;T&gt;</code>是个智能指针，其实现了<code>Drop</code> trait，当<code>MutexGuard</code>离开作用域时会自动释放锁（lock）；</li>
+<li>所以借用检查器可以在编译时就确保不会出现被<code>Mutex</code>守护的资源被没有持有锁的情况下被访问。</li>
+<li>所以在处理锁的时候，需要考虑<code>lock</code>方法返回值的生命周期，否则可能出现持有锁的时间比预期长的情况，导致性能受损。</li>
+</ul>
+</li>
+<li>问题来了，这与 <code>while let</code> 有什么关系呢？<ul>
+<li><code>let</code>语句，当<code>let</code>语句结束时，表达式中等号右边的任何临时值都会被立即丢弃。</li>
+<li><code>while let</code> 、<code>if let</code> 和 <code>match</code> 直到相关块的末尾才会丢弃临时值。</li>
+</ul>
+</li>
+</ul>
+<p>所以综上，</p>
+<p>如果这里使用 <code>while let</code>，一次判断循环，在离开其代码块前，产生的<code>MutexGuard</code>临时值会一直存在，如果有慢请求，worker获取锁后，到执行完job都会一直持有锁，导致无法实现多线程并发。</p>
+<p>而使用<code>loop</code>循环，因为<code>let</code>语句在内部，且<code>let</code>语句执行完，<code>MutexGuard</code>就会被丢弃，这样其他worker就可以争夺锁，就可以达到多个线程并发执行了。</p>
+<h1 id="优雅停机与清理"><a href="#优雅停机与清理" class="headerlink" title="优雅停机与清理"></a>优雅停机与清理</h1><h2 id="为-ThreadPool-实现-Drop-trait"><a href="#为-ThreadPool-实现-Drop-trait" class="headerlink" title="为 ThreadPool 实现 Drop trait"></a>为 ThreadPool 实现 Drop trait</h2><p>当线程池被丢弃时，应该 join 所有线程以确保他们完成其操作。这个在 <code>Drop</code> trait 中实现。</p>
+<p><code>JoinHandler.join</code> 的作用</p>
+<ul>
+<li>等待关联的thread结束，如果关联的线程结束了这个方法会立刻返回。</li>
+<li>该方法需要获取实例的所有权。<ul>
+<li>为了解决这个问题，需要一个方法将 <code>thread</code> 移动出拥有其所有权的 <code>Worker</code> 实例以便 <code>join</code> 可以消费这个线程。</li>
+<li>如果 <code>Worker</code> 存放的是 <code>Option&lt;thread::JoinHandle&lt;()&gt;</code>，就可以在 <code>Option</code> 上调用 <code>take</code> 方法将值从 <code>Some</code> 成员中移动出来而对 <code>None</code> 成员不做处理。</li>
+</ul>
+</li>
+</ul>
+<h2 id="向线程发送信号使其停止接收任务"><a href="#向线程发送信号使其停止接收任务" class="headerlink" title="向线程发送信号使其停止接收任务"></a>向线程发送信号使其停止接收任务</h2><p>修改线程既监听是否有 <code>Job</code> 运行也要监听一个应该停止监听并退出无限循环的信号。</p>
+<p>否则，如果没有停止退出无限循环的信号，那么线程将永远不会退出，泽县城永远阻塞在等待第一个线程结束上。</p>
+<ul>
+<li>所以通道将发送这个枚举的两个成员之一而不是 <code>Job</code> 实例。</li>
+</ul>
+<p>为什么在 Drop trait 实现中不能将发送terminate的循环与获取join的循环放在一起？而是分为两个for循环？</p>
+]]></content>
+      <categories>
+        <category>Rust</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>21知识拾遗</title>
     <url>//21%E7%9F%A5%E8%AF%86%E6%8B%BE%E9%81%97.html</url>
     <content><![CDATA[<h1 id="Formatted-print"><a href="#Formatted-print" class="headerlink" title="Formatted print"></a>Formatted print</h1><p>打印信息，是由<code>std::fmt</code> 包中的几个宏来处理的</p>
@@ -6094,183 +6271,6 @@ child.logfile = sys.stdout
 <h1 id="导出包的使用技巧"><a href="#导出包的使用技巧" class="headerlink" title="导出包的使用技巧"></a>导出包的使用技巧</h1><p>技巧1，巧妙组合放入 prelude 中，在第三方 crate 中很常见的技巧。</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// lib.rs 文件中</span></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">mod</span> prelude &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">use</span> crate::assert::PathAssert;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">use</span> crate::fixture::FileTouch;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="number">1</span>. 先使用 <span class="keyword">pub</span> <span class="keyword">use</span> 将指定的内容重新导出，方便对外访问；</span><br><span class="line"><span class="number">2</span>. 在使用 <span class="keyword">pub</span> <span class="keyword">mod</span> prelude，将这些内容部分核心 <span class="keyword">trait</span> 放到 prelude 中，这样在使用时，可直接通过 `<span class="keyword">use</span> assert_fs::prelude::*` 的形式全部引入使用的代码中，这样基本在实际使用时大部分情况下这个 <span class="keyword">crate</span> 中涉及的引用内容都在这里了。</span><br></pre></td></tr></table></figure>
 
-]]></content>
-      <categories>
-        <category>Rust</category>
-      </categories>
-      <tags>
-        <tag>Rust</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>20最后的项目：构建多线程web server</title>
-    <url>//20%E6%9C%80%E5%90%8E%E7%9A%84%E9%A1%B9%E7%9B%AE%EF%BC%9A%E6%9E%84%E5%BB%BA%E5%A4%9A%E7%BA%BF%E7%A8%8Bweb%20server.html</url>
-    <content><![CDATA[<p>在本章中，我们将一同构建另一个项目，来展示最后几章所学，同时复习更早的章节。</p>
-<p>如下是我们将怎样构建此 web server 的计划：</p>
-<ol>
-<li>学习一些 TCP 与 HTTP 知识</li>
-<li>在套接字（socket）上监听 TCP 请求</li>
-<li>解析少量的 HTTP 请求</li>
-<li>创建一个合适的 HTTP 响应</li>
-<li>通过线程池改善 server 的吞吐量</li>
-</ol>
-<p>不过在开始之前，需要提到一点细节：这里使用的方法并不是使用 Rust 构建 web server 最好的方法。<a href="https://crates.io/">crates.io</a> 上有很多可用于生产环境的 crate，它们提供了比我们所要编写的更为完整的 web server 和线程池实现。</p>
-<p>然而，本章的目的在于学习，而不是走捷径。因为 Rust 是一个系统编程语言，我们能够选择处理什么层次的抽象，并能够选择比其他语言可能或可用的层次更低的层次。因此我们将自己编写一个基础的 HTTP server 和线程池，以便学习将来可能用到的 crate 背后的通用理念和技术。</p>
-<h1 id="涉及知识点"><a href="#涉及知识点" class="headerlink" title="涉及知识点"></a>涉及知识点</h1><p> <strong>超文本传输协议</strong>（<em>Hypertext Transfer Protocol</em>，<em>HTTP</em>）</p>
-<p><strong>传输控制协议</strong>（<em>Transmission Control Protocol</em>，<em>TCP</em>）</p>
-<ul>
-<li>都是 <strong>请求-响应</strong>（<em>request-response</em>）协议，</li>
-<li>也就是说，有 <strong>客户端</strong>（<em>client</em>）来初始化请求，并有 <strong>服务端</strong>（<em>server</em>）监听请求并向客户端提供响应。请求与响应的内容由协议本身定义。</li>
-</ul>
-<p>标准库提供了 <code>std::net</code> 模块处理这些功能。</p>
-<p><code>TcpListener</code> 用于监听 TCP 连接。</p>
-<ul>
-<li>具体内容可以查看API文档；</li>
-<li><code>bind</code> 函数返回 <code>Result&lt;T, E&gt;</code>，这表明绑定可能会失败；</li>
-<li><code>TcpListener</code> 的 <code>incoming</code> 方法返回一个迭代器，它提供了一系列的流（更准确的说是 <code>TcpStream</code> 类型的流）。</li>
-</ul>
-<p><strong>流</strong>（<em>stream</em>）代表一个客户端和服务端之间打开的连接。</p>
-<p><strong>连接</strong>（<em>connection</em>）代表客户端连接服务端、服务端生成响应以及服务端关闭连接的全部请求 &#x2F; 响应过程。</p>
-<p>当客户端连接到服务端时 <code>incoming</code> 方法返回错误是可能的，因为我们实际上没有遍历连接，而是遍历 <strong>连接尝试</strong>（<em>connection attempts</em>）。</p>
-<p>当 <code>stream</code> 在循环的结尾离开作用域并被丢弃，其连接将被关闭，作为 <code>drop</code> 实现的一部分。</p>
-<h2 id="读取请求"><a href="#读取请求" class="headerlink" title="读取请求"></a>读取请求</h2><p>将 <code>std::io::prelude</code> 引入作用域来获取读写流所需的特定 trait。</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">handle_connection</span>(<span class="keyword">mut</span> stream: TcpStream) &#123;</span><br></pre></td></tr></table></figure>
-
-<p>在 <code>handle_connection</code> 中，<code>stream</code> 参数是可变的。这是因为 <code>TcpStream</code> 实例在内部记录了所返回的数据。它可能读取了多于我们请求的数据并保存它们以备下一次请求数据。因此它需要是 <code>mut</code> 的<strong>因为其内部状态可能会改变</strong>；通常我们认为 “读取” 不需要可变性，不过在这个例子中则需要 <code>mut</code> 关键字。</p>
-<p>HTTP 是一个基于文本的协议，同时一个请求有如下格式：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Method Request-URI HTTP-Version CRLF</span><br><span class="line">headers CRLF</span><br><span class="line">message-body</span><br></pre></td></tr></table></figure>
-
-<p>第一行叫做 <strong>请求行</strong>（<em>request line</em>），它存放了客户端请求了什么的信息。</p>
-<ul>
-<li><p>请求行的第一部分是所使用的 <em>method</em>，比如 <code>GET</code> 或 <code>POST</code>，这描述了客户端如何进行请求。这里客户端使用了 <code>GET</code> 请求。</p>
-</li>
-<li><p>请求行接下来的部分是 <em>&#x2F;<em>，它代表客户端请求的 <strong>统一资源标识符</strong>（<em>Uniform Resource Identifier</em>，</em>URI</em>） —— URI 大体上类似，但也不完全类似于 URL（<strong>统一资源定位符</strong>，<em>Uniform Resource Locators</em>）。URI 和 URL 之间的区别对于本章的目的来说并不重要，不过 <strong>HTTP 规范使用术语 URI</strong>，所以这里可以简单的将 URL 理解为 URI。</p>
-</li>
-<li><p>最后一部分是客户端使用的HTTP版本，然后请求行以 <strong>CRLF序列</strong> （CRLF代表回车和换行，<em>carriage return line feed</em>，这是打字机时代的术语！）结束。CRLF序列也可以写成<code>\r\n</code>，其中<code>\r</code>是回车符，<code>\n</code>是换行符。 CRLF序列将请求行与其余请求数据分开。 请注意，打印CRLF时，我们会看到一个新行，而不是<code>\r\n</code>。</p>
-</li>
-</ul>
-<p>第二行是 headers；从 <code>Host:</code> 开始的其余的行是 headers；<code>GET</code> 请求没有 body。</p>
-<h2 id="编写响应"><a href="#编写响应" class="headerlink" title="编写响应"></a>编写响应</h2><p>我们将实现在客户端请求的响应中发送数据的功能。响应有如下格式：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HTTP-Version Status-Code Reason-Phrase CRLF</span><br><span class="line">headers CRLF</span><br><span class="line">message-body</span><br></pre></td></tr></table></figure>
-
-<p>第一行叫做 <strong>状态行</strong>（<em>status line</em>），它包含响应的 HTTP 版本、一个数字状态码用以总结请求的结果和一个描述之前状态码的文本原因短语。</p>
-<p>CRLF 序列之后是任意 header，另一个 CRLF 序列，和响应的 body。</p>
-<p>例如，一个没有body的响应</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">200</span> OK\r\n\r\n</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-<p>数据开头增加 <code>b&quot;&quot;</code> <strong>字节字符串</strong>语法将其转换为字节字符串。</p>
-<h2 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h2><p>通道可以通道任务队列的作用</p>
-<p>如何创建并存储空线程？</p>
-<ul>
-<li>使用 <code>JoinHandle</code>来存储创建的线程</li>
-</ul>
-<p>看一下 <code>thread::spawn</code>的签名</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">spawn</span>&lt;F, T&gt;(f: F) <span class="punctuation">-&gt;</span> JoinHandle&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() <span class="punctuation">-&gt;</span> T + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>,</span><br><span class="line">        T: <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br></pre></td></tr></table></figure>
-
-<p><code>spawn</code>返回 <code>JoinHandle&lt;T&gt;</code>，<code>T</code> 是闭包返回的类型。不返回有意义的值则使用<code>()</code></p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// thread::spawn() -&gt; JoinHandle&lt;T&gt;;</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(||&#123;&#125;);</span><br></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">spawn</span>&lt;F, T&gt;(f: F) <span class="punctuation">-&gt;</span> JoinHandle&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() <span class="punctuation">-&gt;</span> T + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>,</span><br><span class="line">        T: <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br></pre></td></tr></table></figure>
-
-<p><code>F</code> 是这里我们关心的参数；</p>
-<p>要理解<code>F</code>的三个 trait bound的目的，</p>
-<ul>
-<li><code>FnOnce()</code> ，线程仅对闭包执行一次，</li>
-<li><code>Send</code> 来将闭包从一个线程转移到另一个线程（安全在线程间转移所有权）；</li>
-<li><code>&#39;static</code> 是因为并不知道线程会执行多久。</li>
-</ul>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">execute</span>&lt;F&gt;(&amp;<span class="keyword">self</span>, f: F)</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="title function_ invoke__">FnOnce</span>() + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里与上面 <code>spawn</code> 部分 <code>FnOnce</code>的不同有一个知识点：</p>
-<ul>
-<li>使用<code>FnOnce/FnMut/Fn</code>定义 trait bound时，就像普通定义函数签名时一样</li>
-</ul>
-<ol>
-<li>如果有参数和返回值，需要<code>FnOnce(类型) -&gt; 类型2</code>；</li>
-<li>如果没有参数和返回值，或者两者缺一，<ul>
-<li>没有参数时也需要<code>()</code>，即<code>FnOnce()</code>，函数没有参数时也是这样；</li>
-<li>没有返回值时，可以省略返回值，即<code>FnOnce(xxx)</code>（没有返回值时其实就是返回<code>()</code>，不过可以省略）;</li>
-</ul>
-</li>
-</ol>
-<p><code>Vec::with_capacity(size)</code>与 <code>Vec::new()</code>的区别？</p>
-<ul>
-<li><p><code>Vec::with_capacity(size)</code> 效率要高一些，因为会预先进行分配size个元素的空间。</p>
-</li>
-<li><p><code>Vec::new</code> 会随着插入元素而重新改变大小；</p>
-</li>
-</ul>
-<h3 id="使用通道向线程发送请求"><a href="#使用通道向线程发送请求" class="headerlink" title="使用通道向线程发送请求"></a>使用通道向线程发送请求</h3><p>在线程池中，<code>Worker</code> 结构体能够从 <code>ThreadPool</code> 的队列中获取需要执行的代码，并发送到线程中执行他们。</p>
-<p>我们要队列，在这里我们可以简单是使用<strong>通道</strong>来充当任务队列的作用。</p>
-<ol>
-<li><code>ThreadPool</code> 会创建一个通道，其<code>execute</code> 方法会在通道发送端发出期望执行的任务。</li>
-<li>每个 <code>Worker</code> 将会充当通道的接收端。</li>
-</ol>
-<p>注意，<code>mpsc::channel()</code>中，Rust 提供的通道是多生产者，单消费者。</p>
-<ul>
-<li>在线程中的接收端是不能传递给多个<code>worker</code>实例的。</li>
-<li>所以只能所有<code>worker</code>共享单一的receiver了，同时取出任务需要修改receiver。<ul>
-<li>这涉及到在多个线程间共享所有权，并允许线程修改其值得问题。</li>
-<li>需要使用<code>Arc&lt;Mutex&lt;T&gt;&gt;</code>。<code>Arc</code>允许多个线程间共享所有权，<code>Mutex</code> 确保一次只有一个worker能从接收端获取任务并修改。</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">receiver</span> = Arc::<span class="title function_ invoke__">new</span>(Mutex::<span class="title function_ invoke__">new</span>(receiver));</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> <span class="variable">id</span> <span class="keyword">in</span> <span class="number">0</span>..size &#123;</span><br><span class="line">   </span><br><span class="line">    <span class="comment">// 共享所有权需要使用clone方法</span></span><br><span class="line">    workers.<span class="title function_ invoke__">push</span>(Worker::<span class="title function_ invoke__">new</span>(id,Arc::<span class="title function_ invoke__">clone</span>(&amp;receiver)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="接收闭包类型的-trait对象的类型别名"><a href="#接收闭包类型的-trait对象的类型别名" class="headerlink" title="接收闭包类型的 trait对象的类型别名"></a>接收闭包类型的 trait对象的类型别名</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="title class_">Job</span> = <span class="type">Box</span>&lt;<span class="keyword">dyn</span> <span class="title function_ invoke__">FnOnce</span>() + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>&gt;;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="为什么选择loop而不是while-let"><a href="#为什么选择loop而不是while-let" class="headerlink" title="为什么选择loop而不是while let?"></a>为什么选择<code>loop</code>而不是<code>while let</code>?</h3><p>我们需要闭包<strong>一直循环</strong>，向通道的接收端请求任务，并在得到任务时执行他们</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Worker</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>(id: <span class="type">usize</span>, receiver: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Job&gt;&gt;&gt;) <span class="punctuation">-&gt;</span> Worker &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">            <span class="keyword">loop</span> &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">job</span> = receiver.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">recv</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line"></span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;Worker &#123;&#125; got a job; executing.&quot;</span>, id);</span><br><span class="line"></span><br><span class="line">                <span class="title function_ invoke__">job</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Worker &#123;</span><br><span class="line">            id,</span><br><span class="line">            thread,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>实现上使用了<code>loop</code>，而不是<code>while let</code>，为什么？</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Worker</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>(id: <span class="type">usize</span>, receiver: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Job&gt;&gt;&gt;) <span class="punctuation">-&gt;</span> Worker &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">thread</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">            <span class="keyword">while</span> <span class="keyword">let</span> <span class="variable">Ok</span>(job) = receiver.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">recv</span>() &#123;</span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;Worker &#123;&#125; got a job; executing.&quot;</span>, id);</span><br><span class="line"></span><br><span class="line">                <span class="title function_ invoke__">job</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Worker &#123;</span><br><span class="line">            id,</span><br><span class="line">            thread,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这段代码可以编译和运行，但是并不会产生所期望的线程行为：一个慢请求仍然会导致其他请求等待执行。– 这里主要因为获取锁的原因；</p>
-<p>原因有些微妙：</p>
-<ul>
-<li><code>Mutex</code> 结构体没有公有 <code>unlock</code> 方法，因为锁的所有权依赖 <code>lock</code> 方法返回的 <code>LockResult&lt;MutexGuard&lt;T&gt;&gt;</code> 中 <code>MutexGuard&lt;T&gt;</code> 的生命周期。<ul>
-<li>因为<code>MutexGuard&lt;T&gt;</code>是个智能指针，其实现了<code>Drop</code> trait，当<code>MutexGuard</code>离开作用域时会自动释放锁（lock）；</li>
-<li>所以借用检查器可以在编译时就确保不会出现被<code>Mutex</code>守护的资源被没有持有锁的情况下被访问。</li>
-<li>所以在处理锁的时候，需要考虑<code>lock</code>方法返回值的生命周期，否则可能出现持有锁的时间比预期长的情况，导致性能受损。</li>
-</ul>
-</li>
-<li>问题来了，这与 <code>while let</code> 有什么关系呢？<ul>
-<li><code>let</code>语句，当<code>let</code>语句结束时，表达式中等号右边的任何临时值都会被立即丢弃。</li>
-<li><code>while let</code> 、<code>if let</code> 和 <code>match</code> 直到相关块的末尾才会丢弃临时值。</li>
-</ul>
-</li>
-</ul>
-<p>所以综上，</p>
-<p>如果这里使用 <code>while let</code>，一次判断循环，在离开其代码块前，产生的<code>MutexGuard</code>临时值会一直存在，如果有慢请求，worker获取锁后，到执行完job都会一直持有锁，导致无法实现多线程并发。</p>
-<p>而使用<code>loop</code>循环，因为<code>let</code>语句在内部，且<code>let</code>语句执行完，<code>MutexGuard</code>就会被丢弃，这样其他worker就可以争夺锁，就可以达到多个线程并发执行了。</p>
-<h1 id="优雅停机与清理"><a href="#优雅停机与清理" class="headerlink" title="优雅停机与清理"></a>优雅停机与清理</h1><h2 id="为-ThreadPool-实现-Drop-trait"><a href="#为-ThreadPool-实现-Drop-trait" class="headerlink" title="为 ThreadPool 实现 Drop trait"></a>为 ThreadPool 实现 Drop trait</h2><p>当线程池被丢弃时，应该 join 所有线程以确保他们完成其操作。这个在 <code>Drop</code> trait 中实现。</p>
-<p><code>JoinHandler.join</code> 的作用</p>
-<ul>
-<li>等待关联的thread结束，如果关联的线程结束了这个方法会立刻返回。</li>
-<li>该方法需要获取实例的所有权。<ul>
-<li>为了解决这个问题，需要一个方法将 <code>thread</code> 移动出拥有其所有权的 <code>Worker</code> 实例以便 <code>join</code> 可以消费这个线程。</li>
-<li>如果 <code>Worker</code> 存放的是 <code>Option&lt;thread::JoinHandle&lt;()&gt;</code>，就可以在 <code>Option</code> 上调用 <code>take</code> 方法将值从 <code>Some</code> 成员中移动出来而对 <code>None</code> 成员不做处理。</li>
-</ul>
-</li>
-</ul>
-<h2 id="向线程发送信号使其停止接收任务"><a href="#向线程发送信号使其停止接收任务" class="headerlink" title="向线程发送信号使其停止接收任务"></a>向线程发送信号使其停止接收任务</h2><p>修改线程既监听是否有 <code>Job</code> 运行也要监听一个应该停止监听并退出无限循环的信号。</p>
-<p>否则，如果没有停止退出无限循环的信号，那么线程将永远不会退出，泽县城永远阻塞在等待第一个线程结束上。</p>
-<ul>
-<li>所以通道将发送这个枚举的两个成员之一而不是 <code>Job</code> 实例。</li>
-</ul>
-<p>为什么在 Drop trait 实现中不能将发送terminate的循环与获取join的循环放在一起？而是分为两个for循环？</p>
 ]]></content>
       <categories>
         <category>Rust</category>
@@ -10493,43 +10493,6 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
-    <title>更改远程桌面侦听端口</title>
-    <url>//%E6%9B%B4%E6%94%B9%E8%BF%9C%E7%A8%8B%E6%A1%8C%E9%9D%A2%E4%BE%A6%E5%90%AC%E7%AB%AF%E5%8F%A3.html</url>
-    <content><![CDATA[<blockquote>
-<p>适用范围：Windows Server 2022、Windows 10、Windows 8.1、Windows 8、Windows Server 2019、Windows Server 2016、Windows Server 2012 R2、Windows Server 2008 R2</p>
-</blockquote>
-<p>默认情况下为 3389</p>
-<p>可以通过修改注册表来更改 Windows 计算机上的侦听端口。</p>
-<p>步骤如下：</p>
-<ol>
-<li>启动注册表编辑器。 （在“搜索”框中键入 regedit。）</li>
-<li>导航到以下注册表子项：<strong>HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp</strong></li>
-<li>查找端口号</li>
-<li>单击“编辑”“修改”，然后单击“十进制”。</li>
-<li>键入新端口号，然后单击“确定”  。</li>
-<li>关闭注册表编辑器，然后重新启动计算机。</li>
-</ol>
-<p>下次使用远程桌面连接连接到此计算机时，必须键入新端口。 如果正在使用防火墙，请确保将防火墙配置为允许连接到新端口号。</p>
-<p>可运行以下 PowerShell 命令来查看当前端口：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Get-ItemProperty</span> <span class="literal">-Path</span> <span class="string">&#x27;HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp&#x27;</span> <span class="literal">-name</span> <span class="string">&quot;PortNumber&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>例如：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">PortNumber   : <span class="number">3389</span></span><br><span class="line">PSPath       : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP<span class="literal">-Tcp</span></span><br><span class="line">PSParentPath : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations</span><br><span class="line">PSChildName  : RDP<span class="literal">-Tcp</span></span><br><span class="line">PSDrive      : HKLM</span><br><span class="line">PSProvider   : Microsoft.PowerShell.Core\Registry</span><br></pre></td></tr></table></figure>
-
-<p>还可运行以下 PowerShell 命令来更改 RDP 端口。 在此命令中，我们会将新的 RDP 端口指定为 3390。</p>
-<p>若要向注册表添加新的 RDP 端口：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="variable">$portvalue</span> = <span class="number">3390</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">Set-ItemProperty</span> <span class="literal">-Path</span> <span class="string">&#x27;HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp&#x27;</span> <span class="literal">-name</span> <span class="string">&quot;PortNumber&quot;</span> <span class="literal">-Value</span> <span class="variable">$portvalue</span> </span><br><span class="line"></span><br><span class="line"><span class="built_in">New-NetFirewallRule</span> <span class="literal">-DisplayName</span> <span class="string">&#x27;RDPPORTLatest-TCP-In&#x27;</span> <span class="literal">-Profile</span> <span class="string">&#x27;Public&#x27;</span> <span class="literal">-Direction</span> Inbound <span class="literal">-Action</span> Allow <span class="literal">-Protocol</span> TCP <span class="literal">-LocalPort</span> <span class="variable">$portvalue</span> </span><br><span class="line"><span class="built_in">New-NetFirewallRule</span> <span class="literal">-DisplayName</span> <span class="string">&#x27;RDPPORTLatest-UDP-In&#x27;</span> <span class="literal">-Profile</span> <span class="string">&#x27;Public&#x27;</span> <span class="literal">-Direction</span> Inbound <span class="literal">-Action</span> Allow <span class="literal">-Protocol</span> UDP <span class="literal">-LocalPort</span> <span class="variable">$portvalue</span></span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>Windows</tag>
-        <tag>RDP</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>批处理用过的命令及遇到的问题</title>
     <url>//%E6%89%B9%E5%A4%84%E7%90%86%E7%94%A8%E8%BF%87%E7%9A%84%E5%91%BD%E4%BB%A4%E5%8F%8A%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98.html</url>
     <content><![CDATA[<p>注意：</p>
@@ -10600,6 +10563,43 @@ child.logfile = sys.stdout
         <tag>Windows</tag>
         <tag>批处理</tag>
         <tag>Bat</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>更改远程桌面侦听端口</title>
+    <url>//%E6%9B%B4%E6%94%B9%E8%BF%9C%E7%A8%8B%E6%A1%8C%E9%9D%A2%E4%BE%A6%E5%90%AC%E7%AB%AF%E5%8F%A3.html</url>
+    <content><![CDATA[<blockquote>
+<p>适用范围：Windows Server 2022、Windows 10、Windows 8.1、Windows 8、Windows Server 2019、Windows Server 2016、Windows Server 2012 R2、Windows Server 2008 R2</p>
+</blockquote>
+<p>默认情况下为 3389</p>
+<p>可以通过修改注册表来更改 Windows 计算机上的侦听端口。</p>
+<p>步骤如下：</p>
+<ol>
+<li>启动注册表编辑器。 （在“搜索”框中键入 regedit。）</li>
+<li>导航到以下注册表子项：<strong>HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp</strong></li>
+<li>查找端口号</li>
+<li>单击“编辑”“修改”，然后单击“十进制”。</li>
+<li>键入新端口号，然后单击“确定”  。</li>
+<li>关闭注册表编辑器，然后重新启动计算机。</li>
+</ol>
+<p>下次使用远程桌面连接连接到此计算机时，必须键入新端口。 如果正在使用防火墙，请确保将防火墙配置为允许连接到新端口号。</p>
+<p>可运行以下 PowerShell 命令来查看当前端口：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Get-ItemProperty</span> <span class="literal">-Path</span> <span class="string">&#x27;HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp&#x27;</span> <span class="literal">-name</span> <span class="string">&quot;PortNumber&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">PortNumber   : <span class="number">3389</span></span><br><span class="line">PSPath       : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP<span class="literal">-Tcp</span></span><br><span class="line">PSParentPath : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations</span><br><span class="line">PSChildName  : RDP<span class="literal">-Tcp</span></span><br><span class="line">PSDrive      : HKLM</span><br><span class="line">PSProvider   : Microsoft.PowerShell.Core\Registry</span><br></pre></td></tr></table></figure>
+
+<p>还可运行以下 PowerShell 命令来更改 RDP 端口。 在此命令中，我们会将新的 RDP 端口指定为 3390。</p>
+<p>若要向注册表添加新的 RDP 端口：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="variable">$portvalue</span> = <span class="number">3390</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">Set-ItemProperty</span> <span class="literal">-Path</span> <span class="string">&#x27;HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp&#x27;</span> <span class="literal">-name</span> <span class="string">&quot;PortNumber&quot;</span> <span class="literal">-Value</span> <span class="variable">$portvalue</span> </span><br><span class="line"></span><br><span class="line"><span class="built_in">New-NetFirewallRule</span> <span class="literal">-DisplayName</span> <span class="string">&#x27;RDPPORTLatest-TCP-In&#x27;</span> <span class="literal">-Profile</span> <span class="string">&#x27;Public&#x27;</span> <span class="literal">-Direction</span> Inbound <span class="literal">-Action</span> Allow <span class="literal">-Protocol</span> TCP <span class="literal">-LocalPort</span> <span class="variable">$portvalue</span> </span><br><span class="line"><span class="built_in">New-NetFirewallRule</span> <span class="literal">-DisplayName</span> <span class="string">&#x27;RDPPORTLatest-UDP-In&#x27;</span> <span class="literal">-Profile</span> <span class="string">&#x27;Public&#x27;</span> <span class="literal">-Direction</span> Inbound <span class="literal">-Action</span> Allow <span class="literal">-Protocol</span> UDP <span class="literal">-LocalPort</span> <span class="variable">$portvalue</span></span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>Windows</tag>
+        <tag>RDP</tag>
       </tags>
   </entry>
   <entry>
@@ -10980,105 +10980,6 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
-    <title>Docker从入门到放弃</title>
-    <url>//Docker%E4%BB%8E%E5%85%A5%E9%97%A8%E5%88%B0%E6%94%BE%E5%BC%83.html</url>
-    <content><![CDATA[<h1 id="Docker从入门到放弃"><a href="#Docker从入门到放弃" class="headerlink" title="Docker从入门到放弃"></a>Docker从入门到放弃</h1><p>这部分内容，除了搭建docker私有仓库后，可以访问本地image外，默认都是访问了<a href="https://hub.docker.com/search?q=&type=image">Docker Hub</a> 上的镜像</p>
-<h2 id="安装Docker"><a href="#安装Docker" class="headerlink" title="安装Docker"></a>安装Docker</h2><h2 id="docker镜像常用操作"><a href="#docker镜像常用操作" class="headerlink" title="docker镜像常用操作"></a>docker镜像常用操作</h2><h4 id="查看本地镜像"><a href="#查看本地镜像" class="headerlink" title="查看本地镜像"></a>查看本地镜像</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">命令格式：详细命令查看docker images --<span class="built_in">help</span> ?</span></span><br><span class="line">docker images [OPTIONS] [REPOSITORY[:TAG]]</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">列出本地images</span></span><br><span class="line">docker images</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">也可以使用, 因为image是docker的镜像管理命令，更多命令查看： docker image --<span class="built_in">help</span></span></span><br><span class="line">docker image ls</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="获取镜像"><a href="#获取镜像" class="headerlink" title="获取镜像"></a>获取镜像</h4><p>之前提到 <a href="https://hub.docker.com/search?q=&type=image">Docker Hub</a> 上有很多高质量镜像可以直接使用。</p>
-<p>从Docker镜像仓库获取镜像，使用<code>docker pull</code>,命令格式为：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull [选项] [Docker Registry 地址[:端口号]/]镜像名称[:标签]</span><br></pre></td></tr></table></figure>
-
-<p>具体的选项可以通过<code>docker pull --help</code> 帮助命令查看。具体例子：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">从仓库中获取alpine的最新版本，默认没有标签时，就是最新的lastest</span></span><br><span class="line">docker pull alpine  </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">从仓库中获取ubuntu 18.04版本</span></span><br><span class="line">docker pull ubuntu:18.04</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="搜索镜像"><a href="#搜索镜像" class="headerlink" title="搜索镜像"></a>搜索镜像</h4><p>可以在<a href="https://hub.docker.com/search?q=&type=image">Docker Hub</a> 仓库中搜索需要的镜像</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker search [OPTIONS] TERM</span><br></pre></td></tr></table></figure>
-
-<p>样例如下：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">搜索仓库中Mysql镜像</span></span><br><span class="line">docker search mysql</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">只显示stars&gt;=600的镜像</span></span><br><span class="line">docker search --filter stars=600 mysql</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="删除本地镜像"><a href="#删除本地镜像" class="headerlink" title="删除本地镜像"></a>删除本地镜像</h4><p>删除本地镜像</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">更具体的命令查看docker rmi --<span class="built_in">help</span></span></span><br><span class="line">docker rmi [OPTIONS] IMAGE [IMAGE...]</span><br></pre></td></tr></table></figure>
-
-<p>样例：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">删除redis本地镜像</span></span><br><span class="line">docker rmi redis</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="使用Dockerfile定制镜像"><a href="#使用Dockerfile定制镜像" class="headerlink" title="使用Dockerfile定制镜像"></a>使用Dockerfile定制镜像</h4><p>这部分内容请查看 <a href="#%E5%88%B6%E4%BD%9Cdocker%E9%95%9C%E5%83%8F">制作docker镜像</a> 章节</p>
-<h2 id="docker容器常用操作"><a href="#docker容器常用操作" class="headerlink" title="docker容器常用操作"></a>docker容器常用操作</h2><h4 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h4><p>有两种启动容器的方法，</p>
-<ol>
-<li><p>基于镜像新建一个容器并启动</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使用run命令</span></span><br><span class="line">docker run --help</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line">docker run alpine /bin/echo &#x27;Hello world&#x27;</span><br><span class="line">等同于 在shell界面执行 echo &#x27;Hello world&#x27;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-i 以交互式模式运行，-t 为容器重新分配一个伪输入终端并绑定到容器的标准输入上，运行/bin/bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">这样容器启动后就会出现一个bash命令行</span></span><br><span class="line">docker run -it mysql /bin/bash</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>利用docker run来创建容器时,Docker在后台的操作流程包括：</p>
-<ol>
-<li>检查本地是否存在指定的镜像，不存在就从registry下载；</li>
-<li>利用镜像创建并启动一个容器；</li>
-<li>分配一个文件系统，并在只读的镜像层外面挂载一层可读写层；</li>
-<li>从宿主主机配置的网桥接口中桥接一个虚拟接口到容器中去；</li>
-<li>从地址池配置一个ip地址给容器；</li>
-<li>执行用户指定的应用程序；</li>
-</ol>
-</blockquote>
-</li>
-<li><p>将在终止状态(<code>exited</code>)的容器重启启动（Exited状态可以通过<code>docker ps -a</code>命令看到）</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">方法一：可以直接使用start/restart 命令来启动，详细使用方法查看<span class="built_in">help</span>帮助</span></span><br><span class="line">docker start/restart --help</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">方法二：使用docker的container管理命令来启动</span></span><br><span class="line">docker container start --help</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重启容器<span class="built_in">id</span>为a24a4cb23b6d的容器</span></span><br><span class="line">docker restart a24a4cb23b6d</span><br><span class="line"></span><br><span class="line">docker container start a24a4cb23b6d</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h4 id="进入-x2F-退出容器"><a href="#进入-x2F-退出容器" class="headerlink" title="进入&#x2F;退出容器"></a>进入&#x2F;退出容器</h4><ol>
-<li><p>在创建启动时进入</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -it &lt;容器ID/容器名&gt; /bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">说明：如果使用<span class="built_in">exit</span>命令，会关闭当前会话并停止容器</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使用快捷键 Ctrl + p + q , 可以仅退出当前会话，不停掉容器</span></span><br></pre></td></tr></table></figure>
-
-
-</li>
-<li><p>进入一个正在后台运行的容器（推荐）</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it &lt;容器ID/容器名&gt; /bin/bash</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line">docker exec -it a24a4cb23b6d /bin/bash</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">说明：使用<span class="built_in">exec</span> -it的形式， 会出现一个shell交互界面，这样即使使用<span class="built_in">exit</span>命令，也仅是退出当前交互页面，并不会停掉容器</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>Q：为什么<code>attach</code>会卡住？</p>
-<p>A：因为-d 守护模式下，container运行的进程不是shell，也没有虚拟终端tty参数，所以进不去</p>
-</blockquote>
-</li>
-</ol>
-<h4 id="容器日志"><a href="#容器日志" class="headerlink" title="容器日志"></a>容器日志</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看日志的详细帮助</span></span><br><span class="line">docker logs --help</span><br><span class="line">--docker version 的1.13.1没有 --until参数，version的20.10.17有参数。</span><br><span class="line"></span><br><span class="line">docker logs [OPTIONS] CONTAINER</span><br><span class="line">  Options:</span><br><span class="line">      --details        Show extra details provided to logs</span><br><span class="line">  -f, --follow         Follow log output</span><br><span class="line">      --since string   Show logs since timestamp (e.g. 2013-01-02T13:23:37Z) or relative (e.g. 42m for 42 minutes)</span><br><span class="line">  -n, --tail string    Number of lines to show from the end of the logs (default &quot;all&quot;)</span><br><span class="line">  -t, --timestamps     Show timestamps</span><br><span class="line">      --until string   Show logs before a timestamp (e.g. 2013-01-02T13:23:37Z) or relative (e.g. 42m for 42 minutes)</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 翻译：</span></span></span><br><span class="line">        --details        显示更多的信息</span><br><span class="line">    -f, --follow         跟踪实时日志</span><br><span class="line">        --since string   显示自某个timestamp (e.g. 2013-01-02T13:23:37Z)之后的日志，或相对时间 (e.g. 42m for 42 minutes)</span><br><span class="line">        --tail string    从日志末尾显示多少行日志， 默认是all</span><br><span class="line">    -t, --timestamps     显示时间戳</span><br><span class="line">        --until string   显示自某个timestamp (e.g. 2013-01-02T13:23:37Z) 之前的日志，或相对时间 (e.g. 42m for 42 minutes)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">以追加的方式，查看容器a24a4cb23b6d的日志</span></span><br><span class="line">docker logs -f a24a4cb23b6d</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看指定时间后的日志，只显示最后100行</span></span><br><span class="line">docker logs -f -t --since=&quot;2022-09-10&quot; --tail=100 a24a4cb23b6d</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看最近30min的日志</span></span><br><span class="line">docker logs --since 30m a24a4cb23b6d</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看某时间之后的日志</span></span><br><span class="line">docker logs -t --since=&quot;2022-09-10T10:13:37&quot; a24a4cb23b6d</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 常规日志</span></span></span><br><span class="line">2022-09-06T06:00:15.959093Z 221901 [Note] Access denied for user &#x27;root&#x27;@&#x27;172.17.0.1&#x27; (using password: YES)</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 添加-t参数后的日志，会多展示一列有时区的时间格式，并不是linux时间戳。</span></span></span><br><span class="line">2022-09-06T06:00:15.959884000Z 2022-09-06T06:00:15.959093Z 221901 [Note] Access denied for user &#x27;root&#x27;@&#x27;172.17.0.1&#x27; (using password: YES)</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看某时间段的日志</span></span><br><span class="line">docker logs -t --since=&quot;2022-09-09T10:13:37&quot; --until &quot;2022-09-10T12:23:37&quot; a24a4cb23b6d</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="容器与主机间数据copy"><a href="#容器与主机间数据copy" class="headerlink" title="容器与主机间数据copy"></a>容器与主机间数据copy</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看<span class="built_in">cp</span>的详细帮助</span></span><br><span class="line">docker cp --help</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将 a24a4cb23b6d 容器中的文件copy至本地路径</span></span><br><span class="line">docker cp a24a4cb23b6d:/[container_path] [local_path]</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将主机文件copy至 a24a4cb23b6d 容器</span></span><br><span class="line">docker cp [local_path] a24a4cb23b6d:/[container_path]/</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将主机文件copy至 a24a4cb23b6d 容器，目录重命名为[container_path]（注意与非重命名copy的区别）</span></span><br><span class="line">docker cp [local_path] a24a4cb23b6d:/[container_path]</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="查看正在运行与历史运行的容器"><a href="#查看正在运行与历史运行的容器" class="headerlink" title="查看正在运行与历史运行的容器"></a>查看正在运行与历史运行的容器</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看ps的详细帮助</span></span><br><span class="line">docker ps --help</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看正在运行的所有容器</span></span><br><span class="line">docker ps</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看所有运行过的容器</span></span><br><span class="line">docker ps -a</span><br></pre></td></tr></table></figure>
-
-<h4 id="查看容器的元信息"><a href="#查看容器的元信息" class="headerlink" title="查看容器的元信息"></a>查看容器的元信息</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看inspect的详细帮助</span></span><br><span class="line">docker inspcet --help</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看a24a4cb23b6d容器的元信息</span></span><br><span class="line">docker inspect a24a4cb23b6d</span><br></pre></td></tr></table></figure>
-
-<h4 id="获取所有容器名称及其IP地址"><a href="#获取所有容器名称及其IP地址" class="headerlink" title="获取所有容器名称及其IP地址"></a>获取所有容器名称及其IP地址</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker inspect -f &#x27;&#123;&#123; .Name &#125;&#125; - &#123;&#123; .NetworkSettings.IPAddress &#125;&#125;&#x27; $(docker ps -aq)</span><br><span class="line"></span><br><span class="line">-f &#x27;xxx&#x27; 与 --format &#x27;xxx&#x27; 效果相同</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="停止并删除容器"><a href="#停止并删除容器" class="headerlink" title="停止并删除容器"></a>停止并删除容器</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">停止容器</span></span><br><span class="line">docker stop --help</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">删除容器</span></span><br><span class="line">docker rm --help</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="docker数据存储"><a href="#docker数据存储" class="headerlink" title="docker数据存储"></a>docker数据存储</h2><h2 id="docker网络"><a href="#docker网络" class="headerlink" title="docker网络"></a>docker网络</h2><h2 id="docker-compose配置及操作"><a href="#docker-compose配置及操作" class="headerlink" title="docker compose配置及操作"></a>docker compose配置及操作</h2><h2 id="制作docker镜像"><a href="#制作docker镜像" class="headerlink" title="制作docker镜像"></a>制作docker镜像</h2><h2 id="docker私有仓库"><a href="#docker私有仓库" class="headerlink" title="docker私有仓库"></a>docker私有仓库</h2>]]></content>
-      <categories>
-        <category>容器&amp;虚拟化</category>
-        <category>docker</category>
-      </categories>
-      <tags>
-        <tag>容器&amp;虚拟化</tag>
-        <tag>docker</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Docker-win使用遇到问题</title>
     <url>//Docker-win%E4%BD%BF%E7%94%A8%E9%81%87%E5%88%B0%E9%97%AE%E9%A2%98.html</url>
     <content><![CDATA[<h2 id="Windows-Docker-启动容器报端口没有访问权限"><a href="#Windows-Docker-启动容器报端口没有访问权限" class="headerlink" title="Windows Docker 启动容器报端口没有访问权限"></a>Windows Docker 启动容器报端口没有访问权限</h2><p>在 win10 上启动 Docker Desktop 上的 Postgres 容器时，遇到报错，部分内容如下：</p>
@@ -11178,6 +11079,105 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
+    <title>Docker从入门到放弃</title>
+    <url>//Docker%E4%BB%8E%E5%85%A5%E9%97%A8%E5%88%B0%E6%94%BE%E5%BC%83.html</url>
+    <content><![CDATA[<h1 id="Docker从入门到放弃"><a href="#Docker从入门到放弃" class="headerlink" title="Docker从入门到放弃"></a>Docker从入门到放弃</h1><p>这部分内容，除了搭建docker私有仓库后，可以访问本地image外，默认都是访问了<a href="https://hub.docker.com/search?q=&type=image">Docker Hub</a> 上的镜像</p>
+<h2 id="安装Docker"><a href="#安装Docker" class="headerlink" title="安装Docker"></a>安装Docker</h2><h2 id="docker镜像常用操作"><a href="#docker镜像常用操作" class="headerlink" title="docker镜像常用操作"></a>docker镜像常用操作</h2><h4 id="查看本地镜像"><a href="#查看本地镜像" class="headerlink" title="查看本地镜像"></a>查看本地镜像</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">命令格式：详细命令查看docker images --<span class="built_in">help</span> ?</span></span><br><span class="line">docker images [OPTIONS] [REPOSITORY[:TAG]]</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">列出本地images</span></span><br><span class="line">docker images</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">也可以使用, 因为image是docker的镜像管理命令，更多命令查看： docker image --<span class="built_in">help</span></span></span><br><span class="line">docker image ls</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="获取镜像"><a href="#获取镜像" class="headerlink" title="获取镜像"></a>获取镜像</h4><p>之前提到 <a href="https://hub.docker.com/search?q=&type=image">Docker Hub</a> 上有很多高质量镜像可以直接使用。</p>
+<p>从Docker镜像仓库获取镜像，使用<code>docker pull</code>,命令格式为：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull [选项] [Docker Registry 地址[:端口号]/]镜像名称[:标签]</span><br></pre></td></tr></table></figure>
+
+<p>具体的选项可以通过<code>docker pull --help</code> 帮助命令查看。具体例子：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">从仓库中获取alpine的最新版本，默认没有标签时，就是最新的lastest</span></span><br><span class="line">docker pull alpine  </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">从仓库中获取ubuntu 18.04版本</span></span><br><span class="line">docker pull ubuntu:18.04</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="搜索镜像"><a href="#搜索镜像" class="headerlink" title="搜索镜像"></a>搜索镜像</h4><p>可以在<a href="https://hub.docker.com/search?q=&type=image">Docker Hub</a> 仓库中搜索需要的镜像</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker search [OPTIONS] TERM</span><br></pre></td></tr></table></figure>
+
+<p>样例如下：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">搜索仓库中Mysql镜像</span></span><br><span class="line">docker search mysql</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">只显示stars&gt;=600的镜像</span></span><br><span class="line">docker search --filter stars=600 mysql</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="删除本地镜像"><a href="#删除本地镜像" class="headerlink" title="删除本地镜像"></a>删除本地镜像</h4><p>删除本地镜像</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">更具体的命令查看docker rmi --<span class="built_in">help</span></span></span><br><span class="line">docker rmi [OPTIONS] IMAGE [IMAGE...]</span><br></pre></td></tr></table></figure>
+
+<p>样例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">删除redis本地镜像</span></span><br><span class="line">docker rmi redis</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="使用Dockerfile定制镜像"><a href="#使用Dockerfile定制镜像" class="headerlink" title="使用Dockerfile定制镜像"></a>使用Dockerfile定制镜像</h4><p>这部分内容请查看 <a href="#%E5%88%B6%E4%BD%9Cdocker%E9%95%9C%E5%83%8F">制作docker镜像</a> 章节</p>
+<h2 id="docker容器常用操作"><a href="#docker容器常用操作" class="headerlink" title="docker容器常用操作"></a>docker容器常用操作</h2><h4 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h4><p>有两种启动容器的方法，</p>
+<ol>
+<li><p>基于镜像新建一个容器并启动</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使用run命令</span></span><br><span class="line">docker run --help</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line">docker run alpine /bin/echo &#x27;Hello world&#x27;</span><br><span class="line">等同于 在shell界面执行 echo &#x27;Hello world&#x27;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-i 以交互式模式运行，-t 为容器重新分配一个伪输入终端并绑定到容器的标准输入上，运行/bin/bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">这样容器启动后就会出现一个bash命令行</span></span><br><span class="line">docker run -it mysql /bin/bash</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>利用docker run来创建容器时,Docker在后台的操作流程包括：</p>
+<ol>
+<li>检查本地是否存在指定的镜像，不存在就从registry下载；</li>
+<li>利用镜像创建并启动一个容器；</li>
+<li>分配一个文件系统，并在只读的镜像层外面挂载一层可读写层；</li>
+<li>从宿主主机配置的网桥接口中桥接一个虚拟接口到容器中去；</li>
+<li>从地址池配置一个ip地址给容器；</li>
+<li>执行用户指定的应用程序；</li>
+</ol>
+</blockquote>
+</li>
+<li><p>将在终止状态(<code>exited</code>)的容器重启启动（Exited状态可以通过<code>docker ps -a</code>命令看到）</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">方法一：可以直接使用start/restart 命令来启动，详细使用方法查看<span class="built_in">help</span>帮助</span></span><br><span class="line">docker start/restart --help</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">方法二：使用docker的container管理命令来启动</span></span><br><span class="line">docker container start --help</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重启容器<span class="built_in">id</span>为a24a4cb23b6d的容器</span></span><br><span class="line">docker restart a24a4cb23b6d</span><br><span class="line"></span><br><span class="line">docker container start a24a4cb23b6d</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="进入-x2F-退出容器"><a href="#进入-x2F-退出容器" class="headerlink" title="进入&#x2F;退出容器"></a>进入&#x2F;退出容器</h4><ol>
+<li><p>在创建启动时进入</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -it &lt;容器ID/容器名&gt; /bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">说明：如果使用<span class="built_in">exit</span>命令，会关闭当前会话并停止容器</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使用快捷键 Ctrl + p + q , 可以仅退出当前会话，不停掉容器</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>进入一个正在后台运行的容器（推荐）</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it &lt;容器ID/容器名&gt; /bin/bash</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line">docker exec -it a24a4cb23b6d /bin/bash</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">说明：使用<span class="built_in">exec</span> -it的形式， 会出现一个shell交互界面，这样即使使用<span class="built_in">exit</span>命令，也仅是退出当前交互页面，并不会停掉容器</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Q：为什么<code>attach</code>会卡住？</p>
+<p>A：因为-d 守护模式下，container运行的进程不是shell，也没有虚拟终端tty参数，所以进不去</p>
+</blockquote>
+</li>
+</ol>
+<h4 id="容器日志"><a href="#容器日志" class="headerlink" title="容器日志"></a>容器日志</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看日志的详细帮助</span></span><br><span class="line">docker logs --help</span><br><span class="line">--docker version 的1.13.1没有 --until参数，version的20.10.17有参数。</span><br><span class="line"></span><br><span class="line">docker logs [OPTIONS] CONTAINER</span><br><span class="line">  Options:</span><br><span class="line">      --details        Show extra details provided to logs</span><br><span class="line">  -f, --follow         Follow log output</span><br><span class="line">      --since string   Show logs since timestamp (e.g. 2013-01-02T13:23:37Z) or relative (e.g. 42m for 42 minutes)</span><br><span class="line">  -n, --tail string    Number of lines to show from the end of the logs (default &quot;all&quot;)</span><br><span class="line">  -t, --timestamps     Show timestamps</span><br><span class="line">      --until string   Show logs before a timestamp (e.g. 2013-01-02T13:23:37Z) or relative (e.g. 42m for 42 minutes)</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 翻译：</span></span></span><br><span class="line">        --details        显示更多的信息</span><br><span class="line">    -f, --follow         跟踪实时日志</span><br><span class="line">        --since string   显示自某个timestamp (e.g. 2013-01-02T13:23:37Z)之后的日志，或相对时间 (e.g. 42m for 42 minutes)</span><br><span class="line">        --tail string    从日志末尾显示多少行日志， 默认是all</span><br><span class="line">    -t, --timestamps     显示时间戳</span><br><span class="line">        --until string   显示自某个timestamp (e.g. 2013-01-02T13:23:37Z) 之前的日志，或相对时间 (e.g. 42m for 42 minutes)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">以追加的方式，查看容器a24a4cb23b6d的日志</span></span><br><span class="line">docker logs -f a24a4cb23b6d</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看指定时间后的日志，只显示最后100行</span></span><br><span class="line">docker logs -f -t --since=&quot;2022-09-10&quot; --tail=100 a24a4cb23b6d</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看最近30min的日志</span></span><br><span class="line">docker logs --since 30m a24a4cb23b6d</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看某时间之后的日志</span></span><br><span class="line">docker logs -t --since=&quot;2022-09-10T10:13:37&quot; a24a4cb23b6d</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 常规日志</span></span></span><br><span class="line">2022-09-06T06:00:15.959093Z 221901 [Note] Access denied for user &#x27;root&#x27;@&#x27;172.17.0.1&#x27; (using password: YES)</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 添加-t参数后的日志，会多展示一列有时区的时间格式，并不是linux时间戳。</span></span></span><br><span class="line">2022-09-06T06:00:15.959884000Z 2022-09-06T06:00:15.959093Z 221901 [Note] Access denied for user &#x27;root&#x27;@&#x27;172.17.0.1&#x27; (using password: YES)</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看某时间段的日志</span></span><br><span class="line">docker logs -t --since=&quot;2022-09-09T10:13:37&quot; --until &quot;2022-09-10T12:23:37&quot; a24a4cb23b6d</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="容器与主机间数据copy"><a href="#容器与主机间数据copy" class="headerlink" title="容器与主机间数据copy"></a>容器与主机间数据copy</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看<span class="built_in">cp</span>的详细帮助</span></span><br><span class="line">docker cp --help</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将 a24a4cb23b6d 容器中的文件copy至本地路径</span></span><br><span class="line">docker cp a24a4cb23b6d:/[container_path] [local_path]</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将主机文件copy至 a24a4cb23b6d 容器</span></span><br><span class="line">docker cp [local_path] a24a4cb23b6d:/[container_path]/</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将主机文件copy至 a24a4cb23b6d 容器，目录重命名为[container_path]（注意与非重命名copy的区别）</span></span><br><span class="line">docker cp [local_path] a24a4cb23b6d:/[container_path]</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="查看正在运行与历史运行的容器"><a href="#查看正在运行与历史运行的容器" class="headerlink" title="查看正在运行与历史运行的容器"></a>查看正在运行与历史运行的容器</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看ps的详细帮助</span></span><br><span class="line">docker ps --help</span><br><span class="line"></span><br><span class="line">例如：</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看正在运行的所有容器</span></span><br><span class="line">docker ps</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看所有运行过的容器</span></span><br><span class="line">docker ps -a</span><br></pre></td></tr></table></figure>
+
+<h4 id="查看容器的元信息"><a href="#查看容器的元信息" class="headerlink" title="查看容器的元信息"></a>查看容器的元信息</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看inspect的详细帮助</span></span><br><span class="line">docker inspcet --help</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看a24a4cb23b6d容器的元信息</span></span><br><span class="line">docker inspect a24a4cb23b6d</span><br></pre></td></tr></table></figure>
+
+<h4 id="获取所有容器名称及其IP地址"><a href="#获取所有容器名称及其IP地址" class="headerlink" title="获取所有容器名称及其IP地址"></a>获取所有容器名称及其IP地址</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker inspect -f &#x27;&#123;&#123; .Name &#125;&#125; - &#123;&#123; .NetworkSettings.IPAddress &#125;&#125;&#x27; $(docker ps -aq)</span><br><span class="line"></span><br><span class="line">-f &#x27;xxx&#x27; 与 --format &#x27;xxx&#x27; 效果相同</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="停止并删除容器"><a href="#停止并删除容器" class="headerlink" title="停止并删除容器"></a>停止并删除容器</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">停止容器</span></span><br><span class="line">docker stop --help</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">删除容器</span></span><br><span class="line">docker rm --help</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="docker数据存储"><a href="#docker数据存储" class="headerlink" title="docker数据存储"></a>docker数据存储</h2><h2 id="docker网络"><a href="#docker网络" class="headerlink" title="docker网络"></a>docker网络</h2><h2 id="docker-compose配置及操作"><a href="#docker-compose配置及操作" class="headerlink" title="docker compose配置及操作"></a>docker compose配置及操作</h2><h2 id="制作docker镜像"><a href="#制作docker镜像" class="headerlink" title="制作docker镜像"></a>制作docker镜像</h2><h2 id="docker私有仓库"><a href="#docker私有仓库" class="headerlink" title="docker私有仓库"></a>docker私有仓库</h2>]]></content>
+      <categories>
+        <category>容器&amp;虚拟化</category>
+        <category>docker</category>
+      </categories>
+      <tags>
+        <tag>容器&amp;虚拟化</tag>
+        <tag>docker</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>VirtualBox启动虚拟机报错</title>
     <url>//VirtualBox%E5%90%AF%E5%8A%A8%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%8A%A5%E9%94%99.html</url>
     <content><![CDATA[<p>在Windows 10 机器上安装docker之后，之前安装的 VirtualBox 虚拟机启动不了了。报错如下：</p>
@@ -11227,6 +11227,21 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
+    <title>docker安装步骤</title>
+    <url>//docker%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A4.html</url>
+    <content><![CDATA[<h1 id="在线安装方法"><a href="#在线安装方法" class="headerlink" title="在线安装方法"></a>在线安装方法</h1><p><a href="https://docs.docker.com/engine/install/centos/">CentOS安装</a></p>
+<p>Ubuntu 也同样参考相关文档</p>
+<h1 id="离线安装"><a href="#离线安装" class="headerlink" title="离线安装"></a>离线安装</h1>]]></content>
+      <categories>
+        <category>容器&amp;虚拟化</category>
+        <category>docker</category>
+      </categories>
+      <tags>
+        <tag>容器&amp;虚拟化</tag>
+        <tag>docker</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Win10的VMware中虚拟机卡顿</title>
     <url>//Win10%E7%9A%84VMware%E4%B8%AD%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%8D%A1%E9%A1%BF.html</url>
     <content><![CDATA[<p>问题：</p>
@@ -11241,21 +11256,6 @@ child.logfile = sys.stdout
       <tags>
         <tag>容器&amp;虚拟化</tag>
         <tag>VMware</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>docker安装步骤</title>
-    <url>//docker%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A4.html</url>
-    <content><![CDATA[<h1 id="在线安装方法"><a href="#在线安装方法" class="headerlink" title="在线安装方法"></a>在线安装方法</h1><p><a href="https://docs.docker.com/engine/install/centos/">CentOS安装</a></p>
-<p>Ubuntu 也同样参考相关文档</p>
-<h1 id="离线安装"><a href="#离线安装" class="headerlink" title="离线安装"></a>离线安装</h1>]]></content>
-      <categories>
-        <category>容器&amp;虚拟化</category>
-        <category>docker</category>
-      </categories>
-      <tags>
-        <tag>容器&amp;虚拟化</tag>
-        <tag>docker</tag>
       </tags>
   </entry>
   <entry>
@@ -11276,15 +11276,6 @@ child.logfile = sys.stdout
 </ol>
 <p>解决过程：</p>
 <p>不想改动本机（宿主机）的 22 端口，那么就需要将 gitlab 的 22 端口</p>
-<ol>
-<li>处理prometheus-2 子服务；</li>
-<li>整理所有安全平台安全事件；</li>
-<li>沟通防火墙升级方案；</li>
-<li>沟通互联网区防火墙地址下沉方案；</li>
-<li>为数据要素系统开通7台云主机；</li>
-<li>增加互联网区VPN二期账号访问资源；</li>
-<li>联系绿盟工程师处理VPN客户端登录问题；</li>
-</ol>
 ]]></content>
       <categories>
         <category>容器&amp;虚拟化</category>
@@ -11348,6 +11339,39 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
+    <title>怎样防范文件上传漏洞</title>
+    <url>//%E6%80%8E%E6%A0%B7%E9%98%B2%E8%8C%83%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E.html</url>
+    <content><![CDATA[<h1 id="文件上传漏洞的防御方法"><a href="#文件上传漏洞的防御方法" class="headerlink" title="文件上传漏洞的防御方法"></a>文件上传漏洞的防御方法</h1><p>1.<strong>文件上传的目录设置为不可执行</strong>。</p>
+<ul>
+<li>只要 web 容器无法解析该目录下面的文件，即使攻击者上传了脚本文件，服务器本身也不会受到影响，因此这一点至关重要。</li>
+</ul>
+<p>2.判断文件类型。</p>
+<ul>
+<li>在判断文件类型时，可以结合使用 MIME Type、后缀检查等方式。</li>
+</ul>
+<p>3.单独设置文件服务器的域名。</p>
+<ul>
+<li>由于浏览器同源策略的关系，一系列客户端攻击将失效，比如上传 crossdomain.xml、上传包含 Javascript 的 XSS 利用等问题将得到解决。</li>
+</ul>
+<p>4.使用安全设备防御。</p>
+<ul>
+<li>文件上传攻击的本质就是将恶意文件或者脚本上传到服务器，专业的安全设备防御此类漏洞主要是通过对漏洞的上传利用行为和恶意文件的上传过程进行检测。恶意文件千变万化，隐藏手法也不断推陈出新，对普通的系统管理员来说可以通过部署安全设备来帮助防御。</li>
+</ul>
+<p>5.系统上线后运维人员应有较强的安全意思，积极使用多个安全检测工具对系统进行安全扫描，及时发现潜在漏洞并修复。</p>
+<p>6.定时查看系统日志，web 服务器日志以发现入侵痕迹。定时关注系统所使用到的第三方插件的更新情况，如有新版本发布建议及时更新，如果第三方插件被爆有安全漏洞更应立即进行修补。</p>
+<p>7.对于整个网站都是使用的开源代码或者使用网上的框架搭建的网站来说，尤其要注意漏洞的自查和软件版本及补丁的更新，上传功能非必选可以直接删除。除对系统自生的维护外，服务器应进行合理配置，非必选一般的目录都应去掉执行权限，上传目录可配置为只读。</p>
+]]></content>
+      <categories>
+        <category>攻防</category>
+        <category>漏洞</category>
+      </categories>
+      <tags>
+        <tag>攻防</tag>
+        <tag>漏洞</tag>
+        <tag>文件上传</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Kali使用</title>
     <url>//Kali%E4%BD%BF%E7%94%A8.html</url>
     <content><![CDATA[<h1 id="VMware-设置共享目录"><a href="#VMware-设置共享目录" class="headerlink" title="VMware 设置共享目录"></a>VMware 设置共享目录</h1><ol>
@@ -11387,39 +11411,6 @@ child.logfile = sys.stdout
       <tags>
         <tag>攻防</tag>
         <tag>Kali</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>怎样防范文件上传漏洞</title>
-    <url>//%E6%80%8E%E6%A0%B7%E9%98%B2%E8%8C%83%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E.html</url>
-    <content><![CDATA[<h1 id="文件上传漏洞的防御方法"><a href="#文件上传漏洞的防御方法" class="headerlink" title="文件上传漏洞的防御方法"></a>文件上传漏洞的防御方法</h1><p>1.<strong>文件上传的目录设置为不可执行</strong>。</p>
-<ul>
-<li>只要 web 容器无法解析该目录下面的文件，即使攻击者上传了脚本文件，服务器本身也不会受到影响，因此这一点至关重要。</li>
-</ul>
-<p>2.判断文件类型。</p>
-<ul>
-<li>在判断文件类型时，可以结合使用 MIME Type、后缀检查等方式。</li>
-</ul>
-<p>3.单独设置文件服务器的域名。</p>
-<ul>
-<li>由于浏览器同源策略的关系，一系列客户端攻击将失效，比如上传 crossdomain.xml、上传包含 Javascript 的 XSS 利用等问题将得到解决。</li>
-</ul>
-<p>4.使用安全设备防御。</p>
-<ul>
-<li>文件上传攻击的本质就是将恶意文件或者脚本上传到服务器，专业的安全设备防御此类漏洞主要是通过对漏洞的上传利用行为和恶意文件的上传过程进行检测。恶意文件千变万化，隐藏手法也不断推陈出新，对普通的系统管理员来说可以通过部署安全设备来帮助防御。</li>
-</ul>
-<p>5.系统上线后运维人员应有较强的安全意思，积极使用多个安全检测工具对系统进行安全扫描，及时发现潜在漏洞并修复。</p>
-<p>6.定时查看系统日志，web 服务器日志以发现入侵痕迹。定时关注系统所使用到的第三方插件的更新情况，如有新版本发布建议及时更新，如果第三方插件被爆有安全漏洞更应立即进行修补。</p>
-<p>7.对于整个网站都是使用的开源代码或者使用网上的框架搭建的网站来说，尤其要注意漏洞的自查和软件版本及补丁的更新，上传功能非必选可以直接删除。除对系统自生的维护外，服务器应进行合理配置，非必选一般的目录都应去掉执行权限，上传目录可配置为只读。</p>
-]]></content>
-      <categories>
-        <category>攻防</category>
-        <category>漏洞</category>
-      </categories>
-      <tags>
-        <tag>攻防</tag>
-        <tag>漏洞</tag>
-        <tag>文件上传</tag>
       </tags>
   </entry>
   <entry>
@@ -12051,19 +12042,6 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
-    <title>TCP协议</title>
-    <url>//TCP%E5%8D%8F%E8%AE%AE.html</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>网络</category>
-        <category>TCP</category>
-      </categories>
-      <tags>
-        <tag>网络</tag>
-        <tag>TCP</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Linux网络性能测试工具</title>
     <url>//Linux%E7%BD%91%E7%BB%9C%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7.html</url>
     <content><![CDATA[<h1 id="speedtest"><a href="#speedtest" class="headerlink" title="speedtest"></a>speedtest</h1><p>speedtest 是一个较为知名的工具，Python 写的。</p>
@@ -12189,116 +12167,16 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
-    <title>英语学习整体方法和思路</title>
-    <url>//%E8%8B%B1%E8%AF%AD%E5%AD%A6%E4%B9%A0%E6%95%B4%E4%BD%93%E6%96%B9%E6%B3%95%E5%92%8C%E6%80%9D%E8%B7%AF.html</url>
-    <content><![CDATA[<h1 id="英语学习整体方法和思路"><a href="#英语学习整体方法和思路" class="headerlink" title="英语学习整体方法和思路"></a>英语学习整体方法和思路</h1><p>前提，不管英式，美式，对于低水平的人来说，先找一套最方便的资料学就完事了，先学起来，能达到学英语的目的就行，注意学英语的初衷，等到水平高了之后，再去细分英式，美式。<br>    - 对于应试考试，英式与美式没有太大区别，重要的是提高英语水平</p>
-<p>市面英语课程分析</p>
-<h2 id="英语能力"><a href="#英语能力" class="headerlink" title="英语能力"></a>英语能力</h2><p>《新概念英语》 –包含了听说读写，但不适合自学，太枯燥，并且没有扩展内容，适合老师带着学生学，可以找对应的老师讲解的视频配合学，<br>    –适合语法，常见积累量，往读写方向走</p>
-<p>《赖世雄美语从头学》<br>    –基础阶段，也是主要是语法，常见积累量，同时三核心也能带到，有非常多的带读，是一个美式体系，三核心的音标用的是美式kk音标，书中所有标注都是美式kk音标，有对应讲解的音频<br>    这套书买回去是可以自学的</p>
-<p>外教口语一对一，这类课程，不适合基础不够的人，这种情况下，没有东西输出，效果很差，适合有足够输入的人，比如雅思7，找人联系口语的，  </p>
-<p>语境背单词</p>
-<p>听力口语课程，类似，看美剧&#x2F;电影学英语  etc<br>    –属于输入阶段，的听说部分，会涉及精听，泛听，同时需要一定的输出，这样才能掌握的更牢固</p>
-<p>阅读写作课程， 类似，名著&#x2F;外刊精读，xxx阅读打卡<br>    –属于读写这部分的输入，同上</p>
-<h2 id="应试课程"><a href="#应试课程" class="headerlink" title="应试课程"></a>应试课程</h2><p>四六级、雅思托福、应试词汇课<br>    –提供的是应试技巧，如，题型，词语，怎么在短期尽可能给你去拿到更多的分数，</p>
-<p>学习资料推荐</p>
-<ol>
-<li>《》2019版，上海文化出版社</li>
-</ol>
-<p>材料获取的难度低<br>学习的逻辑要清晰</p>
-<h3 id="三核心"><a href="#三核心" class="headerlink" title="三核心"></a>三核心</h3><ul>
-<li>音标<ul>
-<li>《赖世雄美语音标》</li>
-<li>B站昂克英文君的美式kk音标串讲 PartA B</li>
-<li>音标学习的注意点：<ol>
-<li>一定要录音对比，去提高听力识别度（这样才能在练习的时候知道自己是错的，还是对的）</li>
-<li>切勿钻牛角尖，我们和老外声带厚度就不同<ul>
-<li>前期的目标一定要是，读正确，读流利，而不是读的多么地道，不现实。</li>
-</ul>
-</li>
-<li>切勿乱，一开始就把体系构建好，后面再精修</li>
-</ol>
-</li>
-</ul>
-</li>
-<li>连读（所有人必练）<ul>
-<li>听力听不懂<ol>
-<li>积累量不够（单词，短语，句子）</li>
-<li>发音和连读不熟悉</li>
-<li>文化背景</li>
-</ol>
-</li>
-<li>训练材料<ul>
-<li>B站昂克君“最全英语连读规则”共9课时</li>
-</ul>
-</li>
-<li>注意事项：<ol>
-<li>不要钻牛角尖，例如：你算什么男人&#x2F;你三婶摸男人，当遇到无论怎样都分辨不出来的情况，就跳过，不必纠结于特定一两句</li>
-<li>个人习惯不同，连读也会不同，知道怎么连读的规则，当一句话有多种方式连读时，选择合适的就可以</li>
-<li>必须得大量实战，大量跟读，100篇播客的量起步<ul>
-<li>EnglishPod</li>
-</ul>
-</li>
-</ol>
-</li>
-</ul>
-</li>
-<li>语调<ul>
-<li>有需要的可以专门去练</li>
-<li>需要在实战中大量练习</li>
-<li>训练材料<ul>
-<li>《American Accent Training》美语发音秘诀，简称AAT<br>4-12个月不等</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h3><ul>
-<li>词法<ul>
-<li>通过考试，最好能得高分</li>
-<li>材料推荐<ol>
-<li>梳理框架 语法总框架+语法精讲（B站昂克君视频）+ 旋天佑《语法俱乐部》</li>
-<li>大量做题 《Grammar in use》 （可以看B站昂克君视频一起学）</li>
-<li>补充，适合有纯粹语法题型考试的同学（英专，初高中）<ul>
-<li>赖世雄《赖世雄经典语法》薄 1本</li>
-<li>张满胜《英语语法新思维》厚 初&#x2F;中&#x2F;高级  3本教程</li>
-</ul>
-</li>
-</ol>
-</li>
-</ul>
-</li>
-<li>句法</li>
-</ul>
-]]></content>
+    <title>TCP协议</title>
+    <url>//TCP%E5%8D%8F%E8%AE%AE.html</url>
+    <content><![CDATA[]]></content>
       <categories>
-        <category>英语</category>
+        <category>网络</category>
+        <category>TCP</category>
       </categories>
       <tags>
-        <tag>英语</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>音标学习</title>
-    <url>//%E9%9F%B3%E6%A0%87%E5%AD%A6%E4%B9%A0.html</url>
-    <content><![CDATA[<h3 id="oo-到底发什么音？"><a href="#oo-到底发什么音？" class="headerlink" title="oo 到底发什么音？"></a>oo 到底发什么音？</h3><p>这个没有规律，只能查字典，别去猜。</p>
-<p>可能读 </p>
-<p>也可能读</p>
-<h1 id="日化元音"><a href="#日化元音" class="headerlink" title="日化元音"></a>日化元音</h1><p>日化元音是一个整体，不要分开读</p>
-<p>和 <strong>儿</strong> 的区别</p>
-<ol>
-<li>汉语是卷舌，美音是后缩；</li>
-<li>汉语下放下颌骨，美音不放；</li>
-</ol>
-<p>当单词中有字母 <code>r</code> 时，美音才会发日化元音。</p>
-<ul>
-<li>单词中没有 <code>r</code> 的时候，无论英音还是美音，都不会发xx 这个音的</li>
-</ul>
-]]></content>
-      <categories>
-        <category>英语</category>
-      </categories>
-      <tags>
-        <tag>英语</tag>
+        <tag>网络</tag>
+        <tag>TCP</tag>
       </tags>
   </entry>
   <entry>
@@ -12505,6 +12383,119 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
+    <title>英语学习整体方法和思路</title>
+    <url>//%E8%8B%B1%E8%AF%AD%E5%AD%A6%E4%B9%A0%E6%95%B4%E4%BD%93%E6%96%B9%E6%B3%95%E5%92%8C%E6%80%9D%E8%B7%AF.html</url>
+    <content><![CDATA[<h1 id="英语学习整体方法和思路"><a href="#英语学习整体方法和思路" class="headerlink" title="英语学习整体方法和思路"></a>英语学习整体方法和思路</h1><p>前提，不管英式，美式，对于低水平的人来说，先找一套最方便的资料学就完事了，先学起来，能达到学英语的目的就行，注意学英语的初衷，等到水平高了之后，再去细分英式，美式。<br>    - 对于应试考试，英式与美式没有太大区别，重要的是提高英语水平</p>
+<p>市面英语课程分析</p>
+<h2 id="英语能力"><a href="#英语能力" class="headerlink" title="英语能力"></a>英语能力</h2><p>《新概念英语》 –包含了听说读写，但不适合自学，太枯燥，并且没有扩展内容，适合老师带着学生学，可以找对应的老师讲解的视频配合学，<br>    –适合语法，常见积累量，往读写方向走</p>
+<p>《赖世雄美语从头学》<br>    –基础阶段，也是主要是语法，常见积累量，同时三核心也能带到，有非常多的带读，是一个美式体系，三核心的音标用的是美式kk音标，书中所有标注都是美式kk音标，有对应讲解的音频<br>    这套书买回去是可以自学的</p>
+<p>外教口语一对一，这类课程，不适合基础不够的人，这种情况下，没有东西输出，效果很差，适合有足够输入的人，比如雅思7，找人联系口语的，  </p>
+<p>语境背单词</p>
+<p>听力口语课程，类似，看美剧&#x2F;电影学英语  etc<br>    –属于输入阶段，的听说部分，会涉及精听，泛听，同时需要一定的输出，这样才能掌握的更牢固</p>
+<p>阅读写作课程， 类似，名著&#x2F;外刊精读，xxx阅读打卡<br>    –属于读写这部分的输入，同上</p>
+<h2 id="应试课程"><a href="#应试课程" class="headerlink" title="应试课程"></a>应试课程</h2><p>四六级、雅思托福、应试词汇课<br>    –提供的是应试技巧，如，题型，词语，怎么在短期尽可能给你去拿到更多的分数，</p>
+<p>学习资料推荐</p>
+<ol>
+<li>《》2019版，上海文化出版社</li>
+</ol>
+<p>材料获取的难度低<br>学习的逻辑要清晰</p>
+<h3 id="三核心"><a href="#三核心" class="headerlink" title="三核心"></a>三核心</h3><ul>
+<li>音标<ul>
+<li>《赖世雄美语音标》</li>
+<li>B站昂克英文君的美式kk音标串讲 PartA B</li>
+<li>音标学习的注意点：<ol>
+<li>一定要录音对比，去提高听力识别度（这样才能在练习的时候知道自己是错的，还是对的）</li>
+<li>切勿钻牛角尖，我们和老外声带厚度就不同<ul>
+<li>前期的目标一定要是，读正确，读流利，而不是读的多么地道，不现实。</li>
+</ul>
+</li>
+<li>切勿乱，一开始就把体系构建好，后面再精修</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>连读（所有人必练）<ul>
+<li>听力听不懂<ol>
+<li>积累量不够（单词，短语，句子）</li>
+<li>发音和连读不熟悉</li>
+<li>文化背景</li>
+</ol>
+</li>
+<li>训练材料<ul>
+<li>B站昂克君“最全英语连读规则”共9课时</li>
+</ul>
+</li>
+<li>注意事项：<ol>
+<li>不要钻牛角尖，例如：你算什么男人&#x2F;你三婶摸男人，当遇到无论怎样都分辨不出来的情况，就跳过，不必纠结于特定一两句</li>
+<li>个人习惯不同，连读也会不同，知道怎么连读的规则，当一句话有多种方式连读时，选择合适的就可以</li>
+<li>必须得大量实战，大量跟读，100篇播客的量起步<ul>
+<li>EnglishPod</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>语调<ul>
+<li>有需要的可以专门去练</li>
+<li>需要在实战中大量练习</li>
+<li>训练材料<ul>
+<li>《American Accent Training》美语发音秘诀，简称AAT<br>4-12个月不等</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h3><ul>
+<li>词法<ul>
+<li>通过考试，最好能得高分</li>
+<li>材料推荐<ol>
+<li>梳理框架 语法总框架+语法精讲（B站昂克君视频）+ 旋天佑《语法俱乐部》</li>
+<li>大量做题 《Grammar in use》 （可以看B站昂克君视频一起学）</li>
+<li>补充，适合有纯粹语法题型考试的同学（英专，初高中）<ul>
+<li>赖世雄《赖世雄经典语法》薄 1本</li>
+<li>张满胜《英语语法新思维》厚 初&#x2F;中&#x2F;高级  3本教程</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>句法</li>
+</ul>
+]]></content>
+      <categories>
+        <category>英语</category>
+      </categories>
+      <tags>
+        <tag>英语</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>音标学习</title>
+    <url>//%E9%9F%B3%E6%A0%87%E5%AD%A6%E4%B9%A0.html</url>
+    <content><![CDATA[<h3 id="oo-到底发什么音？"><a href="#oo-到底发什么音？" class="headerlink" title="oo 到底发什么音？"></a>oo 到底发什么音？</h3><p>这个没有规律，只能查字典，别去猜。</p>
+<p>可能读 </p>
+<p>也可能读</p>
+<h1 id="日化元音"><a href="#日化元音" class="headerlink" title="日化元音"></a>日化元音</h1><p>日化元音是一个整体，不要分开读</p>
+<p>和 <strong>儿</strong> 的区别</p>
+<ol>
+<li>汉语是卷舌，美音是后缩；</li>
+<li>汉语下放下颌骨，美音不放；</li>
+</ol>
+<p>当单词中有字母 <code>r</code> 时，美音才会发日化元音。</p>
+<ul>
+<li>单词中没有 <code>r</code> 的时候，无论英音还是美音，都不会发xx 这个音的</li>
+</ul>
+]]></content>
+      <categories>
+        <category>英语</category>
+      </categories>
+      <tags>
+        <tag>英语</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>服务启动</title>
     <url>//%E6%9C%8D%E5%8A%A1%E5%90%AF%E5%8A%A8.html</url>
     <content><![CDATA[<p>简单启动web服务</p>
@@ -12609,6 +12600,46 @@ child.logfile = sys.stdout
         <tag>BigData</tag>
         <tag>Hadoop</tag>
         <tag>数据平衡</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Ranger使用遇到问题</title>
+    <url>//Ranger%E4%BD%BF%E7%94%A8%E9%81%87%E5%88%B0%E9%97%AE%E9%A2%98.html</url>
+    <content><![CDATA[<h1 id="Ranger修改密码遇到问题及修复"><a href="#Ranger修改密码遇到问题及修复" class="headerlink" title="Ranger修改密码遇到问题及修复"></a>Ranger修改密码遇到问题及修复</h1><p>版本信息：Ranger-1.2.0集成到Ambari-2.7.3&amp;HDP-3.1.0</p>
+<p>问题描述：</p>
+<ul>
+<li>应要求需要修改大数据平台中 Ranger服务的UI的用户登录密码，以及Ambari平台用户登录密码；</li>
+</ul>
+<p>操作过程：</p>
+<ul>
+<li>登录RangerUI，使用需要修改密码的用户登录，点击右上角用户名的<code>profile</code> -&gt; 选择<code>Change Password</code>，然后输入旧密码和新密码，Ok，退出重登；</li>
+<li>登录Ambari平台，点击用户名 -&gt; 管理 -&gt; 用户列表 -&gt; 选择指定用户点击修改 -&gt; 点击<code>Chanage Password</code> ，同样用新密码修改后，退出重新登录；</li>
+</ul>
+<p>发现问题：</p>
+<ul>
+<li><p>第二天发现平台有报错信息：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">User:admin credentials on Ambari UI are not in sync with Ranger</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>原因及解决：</p>
+<ul>
+<li><p>ambari的Ranger组件配置文件中<code>Ranger Admin user&#39;s password</code>的密码与新密码不符导致校验出错，</p>
+</li>
+<li><p>处理方式就是选择Ranger服务-&gt; 配置 -&gt; ADVANCED -&gt; 高级的 ranger-env -&gt; <code>Ranger Admin user&#39;s password</code>，修改其密码为RangerUI中修改的新密码，然后保存配置即可。</p>
+<blockquote>
+<p>该版本，无需重启服务。</p>
+</blockquote>
+</li>
+<li><p>修改后可以点击检查服务状态，或者等其自动恢复。</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>BigData</category>
+        <category>Ranger</category>
+      </categories>
+      <tags>
+        <tag>BigData</tag>
+        <tag>Ranger</tag>
       </tags>
   </entry>
   <entry>
@@ -12774,101 +12805,6 @@ child.logfile = sys.stdout
         <tag>BigData</tag>
         <tag>Hive</tag>
         <tag>小文件合并</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Ranger使用遇到问题</title>
-    <url>//Ranger%E4%BD%BF%E7%94%A8%E9%81%87%E5%88%B0%E9%97%AE%E9%A2%98.html</url>
-    <content><![CDATA[<h1 id="Ranger修改密码遇到问题及修复"><a href="#Ranger修改密码遇到问题及修复" class="headerlink" title="Ranger修改密码遇到问题及修复"></a>Ranger修改密码遇到问题及修复</h1><p>版本信息：Ranger-1.2.0集成到Ambari-2.7.3&amp;HDP-3.1.0</p>
-<p>问题描述：</p>
-<ul>
-<li>应要求需要修改大数据平台中 Ranger服务的UI的用户登录密码，以及Ambari平台用户登录密码；</li>
-</ul>
-<p>操作过程：</p>
-<ul>
-<li>登录RangerUI，使用需要修改密码的用户登录，点击右上角用户名的<code>profile</code> -&gt; 选择<code>Change Password</code>，然后输入旧密码和新密码，Ok，退出重登；</li>
-<li>登录Ambari平台，点击用户名 -&gt; 管理 -&gt; 用户列表 -&gt; 选择指定用户点击修改 -&gt; 点击<code>Chanage Password</code> ，同样用新密码修改后，退出重新登录；</li>
-</ul>
-<p>发现问题：</p>
-<ul>
-<li><p>第二天发现平台有报错信息：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">User:admin credentials on Ambari UI are not in sync with Ranger</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p>原因及解决：</p>
-<ul>
-<li><p>ambari的Ranger组件配置文件中<code>Ranger Admin user&#39;s password</code>的密码与新密码不符导致校验出错，</p>
-</li>
-<li><p>处理方式就是选择Ranger服务-&gt; 配置 -&gt; ADVANCED -&gt; 高级的 ranger-env -&gt; <code>Ranger Admin user&#39;s password</code>，修改其密码为RangerUI中修改的新密码，然后保存配置即可。</p>
-<blockquote>
-<p>该版本，无需重启服务。</p>
-</blockquote>
-</li>
-<li><p>修改后可以点击检查服务状态，或者等其自动恢复。</p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>BigData</category>
-        <category>Ranger</category>
-      </categories>
-      <tags>
-        <tag>BigData</tag>
-        <tag>Ranger</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>kafka中部分概念</title>
-    <url>//kafka%E4%B8%AD%E9%83%A8%E5%88%86%E6%A6%82%E5%BF%B5.html</url>
-    <content><![CDATA[<p>kafka中常用的内容</p>
-<ol start="0">
-<li><p>什么是rebalance？</p>
-<ul>
-<li>rabalance本质是一种协议，规定了consumer group中的所有consumer对于如何分配订阅的topic的每个分区这件事，如何达成一致</li>
-</ul>
-</li>
-<li><p>目前使用的是什么版本？</p>
-<ul>
-<li>0.9之前(0.8.2及其之前)使用的是zookeeper存储Partition 的 Offset 信息 (consumers&#x2F;{group}&#x2F;offsets&#x2F;{topic}&#x2F;{partition})，<ul>
-<li>zookeeper 并不适用频繁写操作的场景</li>
-</ul>
-</li>
-<li>0.9及其之后，通过内置 Topic(__consumer_offsets) 的方式来记录对应 Partition 的 Offset</li>
-</ul>
-</li>
-<li><p>查看一下broker的机器上是否有coordinator<br>Group Coordinator 是一个服务，每个 Broker在启动的时候都会启动一个该服务。</p>
-<ul>
-<li>Group Coordinator 的作用是用来存储 Group 的相关 Meta 信息，并将对应 Partition 的 Offset 信息记录到 Kafka 内置Topic(__consumer_offsets) 中</li>
-</ul>
-</li>
-<li><p>group如何选择coordination？如何查看__consumer_offsets中每个group对应的partition信息？命令？</p>
-<ul>
-<li>Group 对应在 __consumer_offsets 上的 Partition</li>
-<li>offsets.topic.num.partitions 50个分区</li>
-</ul>
-</li>
-<li><p>发生 rebalance 的时机 ？</p>
-<ul>
-<li>组成员个数发生变化。例如有新的 consumer 实例加入该消费组或者离开组。</li>
-<li>订阅的 Topic 个数发生变化。</li>
-<li>订阅 Topic 的分区数发生变化。</li>
-</ul>
-</li>
-<li><p>消费者也有leader？</p>
-</li>
-<li><p>问题：</p>
-<ol>
-<li>consumer-group成员在接收到coordinate的syncgroup的response后，如何知道自己消费哪个topic的哪个partition？如何在response中找到自己的这个信息？</li>
-</ol>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>BigData</category>
-        <category>Kafka</category>
-      </categories>
-      <tags>
-        <tag>BigData</tag>
-        <tag>Kafka</tag>
       </tags>
   </entry>
   <entry>
@@ -13108,6 +13044,61 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
+    <title>kafka中部分概念</title>
+    <url>//kafka%E4%B8%AD%E9%83%A8%E5%88%86%E6%A6%82%E5%BF%B5.html</url>
+    <content><![CDATA[<p>kafka中常用的内容</p>
+<ol start="0">
+<li><p>什么是rebalance？</p>
+<ul>
+<li>rabalance本质是一种协议，规定了consumer group中的所有consumer对于如何分配订阅的topic的每个分区这件事，如何达成一致</li>
+</ul>
+</li>
+<li><p>目前使用的是什么版本？</p>
+<ul>
+<li>0.9之前(0.8.2及其之前)使用的是zookeeper存储Partition 的 Offset 信息 (consumers&#x2F;{group}&#x2F;offsets&#x2F;{topic}&#x2F;{partition})，<ul>
+<li>zookeeper 并不适用频繁写操作的场景</li>
+</ul>
+</li>
+<li>0.9及其之后，通过内置 Topic(__consumer_offsets) 的方式来记录对应 Partition 的 Offset</li>
+</ul>
+</li>
+<li><p>查看一下broker的机器上是否有coordinator<br>Group Coordinator 是一个服务，每个 Broker在启动的时候都会启动一个该服务。</p>
+<ul>
+<li>Group Coordinator 的作用是用来存储 Group 的相关 Meta 信息，并将对应 Partition 的 Offset 信息记录到 Kafka 内置Topic(__consumer_offsets) 中</li>
+</ul>
+</li>
+<li><p>group如何选择coordination？如何查看__consumer_offsets中每个group对应的partition信息？命令？</p>
+<ul>
+<li>Group 对应在 __consumer_offsets 上的 Partition</li>
+<li>offsets.topic.num.partitions 50个分区</li>
+</ul>
+</li>
+<li><p>发生 rebalance 的时机 ？</p>
+<ul>
+<li>组成员个数发生变化。例如有新的 consumer 实例加入该消费组或者离开组。</li>
+<li>订阅的 Topic 个数发生变化。</li>
+<li>订阅 Topic 的分区数发生变化。</li>
+</ul>
+</li>
+<li><p>消费者也有leader？</p>
+</li>
+<li><p>问题：</p>
+<ol>
+<li>consumer-group成员在接收到coordinate的syncgroup的response后，如何知道自己消费哪个topic的哪个partition？如何在response中找到自己的这个信息？</li>
+</ol>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>BigData</category>
+        <category>Kafka</category>
+      </categories>
+      <tags>
+        <tag>BigData</tag>
+        <tag>Kafka</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>GC调优</title>
     <url>//GC%E8%B0%83%E4%BC%98.html</url>
     <content><![CDATA[<p><code>GC</code> 调优</p>
@@ -13130,6 +13121,263 @@ child.logfile = sys.stdout
         <tag>Java</tag>
         <tag>JVM</tag>
         <tag>GC</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Java类加载机制</title>
+    <url>//Java%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6.html</url>
+    <content><![CDATA[<p>Java类加载机制</p>
+<ol>
+<li>类是怎样被加载的？</li>
+<li>类的加载顺序是什么？</li>
+</ol>
+<h1 id="类的加载机制"><a href="#类的加载机制" class="headerlink" title="类的加载机制"></a>类的加载机制</h1><p>TODO</p>
+<p>详细的流程，看一下《深入理解 Java虚拟机》虚拟机的类加载章节</p>
+<p>类加载流程分为一下5个阶段：</p>
+<blockquote>
+<p>每个阶段做什么内容？</p>
+</blockquote>
+<ul>
+<li>加载（Loading）</li>
+<li>链接（Linking）<ul>
+<li>验证（Verification）</li>
+<li>准备（Preparation）</li>
+<li>解析（Resolution）</li>
+</ul>
+</li>
+<li>初始化（Initialization）</li>
+</ul>
+<p>加载是全部加载吗？还是用到哪些加载哪些？</p>
+<p>resolution （解析）步骤中的 符号引用是什么？</p>
+<p>JDK9之前是一种，JDK9之后，由于引入了平台模块化系统（JPMS），文件结构发生了变化</p>
+<p>JVM 是动态加载、链接和初始化类和接口的</p>
+<p>加载：通过类和接口的名字找到二进制描述并创建类和接口的过程；</p>
+<p>链接：将类和接口合并进jvm运行时状态，使类和接口可以被运行的过程；</p>
+<p>初始化：类和接口的初始化包括执行类和接口的初始化方法。</p>
+<p>5.1. jvm 如何从 class 文件中获取符号引用的；（运行时常量池的构造）</p>
+<blockquote>
+<p>对比 <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.5.5">run-time constant pool</a> 的描述，和 <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html">Java虚拟机规范第5章</a> 中表述，可知 <code>the binary representation of a class or interface</code> 基本可以用编译后生成的 <code>class file</code> 代替；</p>
+</blockquote>
+<ul>
+<li><p>运行时常量池，每个 .class 文件中都会有一个 <code>constant pool</code>表（constant_pool table），</p>
+<p><img src="https://ligongzhao-pics.oss-cn-hangzhou.aliyuncs.com/imgjvm_01constant_pool.png" alt="jvm01constant_pool"></p>
+<ul>
+<li><p>运行时常量池是.class文件中的<code>constant_pool</code>表的运行时表示；</p>
+</li>
+<li><p>存储内容：运行时常量池的功能类似于传统编程语言的符号表（symbol table），尽管它包含的数据范围比典型的符号表更广。</p>
+</li>
+<li><p>分配和构造时间：每个运行时常量池都是从Java虚拟机的<strong>方法区（method area）</strong>分配的(§2.5.4)。类或接口的运行时常量池是在Java虚拟机创建类或接口时构造的(§5.3)。</p>
+</li>
+<li><p>在创建类或接口时，如果构造类或接口的运行时常量池所需要的内存比jvm方法区提供的更多，jvm抛出<code>OOM</code>错误</p>
+</li>
+</ul>
+</li>
+<li><p>方法区，jvm中各线程共享，</p>
+<ul>
+<li>在jvm启动时创建，逻辑上属于heap的一部分；</li>
+<li>方法区类似于常规语言中用于编译代码的存储区，或类似于操作系统进程中的“文本”段（”text” segment）。它存储每个类的结构，如运行时常量池、字段和方法数据，以及方法和构造函数的代码，包括在类和实例初始化以及接口初始化中使用的特殊方法(2.9)。</li>
+<li>不要求连续的内存空间，具体的实现方式由各jvm厂商决定，</li>
+<li>大小可以是固定的，也可以根据计算需要进行扩展。可以不实现垃圾回收和压缩功能。</li>
+</ul>
+</li>
+<li><p>堆，jvm中各线程共享，</p>
+<ul>
+<li><p>jvm启动时创建；</p>
+</li>
+<li><p>为所有类实例（对象）和数组（arrays）分配内存的运行时数据区域；</p>
+</li>
+<li><p>大小与方法区一样，可以是固定的（fixed），也可以根据计算需要进行扩展，同时如果过大也可以收缩，堆的内存同样不需要是连续的。</p>
+</li>
+</ul>
+</li>
+<li><p>class 文件中的<code>constant_pool</code>表，用于在创建类和接口时构造运行时常量池；</p>
+</li>
+<li><p>运行时常量池中的所有引用最初都是符号的，这些符号引用都是从 class 文件结构中获得（问题：什么是符号引用？）</p>
+</li>
+<li><p><code>L ClassName ;</code> ，例如：Ljava&#x2F;lang&#x2F;String;  -&gt; String</p>
+</li>
+<li><p><code>[ 字段类型</code>，数组； 例如：[Ljava&#x2F;lang&#x2F;String;  -&gt; String[]</p>
+</li>
+<li><p>如果元素类型是基本类型，则由相应的字段描述符表示(4.3.2)。</p>
+</li>
+<li><p>否则，如果元素类型是引用类型，则用ASCII“L”字符后接元素类型的二进制名称(4.2.1)，再接ASCII“;”字符表示。</p>
+</li>
+<li><p><strong>the binary name</strong> ，文档中提到的表示，正常类的全限定名为：<code>java.lang.String</code>  -&gt; 二进制名称为： <code>java/lang/String</code>， 即将 <code>.</code>分隔符换为<code>/</code>分隔符；</p>
+</li>
+<li><p>浮点数，不管是 float，double，都遵循 IEEE 754</p>
+</li>
+<li><p>问题：class 文件中 constant_pool 表示的常量池怎样在运行时使用？都是些字段名，字段类型，方法签名等符号集，无法使用啊？</p>
+</li>
+</ul>
+<p>5.2. 解释了jvm启动时如何进行加载、链接和初始化的过程；</p>
+<ul>
+<li>Java虚拟机通过使用 <code>bootstrap class loader</code>(5.3.1)创建一个初始类来启动，（该初始类以依赖于实现的方式指定）。然后，Java虚拟机链接初始类，初始化它，并调用公共类方法void main(String[])。该方法的调用驱动所有进一步的执行。组成主方法的Java虚拟机指令的执行可能导致链接(并因此创建)其他类和接口，以及调用其他方法。</li>
+<li>在Java Virtual Machine的实现中，可以将初始类作为命令行参数提供。或者，实现可以提供一个初始类，该类设置一个类装入器，然后装入应用程序。初始类的其他选择也是可能的，只要它们与前一段给出的规范一致。</li>
+</ul>
+<p>5.3. 类和接口的二进制描述如何被加载的，同时类和接口如何被创建的；</p>
+<ul>
+<li>创建类或接口的方式<ol>
+<li>在类或方法D的运行时常量池中引用了C，会触发对类或接口C的创建（creation）；</li>
+<li>调用了java se平台库中的方法，例如反射，也可能触发对类或接口的创建</li>
+</ol>
+</li>
+<li>类加载器和类的关系？<ul>
+<li>定义加载器（一个加载器L 直接创建了类C）</li>
+<li>初始加载器 （直接定义或者委托加载了一个类）</li>
+</ul>
+</li>
+<li>运行时，一个类或接口由二进制名字和其定义类加载器决定，它的运行时包（package）由包名和这个类的定义类加载器决定；</li>
+<li>an array class 是被 JVM 直接创建的，并不是通过类加载器加载的。（问题，JVM的哪部分创建的 数组类）</li>
+<li>为什么在5.3章节说，只有 bootstrap class loader 和 user-defined class loader 两种类加载器？extension class loader 和 application class loader 去哪里了？</li>
+<li>jvm 可以在 verification 和 resolution 阶段load a class</li>
+<li>定义了类加载过程中遇到异常，如何抛出不同的异常；</li>
+<li>一个行为良好的类加载器应该维护三个属性:<ul>
+<li>给定相同的名称，一个好的类类加载器应该始终返回相同的class对象。</li>
+<li>第二点没有看懂，像是在说加载的类是泛型类时的处理方式；？</li>
+<li>第三点也没有看懂，提到了用户自定义类加载器的处理方式？</li>
+</ul>
+</li>
+</ul>
+<p>5.3.1. 使用 Bootstrap 类加载器，加载非数组类</p>
+<p>5.3.5. 从 class 文件中获取Class</p>
+<ul>
+<li>检查二进制内容是满足 ClassFile 结构，否则报错；</li>
+<li>检查class文件的jdk版本要求，与机器上安装的jdk不兼容也报错,<code>UnsupportedClassVersionError</code>；</li>
+<li></li>
+</ul>
+<blockquote>
+<p>jvm 加载、链接、初始化的过程，是分工处理，并不是加载一个方法处理全部，而是每个方法只做该方法的部分，然后交给下一个，依次循环。同时，每个方法中可以检查并调用前面方法来动态处理。</p>
+</blockquote>
+<p>5.4. 链接的过程；</p>
+<p>主要是 verify 和 preparation 两个阶段，resolution 是可选阶段。</p>
+<p>链接过程会涉及新内存的分配，可能发生 OOM；</p>
+<p>链接阶段具体的实现比较灵活，只要满足三个前提即可：</p>
+<ul>
+<li>链接前，类或接口需要被完全加载；</li>
+<li>初始化前，类或接口需要被完全验证和准备；</li>
+<li>链接过程中检测的错误需要被抛出？</li>
+</ul>
+<p>验证，确保类或接口的二进制表示在结构上是正确的。？这与load过程中的检查功能不是重复了吗？</p>
+<ul>
+<li>不重复，load过程是检查 ClassFile结构，41.和4.8章节的内容，verify 阶段验证4.9章节的内容；</li>
+</ul>
+<p>验证可能导致加载额外的类和接口，但不需要对它们进行验证或准备。</p>
+<ul>
+<li>问题：谁，在什么阶段对额外触发的load内容进行验证或准备？</li>
+</ul>
+<p>preparation</p>
+<p>对类或接口的<strong>静态字段</strong>进行默认值赋值（2.3,2.4章节）；（真正的初始化还是在初始化阶段）</p>
+<p>准备阶段可以在类创建后的任何时候执行，但是要在初始化前完成；</p>
+<p>resolution</p>
+<p>Java虚拟机指令<code>anewarray, checkcast, getfield, getstatic, instanceof, invokedynamic, invokeinterface, invokespecial, invokestatic, invokvirtual, ldc, ldc_w, multianewarray, new, putfield，和putstatic</code> 对运行时常量池进行符号引用。<strong>这些指令的执行都需要解析其符号引用</strong>。</p>
+<blockquote>
+<p>上面文本中提到的指令，除 invokedynamic 之外，其他指令解析一次其符号引用即可；</p>
+<p>invokedynamic 指令解析的具体值是绑定到具体的 invokedynamic 调用位置的，其他 invokedynamic 需要重新解析；</p>
+</blockquote>
+<p>解析是动态地从运行时常量池中的符号引用确定具体值的过程。</p>
+<blockquote>
+<p>具体值，是内存中可以真实查到的</p>
+</blockquote>
+<p>5.5. 类和接口如何被初始化的；</p>
+<p>以下操作会对类或接口C，进行初始化操作：</p>
+<ul>
+<li><p>执行任何引用C的Java虚拟机指令<code>new, getstatic, putstatic或invokestatic (new, getstatic, putstatic, invokestatic)</code>。这些指令通过字段引用或方法引用直接或间接引用类或接口C，则会初始化C。</p>
+</li>
+<li><p>在类库(2.12)中调用某些反射方法，例如，在类class或包java.lang.reflect中调用。</p>
+</li>
+<li><p>如果C是一个类，它的一个子类的初始化，则类C也会被初始化；</p>
+</li>
+<li><p>如果C是一个声明非抽象、非静态方法的接口，则直接或间接实现C的类的初始化。</p>
+</li>
+<li><p>如果C是一个类，它在Java虚拟机启动时被指定为初始类(5.2)。</p>
+</li>
+</ul>
+<p>因为jvm是多线程的，所以初始化类也需要保证同步（因为不同线程可能会初始化相同的类），所以每个类或接口都有唯一的一个初始化锁LC，具体初始化过程如下：</p>
+<ul>
+<li>略</li>
+</ul>
+<p>5.6. 绑定本地方法的概念；</p>
+<p>5.6. jvm退出；</p>
+<p>在jvm层面，每个java 类的构造函数都是实例初始化的方法。该方法名为 init，由编译器提供。</p>
+<h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><p>Bootstrap ClassLoader (启动类加载器)</p>
+<ul>
+<li><p>加载 <jre>&#x2F;lib 目录下符合要求的类，如 rt.jar</p>
+<blockquote>
+<p><jre> 是指 jre 的安装目录</p>
+</blockquote>
+</li>
+</ul>
+<p>Extension ClassLoader (扩展类加载器)</p>
+<ul>
+<li>加载 <jre>&#x2F;lib&#x2F;ext 目录下的类</li>
+</ul>
+<p>Application ClassLoader &#x2F; System ClassLoader （应用类加载器&#x2F;系统类加载器）</p>
+<ul>
+<li>加载用户程序中 classpath 指定的所有 jar 或目录</li>
+</ul>
+<p>自定义 ClassLoader</p>
+<h1 id="什么是双亲委派模型？"><a href="#什么是双亲委派模型？" class="headerlink" title="什么是双亲委派模型？"></a>什么是双亲委派模型？</h1><p>双亲委派过程：如果一个类加载器需要加载类，那么首先它会把这个类加载请求委派给父类加载器去完成，如果父类还有父类则接着委托，每一层都是如此，一直递归到顶层（即启动类加载器），当父类加载器无法完成这个请求（父类加载器中没有加载过这个类）时，子类才会尝试去加载。</p>
+<ul>
+<li>一般情况加载会从应用类加载器委托给扩展类加载器，然后再委托给启动类加载器，启动类加载器找不到然后扩展类加载器找，扩展类加载器找不到再由应用类记载器找。</li>
+</ul>
+<h2 id="双亲委派解决了什么问题？"><a href="#双亲委派解决了什么问题？" class="headerlink" title="双亲委派解决了什么问题？"></a>双亲委派解决了什么问题？</h2><p>在实际应用中，双亲委派解决了 Java 基础类统一加载的问题。</p>
+<p>以 <code>java.lang.Object</code> 来说，加载它经过一层层委托，最终由 Bootstrap ClassLoader 去找 lib目录下 rt.jar 里面的 <code>java.lang.Object</code> 加载到 JVM 中。</p>
+<p>这样如果有不法分子自己造一个 <code>java.lang.Object</code> ，里面嵌了不好的代码，如果我们按照双亲委派模型来实现的话，最终加载到 JVM 中的只会是我们 rt.jar 里面的代码，这样核心的基础代码就得到了保护。JVM 中不会出现两个 Object。</p>
+<p>违反双亲委派的例子</p>
+<p>问题：SPI 怎么违反双亲委派模型了？</p>
+<p>我觉得不能叫打破或者违反，而应该是没有依据双亲委派模型实现的类加载方式。</p>
+<blockquote>
+<p>BootstrapClassloader无法委派AppClassLoader来加载类，也就是说BootstrapClassloader中加载的类中无法使用由AppClassLoader加载的类。</p>
+</blockquote>
+<p>这个规则是哪里规定的？</p>
+<ul>
+<li>很明显java.sql包是由BootstrapClassloader加载器加载的；而接口的实现类com.mysql.jdbc.Driver是由第三方实现的类库，由AppClassLoader加载器进行加载的，我们的问题是DriverManager再获取链接的时候必然要加载到com.mysql.jdbc.Driver类，这就是由BootstrapClassloader加载的类使用了由AppClassLoader加载的类，很明显和双亲委托机制的原理相悖</li>
+</ul>
+<p>线程上下文类加载器</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">getCallerClass();</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>调用类的静态方法会初始化该类？初始化动作做了哪些事情？</p>
+<p>当高层提供了统一接口让低层去实现，同时又要是在高层加载（或实例化）低层的类时，必须通过线程上下文类加载器来帮助高层的 ClassLoader 找到并加载该类。</p>
+<blockquote>
+<p>问题：怎样判断是高层需要加载低层的类？而不是低层本身需要加载该类？</p>
+<p>怎样判断一个类应该由哪个类加载器加载？</p>
+</blockquote>
+<p>Class.forName()?</p>
+<p>ClassLoader?</p>
+<h1 id="类加载顺序"><a href="#类加载顺序" class="headerlink" title="类加载顺序"></a>类加载顺序</h1><ol>
+<li>我们知道，jvm中发现一个类（通过类的package+ClassName来确定唯一）已经被加载了，那么它会直接使用而不会再加载同名的类了</li>
+<li>如何查看jvm启动过程中的类加载顺序？<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">在 jvm 启动脚本(用户java程序启动脚本)中，添加 -verbose 参数或者 -XX:+TraceClassLoading，</span><br><span class="line">日志中就会打印类的加载顺序日志</span><br></pre></td></tr></table></figure></li>
+<li>那么如果有两个相同的类，如何确认先加载哪个？</li>
+</ol>
+<p><a href="https://docs.oracle.com/javase/7/docs/technotes/tools/solaris/classpath.html">参考jdk1.7官方文档</a></p>
+<p><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/classpath.html">jdk1.8的相同内容的位置</a></p>
+<p>在文档的<code>Understanding class path wildcards</code>章节中写道</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">The order in which the JAR files in a directory are enumerated in the expanded class path is not specified and may vary from platform to platform and even from moment to moment on the same machine.</span><br><span class="line">If a specific order is required then the JAR files can be enumerated explicitly in the class path.</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>上面两段的大意为：在同一个目录下的jar的加载顺序是不能指定的，可能因平台而异，甚至在同一台机器上不同时刻也有所不同。</p>
+</blockquote>
+<blockquote>
+<p>如果希望指定顺序，那么可以显示的在classpath中枚举jar文件。</p>
+</blockquote>
+<p>同时官方文档在<code>Specification order</code>段落中，还写道：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">The order in which you specify multiple class path entries is important. The Java interpreter will look for classes in the directories in the order they appear in the class path variable. In the example above, the Java interpreter will first look for a needed class in the directory /java/MyClasses. Only if it doesn&#x27;t find a class with the proper name in that directory will the interpreter look in the /java/OtherClasses directory.</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>大意为：当你的classpath中有多个路径时，指定这些路径的顺序很重要，jvm会按照classpath路径中的顺序依次加载其中的类，如果已经找到了需要的类，就不会从后面加载，如果没有才会向后查找。</p>
+</blockquote>
+<p>综上，同一个classpath目录下的jar的加载顺序是无法指定的，但是可以通过在classpath中显示指定jar文件顺序或者目录的顺序来达到指定加载顺序的目的。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>Java</tag>
+        <tag>JVM</tag>
+        <tag>类加载</tag>
       </tags>
   </entry>
   <entry>
@@ -13543,263 +13791,6 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
-    <title>Java类加载机制</title>
-    <url>//Java%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6.html</url>
-    <content><![CDATA[<p>Java类加载机制</p>
-<ol>
-<li>类是怎样被加载的？</li>
-<li>类的加载顺序是什么？</li>
-</ol>
-<h1 id="类的加载机制"><a href="#类的加载机制" class="headerlink" title="类的加载机制"></a>类的加载机制</h1><p>TODO</p>
-<p>详细的流程，看一下《深入理解 Java虚拟机》虚拟机的类加载章节</p>
-<p>类加载流程分为一下5个阶段：</p>
-<blockquote>
-<p>每个阶段做什么内容？</p>
-</blockquote>
-<ul>
-<li>加载（Loading）</li>
-<li>链接（Linking）<ul>
-<li>验证（Verification）</li>
-<li>准备（Preparation）</li>
-<li>解析（Resolution）</li>
-</ul>
-</li>
-<li>初始化（Initialization）</li>
-</ul>
-<p>加载是全部加载吗？还是用到哪些加载哪些？</p>
-<p>resolution （解析）步骤中的 符号引用是什么？</p>
-<p>JDK9之前是一种，JDK9之后，由于引入了平台模块化系统（JPMS），文件结构发生了变化</p>
-<p>JVM 是动态加载、链接和初始化类和接口的</p>
-<p>加载：通过类和接口的名字找到二进制描述并创建类和接口的过程；</p>
-<p>链接：将类和接口合并进jvm运行时状态，使类和接口可以被运行的过程；</p>
-<p>初始化：类和接口的初始化包括执行类和接口的初始化方法。</p>
-<p>5.1. jvm 如何从 class 文件中获取符号引用的；（运行时常量池的构造）</p>
-<blockquote>
-<p>对比 <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.5.5">run-time constant pool</a> 的描述，和 <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html">Java虚拟机规范第5章</a> 中表述，可知 <code>the binary representation of a class or interface</code> 基本可以用编译后生成的 <code>class file</code> 代替；</p>
-</blockquote>
-<ul>
-<li><p>运行时常量池，每个 .class 文件中都会有一个 <code>constant pool</code>表（constant_pool table），</p>
-<p><img src="https://ligongzhao-pics.oss-cn-hangzhou.aliyuncs.com/imgjvm_01constant_pool.png" alt="jvm01constant_pool"></p>
-<ul>
-<li><p>运行时常量池是.class文件中的<code>constant_pool</code>表的运行时表示；</p>
-</li>
-<li><p>存储内容：运行时常量池的功能类似于传统编程语言的符号表（symbol table），尽管它包含的数据范围比典型的符号表更广。</p>
-</li>
-<li><p>分配和构造时间：每个运行时常量池都是从Java虚拟机的<strong>方法区（method area）</strong>分配的(§2.5.4)。类或接口的运行时常量池是在Java虚拟机创建类或接口时构造的(§5.3)。</p>
-</li>
-<li><p>在创建类或接口时，如果构造类或接口的运行时常量池所需要的内存比jvm方法区提供的更多，jvm抛出<code>OOM</code>错误</p>
-</li>
-</ul>
-</li>
-<li><p>方法区，jvm中各线程共享，</p>
-<ul>
-<li>在jvm启动时创建，逻辑上属于heap的一部分；</li>
-<li>方法区类似于常规语言中用于编译代码的存储区，或类似于操作系统进程中的“文本”段（”text” segment）。它存储每个类的结构，如运行时常量池、字段和方法数据，以及方法和构造函数的代码，包括在类和实例初始化以及接口初始化中使用的特殊方法(2.9)。</li>
-<li>不要求连续的内存空间，具体的实现方式由各jvm厂商决定，</li>
-<li>大小可以是固定的，也可以根据计算需要进行扩展。可以不实现垃圾回收和压缩功能。</li>
-</ul>
-</li>
-<li><p>堆，jvm中各线程共享，</p>
-<ul>
-<li><p>jvm启动时创建；</p>
-</li>
-<li><p>为所有类实例（对象）和数组（arrays）分配内存的运行时数据区域；</p>
-</li>
-<li><p>大小与方法区一样，可以是固定的（fixed），也可以根据计算需要进行扩展，同时如果过大也可以收缩，堆的内存同样不需要是连续的。</p>
-</li>
-</ul>
-</li>
-<li><p>class 文件中的<code>constant_pool</code>表，用于在创建类和接口时构造运行时常量池；</p>
-</li>
-<li><p>运行时常量池中的所有引用最初都是符号的，这些符号引用都是从 class 文件结构中获得（问题：什么是符号引用？）</p>
-</li>
-<li><p><code>L ClassName ;</code> ，例如：Ljava&#x2F;lang&#x2F;String;  -&gt; String</p>
-</li>
-<li><p><code>[ 字段类型</code>，数组； 例如：[Ljava&#x2F;lang&#x2F;String;  -&gt; String[]</p>
-</li>
-<li><p>如果元素类型是基本类型，则由相应的字段描述符表示(4.3.2)。</p>
-</li>
-<li><p>否则，如果元素类型是引用类型，则用ASCII“L”字符后接元素类型的二进制名称(4.2.1)，再接ASCII“;”字符表示。</p>
-</li>
-<li><p><strong>the binary name</strong> ，文档中提到的表示，正常类的全限定名为：<code>java.lang.String</code>  -&gt; 二进制名称为： <code>java/lang/String</code>， 即将 <code>.</code>分隔符换为<code>/</code>分隔符；</p>
-</li>
-<li><p>浮点数，不管是 float，double，都遵循 IEEE 754</p>
-</li>
-<li><p>问题：class 文件中 constant_pool 表示的常量池怎样在运行时使用？都是些字段名，字段类型，方法签名等符号集，无法使用啊？</p>
-</li>
-</ul>
-<p>5.2. 解释了jvm启动时如何进行加载、链接和初始化的过程；</p>
-<ul>
-<li>Java虚拟机通过使用 <code>bootstrap class loader</code>(5.3.1)创建一个初始类来启动，（该初始类以依赖于实现的方式指定）。然后，Java虚拟机链接初始类，初始化它，并调用公共类方法void main(String[])。该方法的调用驱动所有进一步的执行。组成主方法的Java虚拟机指令的执行可能导致链接(并因此创建)其他类和接口，以及调用其他方法。</li>
-<li>在Java Virtual Machine的实现中，可以将初始类作为命令行参数提供。或者，实现可以提供一个初始类，该类设置一个类装入器，然后装入应用程序。初始类的其他选择也是可能的，只要它们与前一段给出的规范一致。</li>
-</ul>
-<p>5.3. 类和接口的二进制描述如何被加载的，同时类和接口如何被创建的；</p>
-<ul>
-<li>创建类或接口的方式<ol>
-<li>在类或方法D的运行时常量池中引用了C，会触发对类或接口C的创建（creation）；</li>
-<li>调用了java se平台库中的方法，例如反射，也可能触发对类或接口的创建</li>
-</ol>
-</li>
-<li>类加载器和类的关系？<ul>
-<li>定义加载器（一个加载器L 直接创建了类C）</li>
-<li>初始加载器 （直接定义或者委托加载了一个类）</li>
-</ul>
-</li>
-<li>运行时，一个类或接口由二进制名字和其定义类加载器决定，它的运行时包（package）由包名和这个类的定义类加载器决定；</li>
-<li>an array class 是被 JVM 直接创建的，并不是通过类加载器加载的。（问题，JVM的哪部分创建的 数组类）</li>
-<li>为什么在5.3章节说，只有 bootstrap class loader 和 user-defined class loader 两种类加载器？extension class loader 和 application class loader 去哪里了？</li>
-<li>jvm 可以在 verification 和 resolution 阶段load a class</li>
-<li>定义了类加载过程中遇到异常，如何抛出不同的异常；</li>
-<li>一个行为良好的类加载器应该维护三个属性:<ul>
-<li>给定相同的名称，一个好的类类加载器应该始终返回相同的class对象。</li>
-<li>第二点没有看懂，像是在说加载的类是泛型类时的处理方式；？</li>
-<li>第三点也没有看懂，提到了用户自定义类加载器的处理方式？</li>
-</ul>
-</li>
-</ul>
-<p>5.3.1. 使用 Bootstrap 类加载器，加载非数组类</p>
-<p>5.3.5. 从 class 文件中获取Class</p>
-<ul>
-<li>检查二进制内容是满足 ClassFile 结构，否则报错；</li>
-<li>检查class文件的jdk版本要求，与机器上安装的jdk不兼容也报错,<code>UnsupportedClassVersionError</code>；</li>
-<li></li>
-</ul>
-<blockquote>
-<p>jvm 加载、链接、初始化的过程，是分工处理，并不是加载一个方法处理全部，而是每个方法只做该方法的部分，然后交给下一个，依次循环。同时，每个方法中可以检查并调用前面方法来动态处理。</p>
-</blockquote>
-<p>5.4. 链接的过程；</p>
-<p>主要是 verify 和 preparation 两个阶段，resolution 是可选阶段。</p>
-<p>链接过程会涉及新内存的分配，可能发生 OOM；</p>
-<p>链接阶段具体的实现比较灵活，只要满足三个前提即可：</p>
-<ul>
-<li>链接前，类或接口需要被完全加载；</li>
-<li>初始化前，类或接口需要被完全验证和准备；</li>
-<li>链接过程中检测的错误需要被抛出？</li>
-</ul>
-<p>验证，确保类或接口的二进制表示在结构上是正确的。？这与load过程中的检查功能不是重复了吗？</p>
-<ul>
-<li>不重复，load过程是检查 ClassFile结构，41.和4.8章节的内容，verify 阶段验证4.9章节的内容；</li>
-</ul>
-<p>验证可能导致加载额外的类和接口，但不需要对它们进行验证或准备。</p>
-<ul>
-<li>问题：谁，在什么阶段对额外触发的load内容进行验证或准备？</li>
-</ul>
-<p>preparation</p>
-<p>对类或接口的<strong>静态字段</strong>进行默认值赋值（2.3,2.4章节）；（真正的初始化还是在初始化阶段）</p>
-<p>准备阶段可以在类创建后的任何时候执行，但是要在初始化前完成；</p>
-<p>resolution</p>
-<p>Java虚拟机指令<code>anewarray, checkcast, getfield, getstatic, instanceof, invokedynamic, invokeinterface, invokespecial, invokestatic, invokvirtual, ldc, ldc_w, multianewarray, new, putfield，和putstatic</code> 对运行时常量池进行符号引用。<strong>这些指令的执行都需要解析其符号引用</strong>。</p>
-<blockquote>
-<p>上面文本中提到的指令，除 invokedynamic 之外，其他指令解析一次其符号引用即可；</p>
-<p>invokedynamic 指令解析的具体值是绑定到具体的 invokedynamic 调用位置的，其他 invokedynamic 需要重新解析；</p>
-</blockquote>
-<p>解析是动态地从运行时常量池中的符号引用确定具体值的过程。</p>
-<blockquote>
-<p>具体值，是内存中可以真实查到的</p>
-</blockquote>
-<p>5.5. 类和接口如何被初始化的；</p>
-<p>以下操作会对类或接口C，进行初始化操作：</p>
-<ul>
-<li><p>执行任何引用C的Java虚拟机指令<code>new, getstatic, putstatic或invokestatic (new, getstatic, putstatic, invokestatic)</code>。这些指令通过字段引用或方法引用直接或间接引用类或接口C，则会初始化C。</p>
-</li>
-<li><p>在类库(2.12)中调用某些反射方法，例如，在类class或包java.lang.reflect中调用。</p>
-</li>
-<li><p>如果C是一个类，它的一个子类的初始化，则类C也会被初始化；</p>
-</li>
-<li><p>如果C是一个声明非抽象、非静态方法的接口，则直接或间接实现C的类的初始化。</p>
-</li>
-<li><p>如果C是一个类，它在Java虚拟机启动时被指定为初始类(5.2)。</p>
-</li>
-</ul>
-<p>因为jvm是多线程的，所以初始化类也需要保证同步（因为不同线程可能会初始化相同的类），所以每个类或接口都有唯一的一个初始化锁LC，具体初始化过程如下：</p>
-<ul>
-<li>略</li>
-</ul>
-<p>5.6. 绑定本地方法的概念；</p>
-<p>5.6. jvm退出；</p>
-<p>在jvm层面，每个java 类的构造函数都是实例初始化的方法。该方法名为 init，由编译器提供。</p>
-<h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><p>Bootstrap ClassLoader (启动类加载器)</p>
-<ul>
-<li><p>加载 <jre>&#x2F;lib 目录下符合要求的类，如 rt.jar</p>
-<blockquote>
-<p><jre> 是指 jre 的安装目录</p>
-</blockquote>
-</li>
-</ul>
-<p>Extension ClassLoader (扩展类加载器)</p>
-<ul>
-<li>加载 <jre>&#x2F;lib&#x2F;ext 目录下的类</li>
-</ul>
-<p>Application ClassLoader &#x2F; System ClassLoader （应用类加载器&#x2F;系统类加载器）</p>
-<ul>
-<li>加载用户程序中 classpath 指定的所有 jar 或目录</li>
-</ul>
-<p>自定义 ClassLoader</p>
-<h1 id="什么是双亲委派模型？"><a href="#什么是双亲委派模型？" class="headerlink" title="什么是双亲委派模型？"></a>什么是双亲委派模型？</h1><p>双亲委派过程：如果一个类加载器需要加载类，那么首先它会把这个类加载请求委派给父类加载器去完成，如果父类还有父类则接着委托，每一层都是如此，一直递归到顶层（即启动类加载器），当父类加载器无法完成这个请求（父类加载器中没有加载过这个类）时，子类才会尝试去加载。</p>
-<ul>
-<li>一般情况加载会从应用类加载器委托给扩展类加载器，然后再委托给启动类加载器，启动类加载器找不到然后扩展类加载器找，扩展类加载器找不到再由应用类记载器找。</li>
-</ul>
-<h2 id="双亲委派解决了什么问题？"><a href="#双亲委派解决了什么问题？" class="headerlink" title="双亲委派解决了什么问题？"></a>双亲委派解决了什么问题？</h2><p>在实际应用中，双亲委派解决了 Java 基础类统一加载的问题。</p>
-<p>以 <code>java.lang.Object</code> 来说，加载它经过一层层委托，最终由 Bootstrap ClassLoader 去找 lib目录下 rt.jar 里面的 <code>java.lang.Object</code> 加载到 JVM 中。</p>
-<p>这样如果有不法分子自己造一个 <code>java.lang.Object</code> ，里面嵌了不好的代码，如果我们按照双亲委派模型来实现的话，最终加载到 JVM 中的只会是我们 rt.jar 里面的代码，这样核心的基础代码就得到了保护。JVM 中不会出现两个 Object。</p>
-<p>违反双亲委派的例子</p>
-<p>问题：SPI 怎么违反双亲委派模型了？</p>
-<p>我觉得不能叫打破或者违反，而应该是没有依据双亲委派模型实现的类加载方式。</p>
-<blockquote>
-<p>BootstrapClassloader无法委派AppClassLoader来加载类，也就是说BootstrapClassloader中加载的类中无法使用由AppClassLoader加载的类。</p>
-</blockquote>
-<p>这个规则是哪里规定的？</p>
-<ul>
-<li>很明显java.sql包是由BootstrapClassloader加载器加载的；而接口的实现类com.mysql.jdbc.Driver是由第三方实现的类库，由AppClassLoader加载器进行加载的，我们的问题是DriverManager再获取链接的时候必然要加载到com.mysql.jdbc.Driver类，这就是由BootstrapClassloader加载的类使用了由AppClassLoader加载的类，很明显和双亲委托机制的原理相悖</li>
-</ul>
-<p>线程上下文类加载器</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">getCallerClass();</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-<p>调用类的静态方法会初始化该类？初始化动作做了哪些事情？</p>
-<p>当高层提供了统一接口让低层去实现，同时又要是在高层加载（或实例化）低层的类时，必须通过线程上下文类加载器来帮助高层的 ClassLoader 找到并加载该类。</p>
-<blockquote>
-<p>问题：怎样判断是高层需要加载低层的类？而不是低层本身需要加载该类？</p>
-<p>怎样判断一个类应该由哪个类加载器加载？</p>
-</blockquote>
-<p>Class.forName()?</p>
-<p>ClassLoader?</p>
-<h1 id="类加载顺序"><a href="#类加载顺序" class="headerlink" title="类加载顺序"></a>类加载顺序</h1><ol>
-<li>我们知道，jvm中发现一个类（通过类的package+ClassName来确定唯一）已经被加载了，那么它会直接使用而不会再加载同名的类了</li>
-<li>如何查看jvm启动过程中的类加载顺序？<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">在 jvm 启动脚本(用户java程序启动脚本)中，添加 -verbose 参数或者 -XX:+TraceClassLoading，</span><br><span class="line">日志中就会打印类的加载顺序日志</span><br></pre></td></tr></table></figure></li>
-<li>那么如果有两个相同的类，如何确认先加载哪个？</li>
-</ol>
-<p><a href="https://docs.oracle.com/javase/7/docs/technotes/tools/solaris/classpath.html">参考jdk1.7官方文档</a></p>
-<p><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/classpath.html">jdk1.8的相同内容的位置</a></p>
-<p>在文档的<code>Understanding class path wildcards</code>章节中写道</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">The order in which the JAR files in a directory are enumerated in the expanded class path is not specified and may vary from platform to platform and even from moment to moment on the same machine.</span><br><span class="line">If a specific order is required then the JAR files can be enumerated explicitly in the class path.</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>上面两段的大意为：在同一个目录下的jar的加载顺序是不能指定的，可能因平台而异，甚至在同一台机器上不同时刻也有所不同。</p>
-</blockquote>
-<blockquote>
-<p>如果希望指定顺序，那么可以显示的在classpath中枚举jar文件。</p>
-</blockquote>
-<p>同时官方文档在<code>Specification order</code>段落中，还写道：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">The order in which you specify multiple class path entries is important. The Java interpreter will look for classes in the directories in the order they appear in the class path variable. In the example above, the Java interpreter will first look for a needed class in the directory /java/MyClasses. Only if it doesn&#x27;t find a class with the proper name in that directory will the interpreter look in the /java/OtherClasses directory.</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>大意为：当你的classpath中有多个路径时，指定这些路径的顺序很重要，jvm会按照classpath路径中的顺序依次加载其中的类，如果已经找到了需要的类，就不会从后面加载，如果没有才会向后查找。</p>
-</blockquote>
-<p>综上，同一个classpath目录下的jar的加载顺序是无法指定的，但是可以通过在classpath中显示指定jar文件顺序或者目录的顺序来达到指定加载顺序的目的。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>JVM</category>
-      </categories>
-      <tags>
-        <tag>Java</tag>
-        <tag>JVM</tag>
-        <tag>类加载</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>== and equals() and hashCode()</title>
     <url>//==%20and%20equals()%20and%20hashCode().html</url>
     <content><![CDATA[<h1 id="x3D-x3D-and-equals-and-hashCode"><a href="#x3D-x3D-and-equals-and-hashCode" class="headerlink" title="&#x3D;&#x3D; and equals() and hashCode()"></a>&#x3D;&#x3D; and equals() and hashCode()</h1><h2 id="涉及两个主要内容"><a href="#涉及两个主要内容" class="headerlink" title="涉及两个主要内容"></a>涉及两个主要内容</h2><ul>
@@ -13949,81 +13940,6 @@ child.logfile = sys.stdout
       </tags>
   </entry>
   <entry>
-    <title>Java动态代理</title>
-    <url>//Java%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86.html</url>
-    <content><![CDATA[<h1 id="什么是动态代理？"><a href="#什么是动态代理？" class="headerlink" title="什么是动态代理？"></a>什么是动态代理？</h1><p>动态代理是一种代理机制，动态是相对于静态来说的。</p>
-<p>代理可以看做是调用目标的一个包装，通常用来在调用真实目标之前进行一些逻辑处理。</p>
-<ul>
-<li>静态代理：是我们预先写好的一个代理类，在编译后，生成一个 class 文件。<ul>
-<li>静态代理需要我们为每个目标类写对应的代理类。</li>
-</ul>
-</li>
-<li>动态代理：在运行时生成代理类，并加载到 JVM 中。<ul>
-<li>相比于静态代理更加灵活，可以通过指定目标来动态生成代理类。</li>
-</ul>
-</li>
-</ul>
-<p>代理也是一种解耦，调用者与目标类之间的解耦。在某种情况下，调用者不能或不想直接引用另一个对象，这时代理对象可以在调用者和目标之间起到中介的作用。</p>
-<h1 id="常见的动态代理"><a href="#常见的动态代理" class="headerlink" title="常见的动态代理"></a>常见的动态代理</h1><ul>
-<li><p>JDK 动态代理</p>
-</li>
-<li><p>CGLIB</p>
-</li>
-</ul>
-<h1 id="JDK-动态代理实现步骤"><a href="#JDK-动态代理实现步骤" class="headerlink" title="JDK 动态代理实现步骤"></a>JDK 动态代理实现步骤</h1><ol>
-<li><p>定义一个目标类(被代理对象类)和一个目标类实现的接口；</p>
-</li>
-<li><p>实现一个 <code>InvocationHandler</code>（调用处理器，实现 <code>InvocationHandler</code> 接口）得到一个切面类（自定义实现的调用处理器），实际是将代理类中处理的业务放到 <code>InvocationHandler</code>的方法中完成；</p>
-</li>
-<li><p>然后利用 <code>Proxy</code> 根据目标类的类加载器、接口和切面类（自定义实现的调用处理器）得到一个代理类；</p>
-<blockquote>
-<p>代理类的逻辑就是把所有接口方法的调用，转发到切面类的 <code>invoke()</code> 方法上，在 <code>invoke()</code> 方法中做一些增强的处理，然后利用反射调用目标类的方法。</p>
-</blockquote>
-</li>
-</ol>
-<h1 id="JDK-动态代理主要涉及到的类"><a href="#JDK-动态代理主要涉及到的类" class="headerlink" title="JDK 动态代理主要涉及到的类"></a>JDK 动态代理主要涉及到的类</h1><ol>
-<li><code>java.lang.reflect.InvocationHandler</code>： 生成代理类前需要实现<code>InvocationHandle</code> 接口的 <code>invoke()</code> 方法，将代理类要实现的业务逻辑写在里面，以供后面运行时生成的代理类调用；</li>
-<li><code>java.lang.reflect.Proxy</code>： 生成代理类的主类。通过 Proxy 类生成的代理类都继承了 Proxy 类。Proxy的主要调用方法为 <code>Proxy.newProxyInstance(ClassLoader loader,Class&lt;?&gt;[] interfaces,InvocationHandler h)</code>  –&gt; 一个静态方法<ul>
-<li>第一个参数为类加载器，通常为目标类（被代理类）的类加载器，即通过类加载器加载代理类到 JVM 的方法区；</li>
-<li>第二个参数为被代理类所有实现的接口，一个数据，通常可能为一个接口；</li>
-<li>第三个参数为自定义实现的调用处理器 <code>InvocationHandler</code>；</li>
-</ul>
-</li>
-</ol>
-<h2 id="为什么-JDK-动态代理要求目标类一定要定义接口？"><a href="#为什么-JDK-动态代理要求目标类一定要定义接口？" class="headerlink" title="为什么 JDK 动态代理要求目标类一定要定义接口？"></a>为什么 JDK 动态代理要求目标类一定要定义接口？</h2><p><strong>答：</strong> 因为 Java <strong>单继承</strong>的特性，生成的动态代理类一定要继承 Proxy 类，所以动态代理只能针对接口代理。</p>
-<blockquote>
-<p>这点可以通过反编译运行时动态生成的代理类得到。</p>
-</blockquote>
-<p><a href="%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96Java%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8A%A8%E6%80%81%E7%94%9F%E6%88%90%E7%9A%84class%E6%96%87%E4%BB%B6">如何获得运行时动态生成的类？</a></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 运行时动态生成的代理类</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">$Proxy0</span> <span class="keyword">extends</span> <span class="title class_">Proxy</span> <span class="keyword">implements</span> <span class="title class_">AccountService</span> &#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 从上面类的定义可知，代理类必须继承 Proxy 类，只能对接口代理。</span></span><br></pre></td></tr></table></figure>
-
-
-
-<h1 id="CGLIB-的实现步骤"><a href="#CGLIB-的实现步骤" class="headerlink" title="CGLIB 的实现步骤"></a>CGLIB 的实现步骤</h1><p>GCLIB 是通过字节码生成技术来实现调用的逻辑。</p>
-<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2><h1 id="思考："><a href="#思考：" class="headerlink" title="思考："></a>思考：</h1><p>动态代理，装饰者模式，和类的继承 之间的区别？</p>
-<p>最终目的：对原有&#x2F;指定方法进行功能上的扩展<br>在不修改原业务的基础上，基于原业务方法，进行重新的扩展，实现新的业务。</p>
-<h1 id="Java-反射"><a href="#Java-反射" class="headerlink" title="Java 反射"></a>Java 反射</h1><p>java反射可以通过<br>getConstructor,getField和getMethod<br>以及相应的<br>getDeclaredConstructor,getDeclaredField和getDeclaredMethod分别获取构造方法，域和方法</p>
-<p>区别在于getDeclaredXXX方法只会获取该类自身声明的内容，而不会获取继承来的内容</p>
-<p>由于数组的特殊性，Array类提供一组特殊方法供反射使用</p>
-<pre><code>Object array = Array.newInstance(String.class, 10); //等价于 new String[10]
-Array.set(array, 0, &quot;Hello&quot;);  //等价于array[0] = &quot;Hello&quot;
-Array.set(array, 1, &quot;World&quot;);  //等价于array[1] = &quot;World&quot;
-System.out.println(Array.get(array, 0));  //等价于array[0]
-</code></pre>
-<p>反射对于泛型的处理，如List<String><br>正常情况下，运行时，JVM看到的是原始类型，List，看不到List<String></p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>Java基础</category>
-        <category>动态代理</category>
-      </categories>
-      <tags>
-        <tag>Java</tag>
-        <tag>动态代理</tag>
-        <tag>Java基础</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Java 内部类</title>
     <url>//Java%20%E5%86%85%E9%83%A8%E7%B1%BB.html</url>
     <content><![CDATA[<h1 id="嵌套类-Nested-Classes"><a href="#嵌套类-Nested-Classes" class="headerlink" title="嵌套类(Nested Classes)"></a>嵌套类(Nested Classes)</h1><blockquote>
@@ -14140,6 +14056,81 @@ System.out.println(Array.get(array, 0));  //等价于array[0]
       </categories>
       <tags>
         <tag>Java</tag>
+        <tag>Java基础</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Java动态代理</title>
+    <url>//Java%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86.html</url>
+    <content><![CDATA[<h1 id="什么是动态代理？"><a href="#什么是动态代理？" class="headerlink" title="什么是动态代理？"></a>什么是动态代理？</h1><p>动态代理是一种代理机制，动态是相对于静态来说的。</p>
+<p>代理可以看做是调用目标的一个包装，通常用来在调用真实目标之前进行一些逻辑处理。</p>
+<ul>
+<li>静态代理：是我们预先写好的一个代理类，在编译后，生成一个 class 文件。<ul>
+<li>静态代理需要我们为每个目标类写对应的代理类。</li>
+</ul>
+</li>
+<li>动态代理：在运行时生成代理类，并加载到 JVM 中。<ul>
+<li>相比于静态代理更加灵活，可以通过指定目标来动态生成代理类。</li>
+</ul>
+</li>
+</ul>
+<p>代理也是一种解耦，调用者与目标类之间的解耦。在某种情况下，调用者不能或不想直接引用另一个对象，这时代理对象可以在调用者和目标之间起到中介的作用。</p>
+<h1 id="常见的动态代理"><a href="#常见的动态代理" class="headerlink" title="常见的动态代理"></a>常见的动态代理</h1><ul>
+<li><p>JDK 动态代理</p>
+</li>
+<li><p>CGLIB</p>
+</li>
+</ul>
+<h1 id="JDK-动态代理实现步骤"><a href="#JDK-动态代理实现步骤" class="headerlink" title="JDK 动态代理实现步骤"></a>JDK 动态代理实现步骤</h1><ol>
+<li><p>定义一个目标类(被代理对象类)和一个目标类实现的接口；</p>
+</li>
+<li><p>实现一个 <code>InvocationHandler</code>（调用处理器，实现 <code>InvocationHandler</code> 接口）得到一个切面类（自定义实现的调用处理器），实际是将代理类中处理的业务放到 <code>InvocationHandler</code>的方法中完成；</p>
+</li>
+<li><p>然后利用 <code>Proxy</code> 根据目标类的类加载器、接口和切面类（自定义实现的调用处理器）得到一个代理类；</p>
+<blockquote>
+<p>代理类的逻辑就是把所有接口方法的调用，转发到切面类的 <code>invoke()</code> 方法上，在 <code>invoke()</code> 方法中做一些增强的处理，然后利用反射调用目标类的方法。</p>
+</blockquote>
+</li>
+</ol>
+<h1 id="JDK-动态代理主要涉及到的类"><a href="#JDK-动态代理主要涉及到的类" class="headerlink" title="JDK 动态代理主要涉及到的类"></a>JDK 动态代理主要涉及到的类</h1><ol>
+<li><code>java.lang.reflect.InvocationHandler</code>： 生成代理类前需要实现<code>InvocationHandle</code> 接口的 <code>invoke()</code> 方法，将代理类要实现的业务逻辑写在里面，以供后面运行时生成的代理类调用；</li>
+<li><code>java.lang.reflect.Proxy</code>： 生成代理类的主类。通过 Proxy 类生成的代理类都继承了 Proxy 类。Proxy的主要调用方法为 <code>Proxy.newProxyInstance(ClassLoader loader,Class&lt;?&gt;[] interfaces,InvocationHandler h)</code>  –&gt; 一个静态方法<ul>
+<li>第一个参数为类加载器，通常为目标类（被代理类）的类加载器，即通过类加载器加载代理类到 JVM 的方法区；</li>
+<li>第二个参数为被代理类所有实现的接口，一个数据，通常可能为一个接口；</li>
+<li>第三个参数为自定义实现的调用处理器 <code>InvocationHandler</code>；</li>
+</ul>
+</li>
+</ol>
+<h2 id="为什么-JDK-动态代理要求目标类一定要定义接口？"><a href="#为什么-JDK-动态代理要求目标类一定要定义接口？" class="headerlink" title="为什么 JDK 动态代理要求目标类一定要定义接口？"></a>为什么 JDK 动态代理要求目标类一定要定义接口？</h2><p><strong>答：</strong> 因为 Java <strong>单继承</strong>的特性，生成的动态代理类一定要继承 Proxy 类，所以动态代理只能针对接口代理。</p>
+<blockquote>
+<p>这点可以通过反编译运行时动态生成的代理类得到。</p>
+</blockquote>
+<p><a href="%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96Java%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8A%A8%E6%80%81%E7%94%9F%E6%88%90%E7%9A%84class%E6%96%87%E4%BB%B6">如何获得运行时动态生成的类？</a></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 运行时动态生成的代理类</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">$Proxy0</span> <span class="keyword">extends</span> <span class="title class_">Proxy</span> <span class="keyword">implements</span> <span class="title class_">AccountService</span> &#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 从上面类的定义可知，代理类必须继承 Proxy 类，只能对接口代理。</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="CGLIB-的实现步骤"><a href="#CGLIB-的实现步骤" class="headerlink" title="CGLIB 的实现步骤"></a>CGLIB 的实现步骤</h1><p>GCLIB 是通过字节码生成技术来实现调用的逻辑。</p>
+<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2><h1 id="思考："><a href="#思考：" class="headerlink" title="思考："></a>思考：</h1><p>动态代理，装饰者模式，和类的继承 之间的区别？</p>
+<p>最终目的：对原有&#x2F;指定方法进行功能上的扩展<br>在不修改原业务的基础上，基于原业务方法，进行重新的扩展，实现新的业务。</p>
+<h1 id="Java-反射"><a href="#Java-反射" class="headerlink" title="Java 反射"></a>Java 反射</h1><p>java反射可以通过<br>getConstructor,getField和getMethod<br>以及相应的<br>getDeclaredConstructor,getDeclaredField和getDeclaredMethod分别获取构造方法，域和方法</p>
+<p>区别在于getDeclaredXXX方法只会获取该类自身声明的内容，而不会获取继承来的内容</p>
+<p>由于数组的特殊性，Array类提供一组特殊方法供反射使用</p>
+<pre><code>Object array = Array.newInstance(String.class, 10); //等价于 new String[10]
+Array.set(array, 0, &quot;Hello&quot;);  //等价于array[0] = &quot;Hello&quot;
+Array.set(array, 1, &quot;World&quot;);  //等价于array[1] = &quot;World&quot;
+System.out.println(Array.get(array, 0));  //等价于array[0]
+</code></pre>
+<p>反射对于泛型的处理，如List<String><br>正常情况下，运行时，JVM看到的是原始类型，List，看不到List<String></p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>Java基础</category>
+        <category>动态代理</category>
+      </categories>
+      <tags>
+        <tag>Java</tag>
+        <tag>动态代理</tag>
         <tag>Java基础</tag>
       </tags>
   </entry>
@@ -14432,6 +14423,23 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       </tags>
   </entry>
   <entry>
+    <title>异常</title>
+    <url>//%E5%BC%82%E5%B8%B8.html</url>
+    <content><![CDATA[<ol>
+<li>Exception和Error有什么区别？</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>Java基础</category>
+      </categories>
+      <tags>
+        <tag>Java</tag>
+        <tag>Java基础</tag>
+        <tag>异常</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>如何获取Java运行时动态生成的class文件</title>
     <url>//%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96Java%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8A%A8%E6%80%81%E7%94%9F%E6%88%90%E7%9A%84class%E6%96%87%E4%BB%B6.html</url>
     <content><![CDATA[<p>分析JDK动态代理时我们知道代理类是在运行时动态生成的，那么如何查看这些动态生成的代理类的内容？</p>
@@ -14475,23 +14483,6 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       </tags>
   </entry>
   <entry>
-    <title>异常</title>
-    <url>//%E5%BC%82%E5%B8%B8.html</url>
-    <content><![CDATA[<ol>
-<li>Exception和Error有什么区别？</li>
-</ol>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>Java基础</category>
-      </categories>
-      <tags>
-        <tag>Java</tag>
-        <tag>Java基础</tag>
-        <tag>异常</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Java Collection问题汇总</title>
     <url>//Java%20Collection%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html</url>
     <content><![CDATA[<ol>
@@ -14510,6 +14501,29 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       <tags>
         <tag>Java</tag>
         <tag>Java容器</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>时间格式化</title>
+    <url>//%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F%E5%8C%96.html</url>
+    <content><![CDATA[<ol>
+<li><p>jdk8中两个包都可以实现转换指定string格式</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">使用DateTimeFormatter和LocalDateTime时，下面两种转换为指定格式string的format都可以，</span><br><span class="line">但是通过传参可以看出为什么stdFormat.format(localDateTime1);也可以，因为LocalDateTime实现了Temporal接口，而Temporal接口继承了TemporalAccessor接口</span><br><span class="line">  <span class="meta">@Test</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testLocalDateTiem</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">DateTimeFormatter</span> <span class="variable">stdFormat</span> <span class="operator">=</span> DateTimeFormatter.ofPattern(<span class="string">&quot;yyyy-MM-dd HH:mm:ss&quot;</span>);</span><br><span class="line">    <span class="type">Date</span> <span class="variable">date</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Date</span>();</span><br><span class="line">    <span class="type">LocalDateTime</span> <span class="variable">localDateTime1</span> <span class="operator">=</span></span><br><span class="line">        LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());</span><br><span class="line">    <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> stdFormat.format(localDateTime1);</span><br><span class="line">    <span class="type">String</span> <span class="variable">format</span> <span class="operator">=</span> localDateTime1.format(stdFormat);</span><br><span class="line">    Assertions.assertThat(result).isEqualTo(format);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>当前时间&#x2F;指定时间 的 前一天</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="type">LocalDateTime</span> <span class="variable">now</span> <span class="operator">=</span> LocalDateTime.now();</span><br><span class="line"><span class="type">LocalDateTime</span> <span class="variable">yesterday</span> <span class="operator">=</span> now.plusDays(-<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>LocalDateTime 与 字符串类型 时间格式转换</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">String specailTiem=<span class="string">&quot;2021-07-26 15:26:26&quot;</span>;</span><br><span class="line"><span class="type">DateTimeFormatter</span> <span class="variable">dateTimeFormatter</span> <span class="operator">=</span> DateTimeFormatter.ofPattern(<span class="string">&quot;yyyy-MM-dd HH:mm:ss&quot;</span>);</span><br><span class="line"><span class="type">DateTimeFormatter</span> <span class="variable">dateHourFormatter</span> <span class="operator">=</span> DateTimeFormatter.ofPattern(<span class="string">&quot;yyyyMMddHH&quot;</span>);</span><br><span class="line"><span class="type">LocalDateTime</span> <span class="variable">dateTime</span> <span class="operator">=</span> LocalDateTime.parse(specailTiem, dateTimeFormatter);</span><br><span class="line"><span class="type">String</span> <span class="variable">dateTimeHour</span> <span class="operator">=</span> dateTime.format(dateHourFormatter);</span><br></pre></td></tr></table></figure></li>
+</ol>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>Java时间格式化</category>
+      </categories>
+      <tags>
+        <tag>Java</tag>
+        <tag>Java时间格式化</tag>
       </tags>
   </entry>
   <entry>
@@ -14567,23 +14581,6 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       <tags>
         <tag>Java</tag>
         <tag>Java并发</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Java线程</title>
-    <url>//Java%E7%BA%BF%E7%A8%8B.html</url>
-    <content><![CDATA[<h2 id="线程生命周期的不同状态"><a href="#线程生命周期的不同状态" class="headerlink" title="线程生命周期的不同状态"></a>线程生命周期的不同状态</h2><ul>
-<li>新建（NEW ）</li>
-</ul>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>Java并发</category>
-      </categories>
-      <tags>
-        <tag>Java</tag>
-        <tag>Java并发</tag>
-        <tag>线程</tag>
       </tags>
   </entry>
   <entry>
@@ -14816,6 +14813,23 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       </tags>
   </entry>
   <entry>
+    <title>Java线程</title>
+    <url>//Java%E7%BA%BF%E7%A8%8B.html</url>
+    <content><![CDATA[<h2 id="线程生命周期的不同状态"><a href="#线程生命周期的不同状态" class="headerlink" title="线程生命周期的不同状态"></a>线程生命周期的不同状态</h2><ul>
+<li>新建（NEW ）</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>Java并发</category>
+      </categories>
+      <tags>
+        <tag>Java</tag>
+        <tag>Java并发</tag>
+        <tag>线程</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Synchronized VS ReentrantLock</title>
     <url>//Synchronized%20VS%20ReentrantLock.html</url>
     <content><![CDATA[<h1 id="Synchronized-VS-ReentrantLock-区别"><a href="#Synchronized-VS-ReentrantLock-区别" class="headerlink" title="Synchronized VS ReentrantLock 区别"></a>Synchronized VS ReentrantLock 区别</h1><p>相同点：</p>
@@ -15003,29 +15017,6 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       </tags>
   </entry>
   <entry>
-    <title>时间格式化</title>
-    <url>//%E6%97%B6%E9%97%B4%E6%A0%BC%E5%BC%8F%E5%8C%96.html</url>
-    <content><![CDATA[<ol>
-<li><p>jdk8中两个包都可以实现转换指定string格式</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">使用DateTimeFormatter和LocalDateTime时，下面两种转换为指定格式string的format都可以，</span><br><span class="line">但是通过传参可以看出为什么stdFormat.format(localDateTime1);也可以，因为LocalDateTime实现了Temporal接口，而Temporal接口继承了TemporalAccessor接口</span><br><span class="line">  <span class="meta">@Test</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testLocalDateTiem</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">DateTimeFormatter</span> <span class="variable">stdFormat</span> <span class="operator">=</span> DateTimeFormatter.ofPattern(<span class="string">&quot;yyyy-MM-dd HH:mm:ss&quot;</span>);</span><br><span class="line">    <span class="type">Date</span> <span class="variable">date</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Date</span>();</span><br><span class="line">    <span class="type">LocalDateTime</span> <span class="variable">localDateTime1</span> <span class="operator">=</span></span><br><span class="line">        LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());</span><br><span class="line">    <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> stdFormat.format(localDateTime1);</span><br><span class="line">    <span class="type">String</span> <span class="variable">format</span> <span class="operator">=</span> localDateTime1.format(stdFormat);</span><br><span class="line">    Assertions.assertThat(result).isEqualTo(format);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>当前时间&#x2F;指定时间 的 前一天</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="type">LocalDateTime</span> <span class="variable">now</span> <span class="operator">=</span> LocalDateTime.now();</span><br><span class="line"><span class="type">LocalDateTime</span> <span class="variable">yesterday</span> <span class="operator">=</span> now.plusDays(-<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>LocalDateTime 与 字符串类型 时间格式转换</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">String specailTiem=<span class="string">&quot;2021-07-26 15:26:26&quot;</span>;</span><br><span class="line"><span class="type">DateTimeFormatter</span> <span class="variable">dateTimeFormatter</span> <span class="operator">=</span> DateTimeFormatter.ofPattern(<span class="string">&quot;yyyy-MM-dd HH:mm:ss&quot;</span>);</span><br><span class="line"><span class="type">DateTimeFormatter</span> <span class="variable">dateHourFormatter</span> <span class="operator">=</span> DateTimeFormatter.ofPattern(<span class="string">&quot;yyyyMMddHH&quot;</span>);</span><br><span class="line"><span class="type">LocalDateTime</span> <span class="variable">dateTime</span> <span class="operator">=</span> LocalDateTime.parse(specailTiem, dateTimeFormatter);</span><br><span class="line"><span class="type">String</span> <span class="variable">dateTimeHour</span> <span class="operator">=</span> dateTime.format(dateHourFormatter);</span><br></pre></td></tr></table></figure></li>
-</ol>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>Java时间格式化</category>
-      </categories>
-      <tags>
-        <tag>Java</tag>
-        <tag>Java时间格式化</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Logback使用</title>
     <url>//Logback%E4%BD%BF%E7%94%A8.html</url>
     <content><![CDATA[<p>Logback使用</p>
@@ -15125,28 +15116,6 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       </tags>
   </entry>
   <entry>
-    <title>包管理工具</title>
-    <url>//%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7.html</url>
-    <content><![CDATA[<h1 id="使用yum列出软件包支持的所有版本"><a href="#使用yum列出软件包支持的所有版本" class="headerlink" title="使用yum列出软件包支持的所有版本"></a>使用yum列出软件包支持的所有版本</h1><p>一般情况下yum list只会列出最新版本，以下使用Docker为例，列出其支持的所有可安装版本：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yum list docker-ce --showduplicates | sort -r</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>sort -r 对结果进行倒序排序</p>
-</blockquote>
-<p><a href="https://blog.51cto.com/watchmen/1934660">查看已安装软件包信息及未安装rpm包信息</a></p>
-<p><strong>查看软件包的详细信息</strong></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rpm -qpi rpm包</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>Linux</category>
-      </categories>
-      <tags>
-        <tag>Linux</tag>
-        <tag>包管理</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>常用代码段</title>
     <url>//%E5%B8%B8%E7%94%A8%E4%BB%A3%E7%A0%81%E6%AE%B5.html</url>
     <content><![CDATA[<p>常用代码段</p>
@@ -15166,6 +15135,28 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       <tags>
         <tag>Linux</tag>
         <tag>Shell</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>包管理工具</title>
+    <url>//%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7.html</url>
+    <content><![CDATA[<h1 id="使用yum列出软件包支持的所有版本"><a href="#使用yum列出软件包支持的所有版本" class="headerlink" title="使用yum列出软件包支持的所有版本"></a>使用yum列出软件包支持的所有版本</h1><p>一般情况下yum list只会列出最新版本，以下使用Docker为例，列出其支持的所有可安装版本：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yum list docker-ce --showduplicates | sort -r</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>sort -r 对结果进行倒序排序</p>
+</blockquote>
+<p><a href="https://blog.51cto.com/watchmen/1934660">查看已安装软件包信息及未安装rpm包信息</a></p>
+<p><strong>查看软件包的详细信息</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rpm -qpi rpm包</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>包管理</tag>
       </tags>
   </entry>
   <entry>
@@ -15997,6 +15988,38 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       </tags>
   </entry>
   <entry>
+    <title>database_interface</title>
+    <url>//database_interface.html</url>
+    <content><![CDATA[<h1 id="sqlx"><a href="#sqlx" class="headerlink" title="sqlx"></a>sqlx</h1><p>使用前，选择依赖时，<strong>必须</strong>选择一种 runtime 特性，即 <code>runtime + tls</code> 的一种选项；</p>
+<figure class="highlight toml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Cargo.toml</span></span><br><span class="line"><span class="section">[dependencies]</span></span><br><span class="line"><span class="comment"># tokio + rustls</span></span><br><span class="line"><span class="attr">sqlx</span> = &#123; version = <span class="string">&quot;0.5&quot;</span>, features = [ <span class="string">&quot;runtime-tokio-rustls&quot;</span> ] &#125;</span><br><span class="line"><span class="comment"># async-std + native-tls</span></span><br><span class="line"><span class="attr">sqlx</span> = &#123; version = <span class="string">&quot;0.5&quot;</span>, features = [ <span class="string">&quot;runtime-async-std-native-tls&quot;</span> ] </span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>runtime + TLS backend 是针对 cargo 问题的一种解决方案。</p>
+</blockquote>
+<p>问题：</p>
+<ol>
+<li><p>什么是 runtime？</p>
+</li>
+<li><p>什么是 tls（transport layer security 传输层安全）？</p>
+</li>
+<li><p>native-tls 与 rustls 的区别？</p>
+</li>
+<li><p>actix actor 响应式编程？那么什么是响应式变成？之前scala时有见到过，但是没有认真看，好像越来越多的地方用到了？</p>
+</li>
+<li><p>通过下面的错误提示，大概理解了 compile-time checked 的含义了</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 在编写代码时就会有下面的错误提示</span></span><br><span class="line">error communicating with database: 由于目标计算机积极拒绝，无法连接。 (os error <span class="number">10061</span>)</span><br></pre></td></tr></table></figure></li>
+</ol>
+]]></content>
+      <categories>
+        <category>Rust</category>
+        <category>Rust常用库</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+        <tag>Rust常用库</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>第二遍学习记录</title>
     <url>//%E7%AC%AC%E4%BA%8C%E9%81%8D%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95.html</url>
     <content><![CDATA[<h1 id="构建工具"><a href="#构建工具" class="headerlink" title="构建工具"></a>构建工具</h1><p>cargo</p>
@@ -16030,38 +16053,6 @@ class Stack&lt;E&gt; extends Vector&lt;E&gt; &#123;...
       <tags>
         <tag>Rust</tag>
         <tag>二遍浏览记录</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>database_interface</title>
-    <url>//database_interface.html</url>
-    <content><![CDATA[<h1 id="sqlx"><a href="#sqlx" class="headerlink" title="sqlx"></a>sqlx</h1><p>使用前，选择依赖时，<strong>必须</strong>选择一种 runtime 特性，即 <code>runtime + tls</code> 的一种选项；</p>
-<figure class="highlight toml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Cargo.toml</span></span><br><span class="line"><span class="section">[dependencies]</span></span><br><span class="line"><span class="comment"># tokio + rustls</span></span><br><span class="line"><span class="attr">sqlx</span> = &#123; version = <span class="string">&quot;0.5&quot;</span>, features = [ <span class="string">&quot;runtime-tokio-rustls&quot;</span> ] &#125;</span><br><span class="line"><span class="comment"># async-std + native-tls</span></span><br><span class="line"><span class="attr">sqlx</span> = &#123; version = <span class="string">&quot;0.5&quot;</span>, features = [ <span class="string">&quot;runtime-async-std-native-tls&quot;</span> ] </span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>runtime + TLS backend 是针对 cargo 问题的一种解决方案。</p>
-</blockquote>
-<p>问题：</p>
-<ol>
-<li><p>什么是 runtime？</p>
-</li>
-<li><p>什么是 tls（transport layer security 传输层安全）？</p>
-</li>
-<li><p>native-tls 与 rustls 的区别？</p>
-</li>
-<li><p>actix actor 响应式编程？那么什么是响应式变成？之前scala时有见到过，但是没有认真看，好像越来越多的地方用到了？</p>
-</li>
-<li><p>通过下面的错误提示，大概理解了 compile-time checked 的含义了</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 在编写代码时就会有下面的错误提示</span></span><br><span class="line">error communicating with database: 由于目标计算机积极拒绝，无法连接。 (os error <span class="number">10061</span>)</span><br></pre></td></tr></table></figure></li>
-</ol>
-]]></content>
-      <categories>
-        <category>Rust</category>
-        <category>Rust常用库</category>
-      </categories>
-      <tags>
-        <tag>Rust</tag>
-        <tag>Rust常用库</tag>
       </tags>
   </entry>
   <entry>
@@ -16287,7 +16278,7 @@ docker run --link可以用来链接2个容器，使得源容器（被链接的�
 <p>若无法关联，需要先输入命令关联</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git remote add origin &#x27;远端仓库地址&#x27; </span><br></pre></td></tr></table></figure>
 
-<p>远端仓库地址若设置SSH后，使用<a href="mailto:&#103;&#105;&#116;&#64;&#103;&#105;&#116;&#x68;&#117;&#98;&#46;&#x63;&#x6f;&#109;">&#103;&#105;&#116;&#64;&#103;&#105;&#116;&#x68;&#117;&#98;&#46;&#x63;&#x6f;&#109;</a>:’用户名‘&#x2F;’仓库名‘.git</p>
+<p>远端仓库地址若设置SSH后，使用<a href="mailto:&#103;&#105;&#116;&#64;&#x67;&#x69;&#116;&#x68;&#x75;&#98;&#46;&#x63;&#x6f;&#x6d;">&#103;&#105;&#116;&#64;&#x67;&#x69;&#116;&#x68;&#x75;&#98;&#46;&#x63;&#x6f;&#x6d;</a>:’用户名‘&#x2F;’仓库名‘.git</p>
 <p>参考链接：</p>
 <p><a href="https://qhp.us/index.php/archives/16/">hexo配置和常见问题解决</a></p>
 ]]></content>
@@ -16358,54 +16349,6 @@ docker run --link可以用来链接2个容器，使得源容器（被链接的�
       </tags>
   </entry>
   <entry>
-    <title>Docker中修改MySQL密码</title>
-    <url>//Docker%E4%B8%AD%E4%BF%AE%E6%94%B9MySQL%E5%AF%86%E7%A0%81.html</url>
-    <content><![CDATA[<p><strong>问题背景</strong></p>
-<p>zabbix 使用的 MySQL 是在 Docker 中启动的，发现存在 root 弱密码问题，需要进行修改。</p>
-<p><strong>处理过程</strong></p>
-<h4 id="1-通过-docker-exec-命令进入容器"><a href="#1-通过-docker-exec-命令进入容器" class="headerlink" title="1. 通过 docker exec 命令进入容器"></a>1. 通过 docker exec 命令进入容器</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it mysql-server /bin/bash</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="2-修改配置文件"><a href="#2-修改配置文件" class="headerlink" title="2. 修改配置文件"></a>2. 修改配置文件</h4><p>因为机器为离线状态无法安装新软件，采用以下方法向文件中<strong>追加多行</strong>内容</p>
-<ul>
-<li>如果仅追加一行，直接使用 <code>&gt;&gt;</code> 追加符号即可；</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat &gt;&gt; /etc/mysql/conf.d/docker.cnf &lt;&lt;EOF</span><br><span class="line">skip-grant-tables</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>需要添加的文件在两个 EOF 中间；</li>
-<li>也可以修改 <code>/etc/mysql/my.cnf</code> 文件，这个文件所有MySQL 通用， <code>docker.cnf</code>  只有 docker 中存在；</li>
-</ul>
-<p>如果添加内容错了，可以使用下面的命令来删除多余内容；</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">从第2行（包括第2行）到文件末尾的所有行，会直接修改原文件</span></span><br><span class="line">sed -i &#x27;2,$d&#x27; /etc/mysql/conf.d/docker.cnf</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="3-退出-docker-重启-MySQL-容器"><a href="#3-退出-docker-重启-MySQL-容器" class="headerlink" title="3. 退出 docker 重启 MySQL 容器"></a>3. 退出 docker 重启 MySQL 容器</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker restart mysql-server</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="4-再次进入容器，直接登录-MySQL"><a href="#4-再次进入容器，直接登录-MySQL" class="headerlink" title="4. 再次进入容器，直接登录 MySQL"></a>4. 再次进入容器，直接登录 MySQL</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it mysql-server /bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在容器中使用 mysql 可以直接登录了</span></span><br><span class="line">mysql</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="5-修改-root-账号密码"><a href="#5-修改-root-账号密码" class="headerlink" title="5. 修改 root 账号密码"></a>5. 修改 root 账号密码</h4><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"># MySQL <span class="number">5.7</span><span class="number">.6</span><span class="operator">+</span>版本以上</span><br><span class="line">use mysql;</span><br><span class="line"><span class="keyword">UPDATE</span> <span class="keyword">user</span> <span class="keyword">SET</span> authentication_string <span class="operator">=</span> PASSWORD(<span class="string">&#x27;g123455.&#x27;</span>) <span class="keyword">WHERE</span> <span class="keyword">user</span> <span class="operator">=</span> <span class="string">&#x27;root&#x27;</span>;</span><br><span class="line">flush privileges;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># MySQL <span class="number">5.7</span><span class="number">.6</span>版本以下</span><br><span class="line">use mysql;</span><br><span class="line"><span class="keyword">UPDATE</span> <span class="keyword">user</span> <span class="keyword">SET</span> password<span class="operator">=</span> PASSWORD(<span class="string">&#x27;g123455.&#x27;</span>) <span class="keyword">WHERE</span> <span class="keyword">user</span> <span class="operator">=</span> <span class="string">&#x27;root&#x27;</span>;</span><br><span class="line">flush privileges;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="6-还原配置"><a href="#6-还原配置" class="headerlink" title="6. 还原配置"></a>6. 还原配置</h4><p>按照第2步，删除添加的 <code>skip-grant-tables</code> 配置，还原配置，退出容器，重启 MySQL 就可以了。</p>
-]]></content>
-      <categories>
-        <category>数据库</category>
-        <category>MySQL</category>
-      </categories>
-      <tags>
-        <tag>数据库</tag>
-        <tag>MySQL</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>MySQL使用记录</title>
     <url>//MySQL%E4%BD%BF%E7%94%A8%E8%AE%B0%E5%BD%95.html</url>
     <content><![CDATA[<h1 id="1-连接远程数据库"><a href="#1-连接远程数据库" class="headerlink" title="1. 连接远程数据库"></a>1. 连接远程数据库</h1><p>方法</p>
@@ -16455,6 +16398,54 @@ docker run --link可以用来链接2个容器，使得源容器（被链接的�
 <p>需要查看数据库的更新时间则去掉 <code> and TABLE_NAME = &#39;TABLE_NAME&#39;</code> 部分；</p>
 <p>样例</p>
 <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> table_name,update_time <span class="keyword">from</span> information_schema.`TABLES` it <span class="keyword">where</span> it.TABLE_SCHEMA<span class="operator">=</span><span class="string">&#x27;qa_test&#x27;</span> <span class="keyword">order</span> <span class="keyword">by</span> update_time <span class="keyword">desc</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 查看 qa_test 库中更新时间并根据 update_time 字段倒序排序；</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>数据库</category>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>数据库</tag>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Docker中修改MySQL密码</title>
+    <url>//Docker%E4%B8%AD%E4%BF%AE%E6%94%B9MySQL%E5%AF%86%E7%A0%81.html</url>
+    <content><![CDATA[<p><strong>问题背景</strong></p>
+<p>zabbix 使用的 MySQL 是在 Docker 中启动的，发现存在 root 弱密码问题，需要进行修改。</p>
+<p><strong>处理过程</strong></p>
+<h4 id="1-通过-docker-exec-命令进入容器"><a href="#1-通过-docker-exec-命令进入容器" class="headerlink" title="1. 通过 docker exec 命令进入容器"></a>1. 通过 docker exec 命令进入容器</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it mysql-server /bin/bash</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2-修改配置文件"><a href="#2-修改配置文件" class="headerlink" title="2. 修改配置文件"></a>2. 修改配置文件</h4><p>因为机器为离线状态无法安装新软件，采用以下方法向文件中<strong>追加多行</strong>内容</p>
+<ul>
+<li>如果仅追加一行，直接使用 <code>&gt;&gt;</code> 追加符号即可；</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat &gt;&gt; /etc/mysql/conf.d/docker.cnf &lt;&lt;EOF</span><br><span class="line">skip-grant-tables</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>需要添加的文件在两个 EOF 中间；</li>
+<li>也可以修改 <code>/etc/mysql/my.cnf</code> 文件，这个文件所有MySQL 通用， <code>docker.cnf</code>  只有 docker 中存在；</li>
+</ul>
+<p>如果添加内容错了，可以使用下面的命令来删除多余内容；</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">从第2行（包括第2行）到文件末尾的所有行，会直接修改原文件</span></span><br><span class="line">sed -i &#x27;2,$d&#x27; /etc/mysql/conf.d/docker.cnf</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="3-退出-docker-重启-MySQL-容器"><a href="#3-退出-docker-重启-MySQL-容器" class="headerlink" title="3. 退出 docker 重启 MySQL 容器"></a>3. 退出 docker 重启 MySQL 容器</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker restart mysql-server</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="4-再次进入容器，直接登录-MySQL"><a href="#4-再次进入容器，直接登录-MySQL" class="headerlink" title="4. 再次进入容器，直接登录 MySQL"></a>4. 再次进入容器，直接登录 MySQL</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it mysql-server /bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在容器中使用 mysql 可以直接登录了</span></span><br><span class="line">mysql</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="5-修改-root-账号密码"><a href="#5-修改-root-账号密码" class="headerlink" title="5. 修改 root 账号密码"></a>5. 修改 root 账号密码</h4><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"># MySQL <span class="number">5.7</span><span class="number">.6</span><span class="operator">+</span>版本以上</span><br><span class="line">use mysql;</span><br><span class="line"><span class="keyword">UPDATE</span> <span class="keyword">user</span> <span class="keyword">SET</span> authentication_string <span class="operator">=</span> PASSWORD(<span class="string">&#x27;g123455.&#x27;</span>) <span class="keyword">WHERE</span> <span class="keyword">user</span> <span class="operator">=</span> <span class="string">&#x27;root&#x27;</span>;</span><br><span class="line">flush privileges;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># MySQL <span class="number">5.7</span><span class="number">.6</span>版本以下</span><br><span class="line">use mysql;</span><br><span class="line"><span class="keyword">UPDATE</span> <span class="keyword">user</span> <span class="keyword">SET</span> password<span class="operator">=</span> PASSWORD(<span class="string">&#x27;g123455.&#x27;</span>) <span class="keyword">WHERE</span> <span class="keyword">user</span> <span class="operator">=</span> <span class="string">&#x27;root&#x27;</span>;</span><br><span class="line">flush privileges;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="6-还原配置"><a href="#6-还原配置" class="headerlink" title="6. 还原配置"></a>6. 还原配置</h4><p>按照第2步，删除添加的 <code>skip-grant-tables</code> 配置，还原配置，退出容器，重启 MySQL 就可以了。</p>
 ]]></content>
       <categories>
         <category>数据库</category>
@@ -17906,6 +17897,28 @@ where Disconinued=No
       </tags>
   </entry>
   <entry>
+    <title>服务器端web应用</title>
+    <url>//%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AFweb%E5%BA%94%E7%94%A8.html</url>
+    <content><![CDATA[<h1 id="传统的服务器端-web-应用"><a href="#传统的服务器端-web-应用" class="headerlink" title="传统的服务器端 web 应用"></a>传统的服务器端 web 应用</h1><p>主要技术</p>
+<ul>
+<li>模板引擎： <code>Tera</code><ul>
+<li>主要作用：动态的渲染部分数据</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Rust</category>
+        <category>Rust小项目练习</category>
+        <category>rust_web</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+        <tag>Rust小项目练习</tag>
+        <tag>rust_web</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>http_server</title>
     <url>//http_server.html</url>
     <content><![CDATA[<h1 id="需要使用的库"><a href="#需要使用的库" class="headerlink" title="需要使用的库"></a>需要使用的库</h1><p>标准库中的网络模块</p>
@@ -18202,28 +18215,6 @@ where Disconinued=No
 <li>WebServiceHandler</li>
 </ul>
 <h1 id="拆分项目单个文件到目录"><a href="#拆分项目单个文件到目录" class="headerlink" title="拆分项目单个文件到目录"></a>拆分项目单个文件到目录</h1>]]></content>
-      <categories>
-        <category>Rust</category>
-        <category>Rust小项目练习</category>
-        <category>rust_web</category>
-      </categories>
-      <tags>
-        <tag>Rust</tag>
-        <tag>Rust小项目练习</tag>
-        <tag>rust_web</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>服务器端web应用</title>
-    <url>//%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AFweb%E5%BA%94%E7%94%A8.html</url>
-    <content><![CDATA[<h1 id="传统的服务器端-web-应用"><a href="#传统的服务器端-web-应用" class="headerlink" title="传统的服务器端 web 应用"></a>传统的服务器端 web 应用</h1><p>主要技术</p>
-<ul>
-<li>模板引擎： <code>Tera</code><ul>
-<li>主要作用：动态的渲染部分数据</li>
-</ul>
-</li>
-</ul>
-]]></content>
       <categories>
         <category>Rust</category>
         <category>Rust小项目练习</category>
