@@ -85,7 +85,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">291</span>
+            <span class="post-count">568</span>
         </span>
     </span>
 
@@ -94,7 +94,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">1 分钟</span>
+            <span class="post-count">2 分钟</span>
         </span>
     </span>
 </div>
@@ -129,6 +129,33 @@
 <p><code>tt@&#39;%&#39;</code> , 表示远程登录时的权限设置；</p>
 <p><code>ON *.*</code> ,表示所有库表，当需要指定库表是，<code>ON &lt;库&gt;.&lt;表&gt;</code>, 进行对应替换即可。</p>
 </blockquote>
+<h1 id="3-时间转换"><a href="#3-时间转换" class="headerlink" title="3. 时间转换"></a>3. 时间转换</h1><h2 id="timestamp-转为指定时间格式"><a href="#timestamp-转为指定时间格式" class="headerlink" title="timestamp 转为指定时间格式"></a>timestamp 转为指定时间格式</h2><p>将 timestamp 格式转换为指定 date 格式</p>
+<ul>
+<li><code>FROM_UNIXTIME(unix_timestamp,format)</code><ul>
+<li>unix_timestamp 是 10 位时间戳，如果是 13 位的时间戳，则需要<code>/1000</code>；</li>
+</ul>
+</li>
+</ul>
+<p>将 date 格式转换为指定 date 格式</p>
+<ul>
+<li><code>DATE_FORMAT(date,format)</code></li>
+</ul>
+<p>常用格式占位符</p>
+<ul>
+<li>%Y年、%m月、%d日、%H时、%i分、%s秒</li>
+</ul>
+<p>样例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> DATE_FORMAT(UPDATE_TIME,<span class="string">&#x27;%Y-%m-%d&#x27;</span>) <span class="keyword">as</span> <span class="type">date</span> <span class="keyword">from</span> info_apply;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- update_time 2022-10-10 12:45:43</span></span><br><span class="line"><span class="comment">-- 结果为 2022-10-10</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> FROM_UNIXTIME(UPDATE_TS,<span class="string">&#x27;%Y-%m-%d&#x27;</span>) <span class="keyword">as</span> <span class="type">date</span> <span class="keyword">from</span> info_apply;</span><br><span class="line"><span class="comment">-- UPDATE_TS  1665832560</span></span><br><span class="line"><span class="comment">-- 结果为 2022-10-15</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="MySQL查看数据表最后更新时间"><a href="#MySQL查看数据表最后更新时间" class="headerlink" title="MySQL查看数据表最后更新时间"></a>MySQL查看数据表最后更新时间</h1><p><strong>需求场景：</strong>查看数据库中的某一个数据表是否有更新, 以判断数据更新的最后时间, 以判断出有价值的信息。</p>
+<p>查看指定数据库的指定表的更新时间</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> `TABLE_NAME`, `UPDATE_TIME` <span class="keyword">FROM</span> `information_schema`.`TABLES` <span class="keyword">where</span> `TABLE_SCHEMA` <span class="operator">=</span> <span class="string">&#x27;DB_NAME&#x27;</span> <span class="keyword">and</span> `TABLE_NAME` <span class="operator">=</span> <span class="string">&#x27;TABLE_NAME&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>需要查看数据库的更新时间则去掉 <code> and TABLE_NAME = &#39;TABLE_NAME&#39;</code> 部分；</p>
+<p>样例</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> table_name,update_time <span class="keyword">from</span> information_schema.`TABLES` it <span class="keyword">where</span> it.TABLE_SCHEMA<span class="operator">=</span><span class="string">&#x27;qa_test&#x27;</span> <span class="keyword">order</span> <span class="keyword">by</span> update_time <span class="keyword">desc</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 查看 qa_test 库中更新时间并根据 update_time 字段倒序排序；</span></span><br></pre></td></tr></table></figure>
  
       <!-- reward -->
       
