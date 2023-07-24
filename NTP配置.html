@@ -54,7 +54,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-学习笔记/Linux/NTP配置"
+  id="post-学习笔记/Linux/NTP和Chrony配置"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -85,7 +85,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">2</span>
+            <span class="post-count">674</span>
         </span>
     </span>
 
@@ -94,23 +94,78 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">1 分钟</span>
+            <span class="post-count">3 分钟</span>
         </span>
     </span>
 </div>
  
     </div>
       
+    <div class="tocbot"></div>
+
 
 
 
   
     <div class="article-entry" itemprop="articleBody">
        
-  <ul>
-<li>ntp</li>
-<li>chronyd</li>
-</ul>
+  <h1 id="Chrony时间同步服务"><a href="#Chrony时间同步服务" class="headerlink" title="Chrony时间同步服务"></a>Chrony时间同步服务</h1><p>chrony 与 ntp 一样，既可以做服务端，也可以做客户端。</p>
+<p>使用的是 UDP 协议。</p>
+<p>兼容以前的 ntp服务，所以本地会启动两个UDP端口。</p>
+<p>ntp服务端口，123</p>
+<p>chrony服务端口，323</p>
+<h2 id="服务端配置"><a href="#服务端配置" class="headerlink" title="服务端配置"></a>服务端配置</h2><p>修改 <code>/etc/chrony.conf</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">配置当前服务器向指定NTP服务器同步时间，例如这里先向11.1.36.1同步时间</span></span><br><span class="line">server 11.1.36.1 iburst</span><br><span class="line"></span><br><span class="line">服务端需要把下面的allow内容打开，并做适当配置。</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Allow NTP client access from <span class="built_in">local</span> network.</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">allow 192.168.0.0/16</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">如果上面使用server字段配置的时间服务器同步时间失败,默认情况下当前时间服务器是不会向客户端同步时间的,</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这是因为担心当前节点的时间不准确(因为当前节点没有和定义中的server时间服务器进行同步),如果我们想要在</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">server指定的时间服务器同步失败的情况下依旧返回当前时间服务器的时间给客户端，需要开启该参数,这一项参</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">数配置在生产环境中还是相当危险的，因此建议大家在server字段中指定互联网的网络时间,否则可能会出现整个</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">集群时间都错的的一致!</span></span><br><span class="line">local stratum 10</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="客户端配置"><a href="#客户端配置" class="headerlink" title="客户端配置"></a>客户端配置</h2><p>修改 <code>/etc/chrony.conf</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">server 11.1.36.1 iburst</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>重点修改这部分，可以多行，多个NTP服务地址。</p>
+<p>server NTP服务端 iburst</p>
+</blockquote>
+<p>启动 chronyd 服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl restart chronyd</span><br></pre></td></tr></table></figure>
+
+<p>查看服务状态</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl status chronyd</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h2 id="查看同步"><a href="#查看同步" class="headerlink" title="查看同步"></a>查看同步</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chronyc sources -v</span><br></pre></td></tr></table></figure>
+
+<p>样例</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[root@test-mysql5 ~]# chronyc sources -v</span><br><span class="line">210 Number of sources = 1</span><br><span class="line"></span><br><span class="line">  .-- Source mode  &#x27;^&#x27; = server, &#x27;=&#x27; = peer, &#x27;#&#x27; = local clock.</span><br><span class="line"> / .- Source state &#x27;*&#x27; = current synced, &#x27;+&#x27; = combined , &#x27;-&#x27; = not combined,</span><br><span class="line">| /   &#x27;?&#x27; = unreachable, &#x27;x&#x27; = time may be in error, &#x27;~&#x27; = time too variable.</span><br><span class="line">||                                                 .- xxxx [ yyyy ] +/- zzzz</span><br><span class="line">||      Reachability register (octal) -.           |  xxxx = adjusted offset,</span><br><span class="line">||      Log2(Polling interval) --.      |          |  yyyy = measured offset,</span><br><span class="line">||                                \     |          |  zzzz = estimated error.</span><br><span class="line">||                                 |    |           \</span><br><span class="line">MS Name/IP address         Stratum Poll Reach LastRx Last sample               </span><br><span class="line">===============================================================================</span><br><span class="line">^* 11.1.36.1                     1   6   377   125  +5239ns[-1566ns] +/-  744us</span><br></pre></td></tr></table></figure>
+
+<p>通过 <code>-v</code> 可以得知，<code>^*</code> 表示当前的时间服务器<strong>同步成功</strong>。</p>
+<h2 id="手动同步"><a href="#手动同步" class="headerlink" title="手动同步"></a>手动同步</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">手动同步系统时间</span></span><br><span class="line">chronyc -a makestep</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看时间同步源</span></span><br><span class="line">chronyc sources -v</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/yinzhengjie/p/12292549.html">https://www.cnblogs.com/yinzhengjie/p/12292549.html</a></p>
+<hr>
+<h1 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h1><p>设置系统时区和时间</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@test-mysql5 ~]# timedatectl </span><br><span class="line">      Local time: Thu 2023-07-20 17:02:41 CST</span><br><span class="line">  Universal time: Thu 2023-07-20 09:02:41 UTC</span><br><span class="line">        RTC time: Thu 2023-07-20 09:03:02</span><br><span class="line">       Time zone: n/a (CST, +0800)</span><br><span class="line">     NTP enabled: yes</span><br><span class="line">NTP synchronized: yes</span><br><span class="line"> RTC in local TZ: no</span><br><span class="line">      DST active: n/a</span><br></pre></td></tr></table></figure>
+
+<p>查看上海时区</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@test-mysql5 ~]# timedatectl list-timezones |grep -E &quot;Asia/Shang*&quot;</span><br><span class="line">Asia/Shanghai</span><br></pre></td></tr></table></figure>
+
+<p>设置系统时区为上海</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@test-mysql5 ~]# timedatectl set-timezone &quot;Asia/Shanghai&quot;</span><br></pre></td></tr></table></figure>
+
+<p>帮助信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@test-mysql5 ~]# timedatectl --help</span><br></pre></td></tr></table></figure>
+
+
+
  
       <!-- reward -->
       
@@ -225,7 +280,7 @@
     <ul>
       <li>
         Copyrights &copy;
-        2022
+        2022-2023
         <i class="ri-heart-fill heart_icon"></i> ligongzhao
       </li>
     </ul>

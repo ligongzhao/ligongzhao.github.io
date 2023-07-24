@@ -85,7 +85,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">217</span>
+            <span class="post-count">675</span>
         </span>
     </span>
 
@@ -94,7 +94,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">1 分钟</span>
+            <span class="post-count">3 分钟</span>
         </span>
     </span>
 </div>
@@ -138,6 +138,27 @@
 
 <p>解释：zabbix的md5值-为，<code>5fce1b3e34b520afeffb37ce08c7cd66</code></p>
 </blockquote>
+<h1 id="Zabbix-告警及解决过程"><a href="#Zabbix-告警及解决过程" class="headerlink" title="Zabbix 告警及解决过程"></a>Zabbix 告警及解决过程</h1><h2 id="1-zabbix-proxy-日志报错cannot-send-list-of-active-checks-to-“10-100-3-10”-host-10-100-3-60-not-found"><a href="#1-zabbix-proxy-日志报错cannot-send-list-of-active-checks-to-“10-100-3-10”-host-10-100-3-60-not-found" class="headerlink" title="1. zabbix proxy 日志报错cannot send list of active checks to “10.100.3.10”: host [10.100.3.60] not found"></a>1. zabbix proxy 日志报错cannot send list of active checks to “10.100.3.10”: host [10.100.3.60] not found</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">403:20221021:060755.665 cannot send list of active checks to &quot;10.100.3.10&quot;: host [10.100.3.60] not found</span><br><span class="line"> 399:20221021:060804.003 cannot send list of active checks to &quot;10.100.3.27&quot;: host [10.100.3.56] not found</span><br><span class="line"> 401:20221021:060823.654 cannot send list of active checks to &quot;10.100.3.35&quot;: host [10.100.3.61] not found</span><br></pre></td></tr></table></figure>
+
+<p>从上面报错发现这三个节点agent的配置与实际不相符。分别登录查看其 <code>/etc/zabbix/zabbix_agentd.conf</code> 配置文件。</p>
+<p>查看后发现配置文件中 <code>Hostname</code> 字段配置的确实与实际IP不一致，修改配置文件并重启服务。</p>
+<h2 id="2-zabbix-proxy-日志中报错cannot-send-list-of-active-checks-to-“10-100-3-27”-host-10-100-3-27-not-found"><a href="#2-zabbix-proxy-日志中报错cannot-send-list-of-active-checks-to-“10-100-3-27”-host-10-100-3-27-not-found" class="headerlink" title="2. zabbix proxy 日志中报错cannot send list of active checks to “10.100.3.27”: host [10.100.3.27] not found"></a>2. zabbix proxy 日志中报错cannot send list of active checks to “10.100.3.27”: host [10.100.3.27] not found</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">401:20221021:064308.089 cannot send list of active checks to &quot;10.100.3.27&quot;: host [10.100.3.27] not found</span><br></pre></td></tr></table></figure>
+
+<p>这个报错是因为该节点配置了 zabbix agent ，但是zabbix server 的 web 页面没有添加对应的主机配置。</p>
+<p>登录 web ，添加该节点的主机配置即可。</p>
+<h2 id="3-监控页面告警-Zabbix-agent-is-not-available-or-nodata-for-30m"><a href="#3-监控页面告警-Zabbix-agent-is-not-available-or-nodata-for-30m" class="headerlink" title="3. 监控页面告警 Zabbix agent is not available (or nodata for 30m)"></a>3. 监控页面告警 Zabbix agent is not available (or nodata for 30m)</h2><p>查看 zabbix web 页面有告警</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Zabbix agent is not available (or nodata for 30m)</span><br></pre></td></tr></table></figure>
+
+<p>登录该节点查看 agent 日志，发现如下报错：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">17668:20221021:135647.898 active check configuration update from [10.100.3.62:10051] started to fail (ZBX_TCP_READ() timed out)</span><br></pre></td></tr></table></figure>
+
+<p>检查确认其他配置没有问题后，可能是因为默认超时时间太短（默认客户端连接 proxy 的超时时间为 3秒），修改为 30 秒，然后重启 zabbix-agent 服务即可。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/zabbix/zabbix_agentd.conf</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果有该参数就修改，没有改参数就添加。该参数支持的范围为：1-30，默认为3</span></span><br><span class="line">Timeout=30</span><br></pre></td></tr></table></figure>
+
+<p>重启 zabbix-agent 服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl restart zabbix-agent</span><br></pre></td></tr></table></figure>
+
+<h3 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h3><p><a target="_blank" rel="noopener" href="https://www.zabbix.com/documentation/5.0/en/manual/appendix/config/zabbix_agentd">zabbix-agent参数</a></p>
  
       <!-- reward -->
       
@@ -252,7 +273,7 @@
     <ul>
       <li>
         Copyrights &copy;
-        2022
+        2022-2023
         <i class="ri-heart-fill heart_icon"></i> ligongzhao
       </li>
     </ul>
