@@ -85,7 +85,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">339</span>
+            <span class="post-count">650</span>
         </span>
     </span>
 
@@ -94,7 +94,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">1 分钟</span>
+            <span class="post-count">2 分钟</span>
         </span>
     </span>
 </div>
@@ -141,6 +141,36 @@
 <p>转换效果如下：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1658746074	-&gt;	2022-07-25 18:47:54</span><br></pre></td></tr></table></figure>
 
+
+
+<h1 id="Excel-删除筛选的内容"><a href="#Excel-删除筛选的内容" class="headerlink" title="Excel 删除筛选的内容"></a>Excel 删除筛选的内容</h1><ol>
+<li>通过<strong>筛选</strong>功能，在名字列筛选选择张三李四。 </li>
+<li>选择将要删除的数据整行。 </li>
+<li>通过快捷键Ctrl+G调出定位窗口→“<strong>定位</strong>”→选择“<strong>可见单元格</strong>”→“确定”。</li>
+<li>在所定位的行范围内右键选择删除。</li>
+</ol>
+<p>这样就解决了删除excel中筛选的内容的问题了。</p>
+<h1 id="查询函数VLOOKUP"><a href="#查询函数VLOOKUP" class="headerlink" title="查询函数VLOOKUP"></a>查询函数VLOOKUP</h1><p>vlookup</p>
+<ul>
+<li><p>公式基础使用 </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vlookup(用哪一列查询,在哪个表中的什么范围使用,取第几列[需要多列，可以使用&#123;&#125;括号，用逗号分隔],精确匹配/模糊匹配)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vlookup(A2,Sheet1!A:E,&#123;2,5,3&#125;,0)  表示用A来查询，在Sheet1!A:E范围查询，取2,5,3三列，精确匹配。 该函数会自动扩展三列。</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>iferror(正确的值,出错后给出的默认值（例如：””）)</p>
+</li>
+<li><p>下拉填充，选择不带格式填充（这个可以解决填充后覆盖原有行的颜色或者其他格式）</p>
+</li>
+<li><p>常量数组，</p>
+<ul>
+<li>常规写函数后，按住F9，这样会将依赖的表，自动转化为常量数组。</li>
+<li>好处：此时可以删除依赖的辅助表中的数据，结果也不会出错。</li>
+</ul>
+</li>
+</ul>
+<p>if，可以嵌套</p>
  
       <!-- reward -->
       
