@@ -18717,4 +18717,35 @@ where Disconinued=No
         <tag>Chrony</tag>
       </tags>
   </entry>
+  <entry>
+    <title>dd命令生成文件</title>
+    <url>//dd%E5%91%BD%E4%BB%A4%E7%94%9F%E6%88%90%E6%96%87%E4%BB%B6.html</url>
+    <content><![CDATA[<h2 id="dd命令"><a href="#dd命令" class="headerlink" title="dd命令"></a>dd命令</h2><h2 id="生成文件"><a href="#生成文件" class="headerlink" title="生成文件"></a>生成文件</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dd if=/dev/zero of=/swapfile bs=1M count=1024</span><br></pre></td></tr></table></figure>
+
+<p>通过 <code>dd</code> 命令生成文件，命令解释：</p>
+<ul>
+<li><p>if ，数据来源，保持不变；</p>
+</li>
+<li><p>of，输出文件位置，可以指定绝对路径，例如：<code>/swapfile</code>。不建议生成在当前路径下（即只有文件名，没有路径），最好使用绝对路径。</p>
+</li>
+<li><p>bs，块大小，默认字节，支持的单位如下（参考dd命令帮助）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">N and BYTES may be followed by the following multiplicative suffixes:</span><br><span class="line">c =1, w =2, b =512, kB =1000, K =1024, MB =1000*1000, M =1024*1024, xM =M</span><br><span class="line">GB =1000*1000*1000, G =1024*1024*1024, and so on for T, P, E, Z, Y.</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>count，块的数量</p>
+</li>
+<li><p>生成的文件总大小&#x3D;bs x count，上面为 1M x 1024 &#x3D; 1G</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Linux</category>
+        <category>dd</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>dd</tag>
+      </tags>
+  </entry>
 </search>
